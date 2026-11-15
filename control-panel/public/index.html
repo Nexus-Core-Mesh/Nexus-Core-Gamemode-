@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nexus Core Control Panel</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">NC</div>
+          <div>
+            <h1>Nexus Core</h1>
+            <small>Control Panel</small>
+          </div>
+        </div>
+
+        <nav class="nav">
+          <a class="active" href="#overview">Übersicht</a>
+          <a href="#states">Staaten</a>
+          <a href="#players">Spieler</a>
+          <a href="#admins">Adminrollen</a>
+          <a href="#jobs">Jobs</a>
+          <a href="#factions">Fraktionen</a>
+          <a href="#houses">Häuser</a>
+          <a href="#businesses">Businesses</a>
+        </nav>
+      </aside>
+
+      <main class="content">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Realtime Overview</p>
+            <h2>Gamemode Monitoring</h2>
+          </div>
+          <button id="refreshBtn">Aktualisieren</button>
+        </header>
+
+        <section id="overview" class="dashboard-grid">
+          <div class="card stat-card accent-blue">
+            <label>Server</label>
+            <strong id="server-status">-</strong>
+            <small id="server-project">-</small>
+          </div>
+          <div class="card stat-card accent-green">
+            <label>Staaten</label>
+            <strong id="state-count">0</strong>
+            <small>Los Santos · SF · LV</small>
+          </div>
+          <div class="card stat-card accent-purple">
+            <label>Spieler</label>
+            <strong id="player-count">0</strong>
+            <small>Aktive Accounts</small>
+          </div>
+          <div class="card stat-card accent-red">
+            <label>Admins</label>
+            <strong id="admin-count">0</strong>
+            <small>Rollen & Rechte</small>
+          </div>
+          <div class="card stat-card accent-blue">
+            <label>Jobs</label>
+            <strong id="job-count">0</strong>
+            <small>Aktive Einträge</small>
+          </div>
+          <div class="card stat-card accent-green">
+            <label>Staatsbudget</label>
+            <strong id="treasury-total">0$</strong>
+            <small>Gesamtsumme</small>
+          </div>
+        </section>
+
+        <section class="panel-grid">
+          <div class="panel card">
+            <div class="panel-header">
+              <h3>Staatsübersicht</h3>
+            </div>
+            <div id="states-container" class="data-list"></div>
+          </div>
+
+          <div class="panel card">
+            <div class="panel-header">
+              <h3>Spieler</h3>
+            </div>
+            <div id="players-container" class="data-list compact"></div>
+          </div>
+        </section>
+
+        <section class="panel-grid">
+          <div class="panel card">
+            <div class="panel-header">
+              <h3>Adminrollen</h3>
+            </div>
+            <div id="admins-container" class="data-list compact"></div>
+          </div>
+
+          <div class="panel card">
+            <div class="panel-header">
+              <h3>Jobs</h3>
+            </div>
+            <div id="jobs-container" class="data-list compact"></div>
+          </div>
+        </section>
+
+        <section class="panel-grid">
+          <div class="panel card">
+            <div class="panel-header">
+              <h3>Fraktionen</h3>
+            </div>
+            <div id="factions-container" class="data-list compact"></div>
+          </div>
+
+          <div class="panel card">
+            <div class="panel-header">
+              <h3>Häuser</h3>
+            </div>
+            <div id="houses-container" class="data-list compact"></div>
+          </div>
+        </section>
+
+        <section class="panel-grid">
+          <div class="panel card">
+            <div class="panel-header">
+              <h3>Businesses</h3>
+            </div>
+            <div id="businesses-container" class="data-list compact"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

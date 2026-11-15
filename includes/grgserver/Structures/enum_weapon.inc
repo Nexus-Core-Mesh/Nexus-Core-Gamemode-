@@ -1,0 +1,5 @@
+enum enum_weapon
+{
+	WEAPON_AMMO,
+	WEAPON_NAME[STRINGLENGTH_WEAPONNAME]
+}

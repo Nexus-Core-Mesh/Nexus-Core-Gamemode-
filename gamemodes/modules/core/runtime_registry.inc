@@ -1,0 +1,222 @@
+#if !defined RUNTIME_REGISTRY_INC
+#define RUNTIME_REGISTRY_INC
+
+#include <a_samp>
+
+#define MAX_RUNTIME_MODULES 64
+#define MAX_RUNTIME_HOOKS 32
+#define MAX_RUNTIME_LABEL_LEN 48
+
+new gRuntimeModuleCount = 0;
+new gRuntimeModules[MAX_RUNTIME_MODULES][MAX_RUNTIME_LABEL_LEN];
+new gRuntimeConnectHookCount = 0;
+new gRuntimeConnectHooks[MAX_RUNTIME_HOOKS][MAX_RUNTIME_LABEL_LEN];
+new gRuntimeDisconnectHookCount = 0;
+new gRuntimeDisconnectHooks[MAX_RUNTIME_HOOKS][MAX_RUNTIME_LABEL_LEN];
+
+forward Core_OnPlayerConnect(playerid);
+forward Core_OnPlayerDisconnect(playerid, reason);
+forward LoginSystem_OnPlayerConnect(playerid);
+forward LoginSystem_OnPlayerDisconnect(playerid, reason);
+forward StateSystem_OnPlayerConnect(playerid);
+forward StateSystem_OnPlayerDisconnect(playerid, reason);
+forward InventorySystem_OnPlayerConnect(playerid);
+forward HouseStorageSystem_OnPlayerConnect(playerid);
+forward UBBVehicleSystem_OnPlayerConnect(playerid);
+forward AdminSystem_OnPlayerConnect(playerid);
+forward AdminSystem_OnPlayerDisconnect(playerid, reason);
+forward JobsCore_OnPlayerConnect(playerid);
+forward ProgressionSystem_OnPlayerConnect(playerid);
+forward JobCenter_OnPlayerConnect(playerid);
+forward TextWars_OnPlayerConnect(playerid);
+forward StateControl_OnPlayerConnect(playerid);
+forward UiHub_OnPlayerConnect(playerid);
+forward JobsCore_OnPlayerDisconnect(playerid);
+forward JobCenter_OnPlayerDisconnect(playerid);
+forward TextWars_OnPlayerDisconnect(playerid);
+
+stock Core_RuntimeModuleExists(const moduleName[])
+{
+    for (new i = 0; i < gRuntimeModuleCount; i++)
+    {
+        if (strcmp(gRuntimeModules[i], moduleName, true) == 0)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+stock Core_RegisterRuntimeModule(const moduleName[])
+{
+    if (Core_RuntimeModuleExists(moduleName))
+    {
+        return true;
+    }
+
+    if (gRuntimeModuleCount >= MAX_RUNTIME_MODULES)
+    {
+        return false;
+    }
+
+    format(gRuntimeModules[gRuntimeModuleCount], MAX_RUNTIME_LABEL_LEN, "%s", moduleName);
+    gRuntimeModuleCount++;
+    return true;
+}
+
+stock Core_ConnectHookExists(const hookName[])
+{
+    for (new i = 0; i < gRuntimeConnectHookCount; i++)
+    {
+        if (strcmp(gRuntimeConnectHooks[i], hookName, true) == 0)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+stock Core_RegisterPlayerConnectHook(const hookName[])
+{
+    if (Core_ConnectHookExists(hookName))
+    {
+        return true;
+    }
+
+    if (gRuntimeConnectHookCount >= MAX_RUNTIME_HOOKS)
+    {
+        return false;
+    }
+
+    format(gRuntimeConnectHooks[gRuntimeConnectHookCount], MAX_RUNTIME_LABEL_LEN, "%s", hookName);
+    gRuntimeConnectHookCount++;
+    return true;
+}
+
+stock Core_DisconnectHookExists(const hookName[])
+{
+    for (new i = 0; i < gRuntimeDisconnectHookCount; i++)
+    {
+        if (strcmp(gRuntimeDisconnectHooks[i], hookName, true) == 0)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+stock Core_RegisterPlayerDisconnectHook(const hookName[])
+{
+    if (Core_DisconnectHookExists(hookName))
+    {
+        return true;
+    }
+
+    if (gRuntimeDisconnectHookCount >= MAX_RUNTIME_HOOKS)
+    {
+        return false;
+    }
+
+    format(gRuntimeDisconnectHooks[gRuntimeDisconnectHookCount], MAX_RUNTIME_LABEL_LEN, "%s", hookName);
+    gRuntimeDisconnectHookCount++;
+    return true;
+}
+
+stock Core_PrintRuntimeRegistry()
+{
+    printf("[CORE] Runtime-Registrierung: %d Module geladen", gRuntimeModuleCount);
+    for (new i = 0; i < gRuntimeModuleCount; i++)
+    {
+        printf("[CORE] Module[%d]: %s", i, gRuntimeModules[i]);
+    }
+
+    printf("[CORE] Connect-Hooks: %d", gRuntimeConnectHookCount);
+    for (new i = 0; i < gRuntimeConnectHookCount; i++)
+    {
+        printf("[CORE] ConnectHook[%d]: %s", i, gRuntimeConnectHooks[i]);
+    }
+
+    printf("[CORE] Disconnect-Hooks: %d", gRuntimeDisconnectHookCount);
+    for (new i = 0; i < gRuntimeDisconnectHookCount; i++)
+    {
+        printf("[CORE] DisconnectHook[%d]: %s", i, gRuntimeDisconnectHooks[i]);
+    }
+}
+
+stock Core_RunPlayerConnectHooks(playerid)
+{
+    if (!Core_ValidatePlayerSlot(playerid))
+    {
+        return;
+    }
+
+    Core_OnPlayerConnect(playerid);
+    AdminSystem_OnPlayerConnect(playerid);
+    LoginSystem_OnPlayerConnect(playerid);
+    StateSystem_OnPlayerConnect(playerid);
+    InventorySystem_OnPlayerConnect(playerid);
+    HouseStorageSystem_OnPlayerConnect(playerid);
+    UBBVehicleSystem_OnPlayerConnect(playerid);
+    ProgressionSystem_OnPlayerConnect(playerid);
+    JobsCore_OnPlayerConnect(playerid);
+    JobCenter_OnPlayerConnect(playerid);
+    TextWars_OnPlayerConnect(playerid);
+    StateControl_OnPlayerConnect(playerid);
+    UiHub_OnPlayerConnect(playerid);
+}
+
+stock Core_RunPlayerDisconnectHooks(playerid, reason)
+{
+    TextWars_OnPlayerDisconnect(playerid);
+    JobCenter_OnPlayerDisconnect(playerid);
+    JobsCore_OnPlayerDisconnect(playerid);
+    LoginSystem_OnPlayerDisconnect(playerid, reason);
+    AdminSystem_OnPlayerDisconnect(playerid, reason);
+    StateSystem_OnPlayerDisconnect(playerid, reason);
+    Core_OnPlayerDisconnect(playerid, reason);
+}
+
+stock Core_RegisterDefaultRuntimeModules()
+{
+    Core_RegisterRuntimeModule("core");
+    Core_RegisterRuntimeModule("db");
+    Core_RegisterRuntimeModule("state");
+    Core_RegisterRuntimeModule("admin");
+    Core_RegisterRuntimeModule("auth");
+    Core_RegisterRuntimeModule("economy");
+    Core_RegisterRuntimeModule("jobs");
+    Core_RegisterRuntimeModule("housing");
+    Core_RegisterRuntimeModule("vehicles");
+    Core_RegisterRuntimeModule("factions");
+    Core_RegisterRuntimeModule("government");
+    Core_RegisterRuntimeModule("world");
+    Core_RegisterRuntimeModule("social");
+    Core_RegisterRuntimeModule("web");
+    Core_RegisterRuntimeModule("ui");
+
+    Core_RegisterPlayerConnectHook("Core_OnPlayerConnect");
+    Core_RegisterPlayerConnectHook("AdminSystem_OnPlayerConnect");
+    Core_RegisterPlayerConnectHook("LoginSystem_OnPlayerConnect");
+    Core_RegisterPlayerConnectHook("StateSystem_OnPlayerConnect");
+    Core_RegisterPlayerConnectHook("InventorySystem_OnPlayerConnect");
+    Core_RegisterPlayerConnectHook("HouseStorageSystem_OnPlayerConnect");
+    Core_RegisterPlayerConnectHook("UBBVehicleSystem_OnPlayerConnect");
+    Core_RegisterPlayerConnectHook("ProgressionSystem_OnPlayerConnect");
+    Core_RegisterPlayerConnectHook("JobsCore_OnPlayerConnect");
+    Core_RegisterPlayerConnectHook("JobCenter_OnPlayerConnect");
+    Core_RegisterPlayerConnectHook("TextWars_OnPlayerConnect");
+    Core_RegisterPlayerConnectHook("StateControl_OnPlayerConnect");
+    Core_RegisterPlayerConnectHook("UiHub_OnPlayerConnect");
+
+    Core_RegisterPlayerDisconnectHook("TextWars_OnPlayerDisconnect");
+    Core_RegisterPlayerDisconnectHook("JobCenter_OnPlayerDisconnect");
+    Core_RegisterPlayerDisconnectHook("JobsCore_OnPlayerDisconnect");
+    Core_RegisterPlayerDisconnectHook("LoginSystem_OnPlayerDisconnect");
+    Core_RegisterPlayerDisconnectHook("AdminSystem_OnPlayerDisconnect");
+    Core_RegisterPlayerDisconnectHook("StateSystem_OnPlayerDisconnect");
+    Core_RegisterPlayerDisconnectHook("Core_OnPlayerDisconnect");
+
+    return true;
+}
+
+#endif
