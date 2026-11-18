@@ -115,7 +115,7 @@ stock StateServices_RegisterService(stateid, const name[], serviceType, priority
     return false;
 }
 
-stock int:StateServices_GetStateServiceCount(stateid)
+stock int:StateServices_GetCount(stateid)
 {
     if (!Core_IsValidState(stateid))
     {
@@ -171,7 +171,7 @@ stock StateServices_ShowOverview(playerid, stateid)
     SendClientMessage(playerid, 0x00D9FFFF, services);
 }
 
-stock StateServices_ShowPlayerServices(playerid)
+stock StateServices_Show(playerid)
 {
     new stateid = StateSystem_GetPlayerState(playerid);
     StateServices_ShowOverview(playerid, stateid);

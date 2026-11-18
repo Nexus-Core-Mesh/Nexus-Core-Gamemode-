@@ -24,21 +24,16 @@ new gHouseStorageItem[MAX_HOUSES][MAX_HOUSE_STORAGE_SLOTS];
 new gHouseStorageQty[MAX_HOUSES][MAX_HOUSE_STORAGE_SLOTS];
 new gHouseStorageMeta[MAX_HOUSES][MAX_HOUSE_STORAGE_SLOTS][32];
 
-stock HouseStorageSystem_OnPlayerConnect(playerid)
+stock HouseStorageSystem_Connect(playerid)
 {
     if (playerid < 0 || playerid >= MAX_PLAYERS)
     {
         return false;
     }
 
-    for (new i = 0; i < MAX_HOUSES; i++)
-    {
-        if (gHouseStorageOwner[i] == playerid || gHouseStorageOwner[i] == -1)
-        {
-            DB_LoadHouseStorage(i);
-        }
-    }
-
+    // Do not execute the full house-storage database sweep on every connect.
+    // This blocks the main thread during player spawn/login and causes the
+    // client to hang before the login and state spawn sequence completes.
     return true;
 }
 
@@ -58,14 +53,14 @@ stock HouseStorageSystem_Initialize()
         }
     }
 
-    HouseStorageSystem_RegisterHouseStorage(0, STATE_LOS_SANTOS, -1, HOUSE_STORAGE_SAFE, 5000);
-    HouseStorageSystem_RegisterHouseStorage(1, STATE_SAN_FIERRO, -1, HOUSE_STORAGE_LOCKER, 3000);
-    HouseStorageSystem_RegisterHouseStorage(2, STATE_LAS_VENTURAS, -1, HOUSE_STORAGE_SAFE, 8000);
+    HouseStorageSystem_RegHouse(0, STATE_LOS_SANTOS, -1, HOUSE_STORAGE_SAFE, 5000);
+    HouseStorageSystem_RegHouse(1, STATE_SAN_FIERRO, -1, HOUSE_STORAGE_LOCKER, 3000);
+    HouseStorageSystem_RegHouse(2, STATE_LAS_VENTURAS, -1, HOUSE_STORAGE_SAFE, 8000);
 
     print("[HOUSE_STORAGE] Haus-Safes und Lagerplätze initialisiert");
 }
 
-stock HouseStorageSystem_RegisterHouseStorage(houseid, stateid, ownerid, type, money)
+stock HouseStorageSystem_RegHouse(houseid, stateid, ownerid, type, money)
 {
     if (houseid < 0 || houseid >= MAX_HOUSES)
     {
@@ -150,7 +145,7 @@ stock HouseStorageSystem_StoreItem(playerid, houseid, itemid, quantity, metadata
     return false;
 }
 
-stock HouseStorageSystem_SetItemAtSlot(houseid, slot, itemid, quantity, const metadata[])
+stock HouseStorageSystem_SetSlot(houseid, slot, itemid, quantity, const metadata[])
 {
     if (houseid < 0 || houseid >= MAX_HOUSES)
     {
@@ -244,7 +239,7 @@ stock HouseStorageSystem_DepositMoney(playerid, houseid, amount)
     return true;
 }
 
-stock HouseStorageSystem_WithdrawMoney(playerid, houseid, amount)
+stock HouseStorageSystem_Withdraw(playerid, houseid, amount)
 {
     if (playerid < 0 || playerid >= MAX_PLAYERS)
     {
@@ -263,7 +258,7 @@ stock HouseStorageSystem_WithdrawMoney(playerid, houseid, amount)
     return true;
 }
 
-stock int:HouseStorageSystem_GetSafeBalance(houseid)
+stock int:HouseStorageSystem_GetBal(houseid)
 {
     if (houseid < 0 || houseid >= MAX_HOUSES)
     {

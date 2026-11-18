@@ -100,7 +100,7 @@ stock StateSpawnSystem_Apply(playerid, stateid)
     return true;
 }
 
-stock StateSpawnSystem_SetPlayerHomeSpawn(playerid, stateid)
+stock StateSpawnSystem_SetHome(playerid, stateid)
 {
     if (!Core_IsValidPlayerId(playerid) || !Core_IsValidState(stateid))
     {

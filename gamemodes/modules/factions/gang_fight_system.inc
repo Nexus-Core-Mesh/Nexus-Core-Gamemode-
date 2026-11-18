@@ -34,7 +34,7 @@ stock GangFightSystem_Initialize()
 }
 
 // Erste aktive Auseinandersetzung eines Staates oder -1.
-stock int:GangFightSystem_GetActiveFightForState(stateid)
+stock int:GangFightSystem_GetFight(stateid)
 {
     for (new i = 0; i < MAX_GANG_FIGHTS; i++)
     {
@@ -189,7 +189,7 @@ stock GangFightSystem_ShowStatus(playerid)
 {
     GangFightSystem_HideStatus(playerid);
 
-    new fightid = GangFightSystem_GetActiveFightForState(Core_GetPlayerState(playerid));
+    new fightid = GangFightSystem_GetFight(Core_GetPlayerState(playerid));
     if (fightid == -1)
     {
         SendClientMessage(playerid, 0xFFCC66AA, "[GANG_FIGHT] In deinem Staat läuft aktuell kein Gangfight.");

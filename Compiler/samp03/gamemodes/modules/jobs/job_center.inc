@@ -56,7 +56,7 @@ stock JobCenter_OnPlayerConnect(playerid)
 
 stock JobCenter_OnPlayerDisconnect(playerid)
 {
-    TransportWorkers_UnregisterWorker(playerid);
+    TransportWorkers_UnregWorker(playerid);
     JobCenter_Reset(playerid);
 }
 
@@ -150,7 +150,7 @@ stock JobCenter_AcceptJob(playerid, jobid)
     }
 
     JobCenter_CancelTask(playerid);
-    TransportWorkers_UnregisterWorker(playerid);
+    TransportWorkers_UnregWorker(playerid);
 
     new type = DynamicJobSystem_GetJobType(jobid);
     if (type == JOB_TYPE_TRUCKER)
@@ -351,7 +351,7 @@ stock JobCenter_OnDialogResponse(playerid, dialogid, response, listitem, const i
             if (response)
             {
                 JobCenter_CancelTask(playerid);
-                TransportWorkers_UnregisterWorker(playerid);
+                TransportWorkers_UnregWorker(playerid);
                 JobsCore_QuitJob(playerid);
                 SendClientMessage(playerid, 0xFFCC66AA, "[JOBS] Du hast deinen Job gekündigt.");
             }

@@ -26,14 +26,14 @@ stock FuelStationSystem_Initialize()
         gFuelStationZ[i] = 0.0;
     }
 
-    FuelStationSystem_RegisterStation(STATE_LOS_SANTOS, 1500.0, -1700.0, 13.0, 12);
-    FuelStationSystem_RegisterStation(STATE_SAN_FIERRO, -1900.0, 120.0, 27.0, 11);
-    FuelStationSystem_RegisterStation(STATE_LAS_VENTURAS, 1705.0, 1215.0, 10.0, 13);
+    FuelStationSystem_RegStation(STATE_LOS_SANTOS, 1500.0, -1700.0, 13.0, 12);
+    FuelStationSystem_RegStation(STATE_SAN_FIERRO, -1900.0, 120.0, 27.0, 11);
+    FuelStationSystem_RegStation(STATE_LAS_VENTURAS, 1705.0, 1215.0, 10.0, 13);
 
     print("[FUEL] Tankstellen- und Benzinpreise initialisiert");
 }
 
-stock FuelStationSystem_RegisterStation(stateid, Float:x, Float:y, Float:z, price)
+stock FuelStationSystem_RegStation(stateid, Float:x, Float:y, Float:z, price)
 {
     if (gFuelStationCount >= MAX_FUEL_STATIONS)
     {

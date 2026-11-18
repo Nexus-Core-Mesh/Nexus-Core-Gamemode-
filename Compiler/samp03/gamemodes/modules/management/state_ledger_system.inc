@@ -30,14 +30,14 @@ stock StateLedgerSystem_Initialize()
 
     gStateLedgerEntryTotal = 0;
 
-    StateLedgerSystem_LogTransaction(STATE_LOS_SANTOS, STATE_LEDGER_TYPE_TAX, 1500, "system", "initial_state_tax");
-    StateLedgerSystem_LogTransaction(STATE_SAN_FIERRO, STATE_LEDGER_TYPE_BIZ, 1200, "system", "initial_business_fee");
-    StateLedgerSystem_LogTransaction(STATE_LAS_VENTURAS, STATE_LEDGER_TYPE_GOV, 1800, "system", "initial_budget_transfer");
+    StateLedgerSystem_LogTx(STATE_LOS_SANTOS, STATE_LEDGER_TYPE_TAX, 1500, "system", "initial_state_tax");
+    StateLedgerSystem_LogTx(STATE_SAN_FIERRO, STATE_LEDGER_TYPE_BIZ, 1200, "system", "initial_business_fee");
+    StateLedgerSystem_LogTx(STATE_LAS_VENTURAS, STATE_LEDGER_TYPE_GOV, 1800, "system", "initial_budget_transfer");
 
     print("[STATE_LEDGER] Treasury ledger initialized");
 }
 
-stock StateLedgerSystem_LogTransaction(stateid, type, amount, const actor[], const context[])
+stock StateLedgerSystem_LogTx(stateid, type, amount, const actor[], const context[])
 {
     if (!Core_IsValidState(stateid))
     {
@@ -79,7 +79,7 @@ stock StateLedgerSystem_Transfer(stateid, amount, const reason[], const actor[])
         ledgerType = STATE_LEDGER_TYPE_ADMIN;
     }
 
-    return StateLedgerSystem_LogTransaction(stateid, ledgerType, amount, actor, reason);
+    return StateLedgerSystem_LogTx(stateid, ledgerType, amount, actor, reason);
 }
 
 stock int:StateLedgerSystem_GetEntryCount(stateid)

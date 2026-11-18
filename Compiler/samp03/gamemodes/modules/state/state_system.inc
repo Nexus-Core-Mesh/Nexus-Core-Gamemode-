@@ -361,7 +361,7 @@ stock int:StateSystem_GetTaxRevenue(stateid)
     return gStateTaxRevenue[stateid];
 }
 
-stock int:StateSystem_GetInfrastructureRevenue(stateid)
+stock int:StateSystem_GetInfraRev(stateid)
 {
     if (!StateSystem_IsValidState(stateid))
     {

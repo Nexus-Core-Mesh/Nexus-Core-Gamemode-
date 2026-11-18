@@ -42,7 +42,7 @@ stock DynamicJobSystem_Initialize()
     Core_MarkModuleReady("jobs");
 }
 
-stock DynamicJobSystem_AssignPlayerJobToState(playerid, jobid, stateid)
+stock DynamicJobSystem_AssignJob(playerid, jobid, stateid)
 {
     if (playerid < 0 || playerid >= MAX_PLAYERS)
     {

@@ -3,7 +3,7 @@
 
 #include <a_samp>
 
-stock RoleplayCommandSystem_HandleCommand(playerid, const cmdtext[])
+stock RoleplayCommandSystem_HandleCmd(playerid, const cmdtext[])
 {
     if (cmdtext[0] != '/')
     {

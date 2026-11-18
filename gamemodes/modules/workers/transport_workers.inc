@@ -66,7 +66,7 @@ stock TransportWorkers_RegisterWorker(playerid, stateid, role)
     return true;
 }
 
-stock TransportWorkers_UnregisterWorker(playerid)
+stock TransportWorkers_UnregWorker(playerid)
 {
     for (new i = 0; i < gTransportWorkerCount; i++)
     {
@@ -80,7 +80,7 @@ stock TransportWorkers_UnregisterWorker(playerid)
     return false;
 }
 
-stock int:TransportWorkers_GetStateWorkerCount(stateid)
+stock int:TransportWorkers_GetWorkerCount(stateid)
 {
     if (!Core_IsValidState(stateid))
     {
@@ -109,7 +109,7 @@ stock TransportWorkers_ShowWorkers(playerid, stateid)
     new stateName[32];
     StateSystem_GetStateName(stateid, stateName, sizeof(stateName));
     new message[256];
-    format(message, sizeof(message), "[TRANSPORT_WORKERS] %s | Fahrer: %d", stateName, TransportWorkers_GetStateWorkerCount(stateid));
+    format(message, sizeof(message), "[TRANSPORT_WORKERS] %s | Fahrer: %d", stateName, TransportWorkers_GetWorkerCount(stateid));
     SendClientMessage(playerid, 0x00D9FFFF, message);
 
     for (new i = 0; i < gTransportWorkerCount; i++)

@@ -138,7 +138,7 @@ stock InventorySystem_Initialize()
     print("[INV] Relationale Inventar-Architektur initialisiert");
 }
 
-stock InventorySystem_SetPlayerInventory(playerid, slot, itemid, quantity, const metadata[])
+stock InventorySystem_SetInv(playerid, slot, itemid, quantity, const metadata[])
 {
     if (!Core_ValidatePlayerSlot(playerid))
     {

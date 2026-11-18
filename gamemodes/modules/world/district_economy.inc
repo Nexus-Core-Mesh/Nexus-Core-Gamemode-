@@ -20,14 +20,14 @@ stock DistrictEconomy_Initialize()
         format(gDistrictEconomyName[i], 32, "");
     }
 
-    DistrictEconomy_RegisterDistrict(STATE_LOS_SANTOS, "Downtown", 18000);
-    DistrictEconomy_RegisterDistrict(STATE_SAN_FIERRO, "Harbor", 15000);
-    DistrictEconomy_RegisterDistrict(STATE_LAS_VENTURAS, "The Strip", 22000);
+    DistrictEconomy_RegDistrict(STATE_LOS_SANTOS, "Downtown", 18000);
+    DistrictEconomy_RegDistrict(STATE_SAN_FIERRO, "Harbor", 15000);
+    DistrictEconomy_RegDistrict(STATE_LAS_VENTURAS, "The Strip", 22000);
 
     print("[DISTRICT_ECONOMY] District economy initialized");
 }
 
-stock DistrictEconomy_RegisterDistrict(stateid, const name[], value)
+stock DistrictEconomy_RegDistrict(stateid, const name[], value)
 {
     if (!Core_IsValidState(stateid) || gDistrictEconomyCount >= MAX_DISTRICT_ECONOMY)
     {

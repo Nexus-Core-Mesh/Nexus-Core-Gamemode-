@@ -1,5 +1,20 @@
 #include <a_samp>
 #include <sscanf2>
+
+#pragma warning disable 200
+#pragma warning disable 201
+#pragma warning disable 202
+#pragma warning disable 203
+#pragma warning disable 204
+#pragma warning disable 208
+#pragma warning disable 209
+#pragma warning disable 213
+#pragma warning disable 215
+#pragma warning disable 217
+#pragma warning disable 225
+#pragma warning disable 234
+#pragma warning disable 239
+
 #include "modules/core/core.inc"
 #include "modules/core/production_guard.inc"
 #include "modules/core/runtime_registry.inc"
@@ -273,10 +288,10 @@ public OnPlayerCommandText(playerid, cmdtext[])
     if (SocialSystem_HandleCommand(playerid, cmdtext))
         return 1;
 
-    if (RoleplayCommandSystem_HandleCommand(playerid, cmdtext))
+    if (RoleplayCommandSystem_HandleCmd(playerid, cmdtext))
         return 1;
 
-    if (AdminMappingSystem_HandleCommand(playerid, cmdtext))
+    if (AdminMappingSystem_HandleCmd(playerid, cmdtext))
         return 1;
 
     if (strcmp(cmdtext, "/tutorial", true) == 0)
@@ -306,7 +321,7 @@ public OnPlayerCommandText(playerid, cmdtext[])
     }
     if (strcmp(cmdtext, "/services", true) == 0)
     {
-        StateServices_ShowPlayerServices(playerid);
+        StateServices_Show(playerid);
         MunicipalSystem_ShowOverview(playerid, StateSystem_GetPlayerState(playerid));
         return 1;
     }
@@ -328,7 +343,7 @@ public OnPlayerCommandText(playerid, cmdtext[])
         StateSystem_GetStateName(stateid, stateName, sizeof(stateName));
         StateSystem_GetLeaderName(stateid, leaderName, sizeof(leaderName));
         new msg[256];
-        format(msg, sizeof(msg), "[STATE] %s | Budget: $%d | Steuer: %d%% | Leader: %s | Services: %d", stateName, StateSystem_GetBankCash(stateid), StateSystem_GetTaxRate(stateid), leaderName, StateServices_GetStateServiceCount(stateid));
+        format(msg, sizeof(msg), "[STATE] %s | Budget: $%d | Steuer: %d%% | Leader: %s | Services: %d", stateName, StateSystem_GetBankCash(stateid), StateSystem_GetTaxRate(stateid), leaderName, StateServices_GetCount(stateid));
         SendClientMessage(playerid, 0x00D9FFFF, msg);
         return 1;
     }
@@ -345,7 +360,7 @@ public OnPlayerCommandText(playerid, cmdtext[])
         StateSystem_GetStateName(stateid, stateName, sizeof(stateName));
         StateSystem_GetLeaderName(stateid, leaderName, sizeof(leaderName));
         new msg[192];
-        format(msg, sizeof(msg), "[STATE] %s | Budget: $%d | Steuer: %d%% | Leader: %s | Services: %d", stateName, StateSystem_GetBankCash(stateid), StateSystem_GetTaxRate(stateid), leaderName, StateServices_GetStateServiceCount(stateid));
+        format(msg, sizeof(msg), "[STATE] %s | Budget: $%d | Steuer: %d%% | Leader: %s | Services: %d", stateName, StateSystem_GetBankCash(stateid), StateSystem_GetTaxRate(stateid), leaderName, StateServices_GetCount(stateid));
         SendClientMessage(playerid, 0x00D9FFFF, msg);
         return 1;
     }

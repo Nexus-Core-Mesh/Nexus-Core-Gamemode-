@@ -26,7 +26,7 @@ stock AdminConfigSystem_Initialize()
     print("[ADMIN_CFG] Ingame-Konfigurationssystem initialisiert");
 }
 
-stock AdminConfigSystem_IsStateEnabled(stateid)
+stock AdminConfigSystem_IsEnabled(stateid)
 {
     if (!Core_IsValidState(stateid))
     {
@@ -35,7 +35,7 @@ stock AdminConfigSystem_IsStateEnabled(stateid)
     return gAdminConfigStateEnabled[stateid] == 1;
 }
 
-stock AdminConfigSystem_SetStateBudget(stateid, budget)
+stock AdminConfigSystem_SetBudget(stateid, budget)
 {
     if (!Core_IsValidState(stateid))
     {
