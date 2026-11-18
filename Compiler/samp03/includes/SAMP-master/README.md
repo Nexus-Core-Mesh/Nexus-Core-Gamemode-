@@ -1,3 +1,5 @@
-This is the old SA-MP server and will no longer be updated.
+# Alte SA-MP-Server-Referenz
 
-Please see the [SAMPRacing](https://github.com/GRGServer/SAMPRacing) repository for the new SA-MP server.
+Diese Kopie ist veraltet und dient nur noch als historische Referenz.
+
+Das aktuelle Projekt nutzt den Root-Quellcode und die aktuelle Live-Laufzeit im Ordner `Compiler/samp03/`, nicht diese alte Server-Implementierung.
