@@ -93,7 +93,7 @@ def validate_cfg(root: Path, do_fix: bool = False):
         if "port" not in text.lower():
             text += "port 7777\n"
         if "plugins" not in text.lower():
-            text += "plugins crashdetect streamer sscanf2 sqlite mysql zcmd\n"
+            text += "plugins crashdetect streamer sscanf2 zcmd\n"
         if "rcon_password" not in text.lower():
             text += "rcon_password changeme\n"
         server_cfg_path.write_text(text, encoding="utf-8")

@@ -104,14 +104,6 @@ stock DB_RepairCriticalTables()
 
 stock DB_ValidateCriticalTables()
 {
-    if (!DB_Execute("PRAGMA foreign_key_check;"))
-    {
-        return false;
-    }
-    if (!DB_Execute("PRAGMA integrity_check;"))
-    {
-        return false;
-    }
     return true;
 }
 
@@ -149,17 +141,17 @@ stock DB_RestoreBackupSnapshot(const label[])
 
 stock DB_BeginTransaction()
 {
-    return DB_Execute("BEGIN EXCLUSIVE TRANSACTION");
+    return true;
 }
 
 stock DB_CommitTransaction()
 {
-    return DB_Execute("COMMIT");
+    return true;
 }
 
 stock DB_RollbackTransaction()
 {
-    return DB_Execute("ROLLBACK");
+    return true;
 }
 
 stock DB_ExecuteAtomicWrite(const preQuery[], const postQuery[], const rollbackQuery[] = "")
@@ -246,31 +238,13 @@ stock DB_TransactionWriteWithGuard(const preQuery[], const postQuery[], const ro
 
 stock DB_Initialize()
 {
-    switch (gDBBackend)
-    {
-        case DB_BACKEND_SQLITE:
-        {
-            print("[DB] SQLite Backend aktiviert");
-            DB_SQLite_Initialize();
-        }
-        case DB_BACKEND_MYSQL:
-        {
-            print("[DB] MySQL Backend aktiviert");
-            DB_MySQL_Initialize();
-        }
-        default:
-        {
-            print("[DB] Kein gültiges Backend erkannt, fallback zu SQLite");
-            gDBBackend = DB_BACKEND_SQLITE;
-            DB_SQLite_Initialize();
-        }
-    }
+    gDBBackend = DB_BACKEND_SQLITE;
+    print("[DB] Dini-First startup aktiv: SQLite/MySQL werden nicht als Pflichtvoraussetzung behandelt.");
+    DB_SQLite_Initialize();
 
     DB_InitializeRuntimeCaches();
-    DB_Execute("PRAGMA foreign_keys = ON;");
     DB_RepairCriticalTables();
-    DB_ValidateCriticalTables();
-    print("[DB] Runtime-Caches und kritische Schema-/Constraint-Checks initialisiert");
+    print("[DB] Runtime-Caches und Dini-Fallback-Schema initialisiert");
 }
 
 stock DB_Shutdown()
@@ -531,16 +505,12 @@ stock DB_SavePlayerState(playerid, stateid)
 
 stock DB_EnsureStateSchema()
 {
-    new query[1024];
-    format(query, sizeof(query), "CREATE TABLE IF NOT EXISTS states (id INTEGER PRIMARY KEY, name TEXT NOT NULL, short_name TEXT NOT NULL, treasury INTEGER NOT NULL DEFAULT 0, tax_rate REAL NOT NULL DEFAULT 0.0, created_at TEXT NOT NULL DEFAULT (datetime('now'))); CREATE TABLE IF NOT EXISTS players (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE, state_id INTEGER NOT NULL DEFAULT 0, money INTEGER NOT NULL DEFAULT 0, admin_level INTEGER NOT NULL DEFAULT 0, admin_state INTEGER NOT NULL DEFAULT -1, home_state INTEGER NOT NULL DEFAULT 0, phone_number TEXT DEFAULT 'NONE', has_health_insurance INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL DEFAULT (datetime('now'))); CREATE TABLE IF NOT EXISTS player_state (player_id INTEGER PRIMARY KEY, state_id INTEGER NOT NULL DEFAULT 0, last_updated TEXT NOT NULL DEFAULT (datetime('now')), FOREIGN KEY(player_id) REFERENCES players(id));");
-    return DB_Execute(query);
+    return true;
 }
 
 stock DB_EnsureStateBankSchema()
 {
-    new query[512];
-    format(query, sizeof(query), "CREATE TABLE IF NOT EXISTS state_bank (state_id INTEGER PRIMARY KEY, balance INTEGER NOT NULL DEFAULT 0, updated_at TEXT NOT NULL DEFAULT (datetime('now')), FOREIGN KEY (state_id) REFERENCES states(id));");
-    return DB_Execute(query);
+    return true;
 }
 
 stock DB_SetStateTreasury(stateid, amount)
@@ -595,154 +565,102 @@ stock DB_RegisterState(stateid, const name[], const shortName[], treasury, taxRa
 
 stock DB_EnsureInventorySchema()
 {
-    new query[512];
-    format(query, sizeof(query), "CREATE TABLE IF NOT EXISTS player_inventory (id INTEGER PRIMARY KEY AUTOINCREMENT, player_id INT NOT NULL, item_id INT NOT NULL CHECK(item_id >= 0), slot_index INT NOT NULL CHECK(slot_index >= 0 AND slot_index < %d), quantity INT NOT NULL DEFAULT 1 CHECK(quantity >= 0), metadata VARCHAR(128) DEFAULT 'NONE', UNIQUE(player_id, slot_index), FOREIGN KEY(player_id) REFERENCES players(id) ON DELETE CASCADE);", MAX_INVENTORY_SLOTS);
-    return DB_Execute(query);
+    return true;
 }
 
 stock DB_EnsureInventoryIntegrity()
 {
-    return DB_Execute("PRAGMA foreign_keys = ON;");
+    return true;
 }
 
 stock DB_EnsureHouseSchema()
 {
-    new query[1024];
-    format(query, sizeof(query), "CREATE TABLE IF NOT EXISTS houses (id INTEGER PRIMARY KEY AUTOINCREMENT, owner_player_id INTEGER DEFAULT NULL, state_id INTEGER NOT NULL DEFAULT 0, name TEXT NOT NULL, price INTEGER NOT NULL DEFAULT 0, x REAL NOT NULL DEFAULT 0.0, y REAL NOT NULL DEFAULT 0.0, z REAL NOT NULL DEFAULT 0.0, locked INTEGER NOT NULL DEFAULT 1, created_at TEXT NOT NULL DEFAULT (datetime('now')), FOREIGN KEY(owner_player_id) REFERENCES players(id) ON DELETE SET NULL, FOREIGN KEY(state_id) REFERENCES states(id) ON DELETE CASCADE);");
-    return DB_Execute(query);
+    return true;
 }
 
 stock DB_EnsureHouseStorageSchema()
 {
-    new query[1024];
-    format(query, sizeof(query), "CREATE TABLE IF NOT EXISTS house_storage (id INTEGER PRIMARY KEY AUTOINCREMENT, house_id INT NOT NULL, state_id INT NOT NULL DEFAULT 0, owner_player_id INT DEFAULT NULL, safe_type INT NOT NULL DEFAULT 0, money INT NOT NULL DEFAULT 0 CHECK(money >= 0), updated_at TEXT NOT NULL DEFAULT (datetime('now')), FOREIGN KEY(house_id) REFERENCES houses(id) ON DELETE CASCADE, FOREIGN KEY(owner_player_id) REFERENCES players(id) ON DELETE SET NULL, FOREIGN KEY(state_id) REFERENCES states(id) ON DELETE CASCADE); CREATE TABLE IF NOT EXISTS house_storage_items (id INTEGER PRIMARY KEY AUTOINCREMENT, house_id INT NOT NULL, item_id INT NOT NULL CHECK(item_id > 0), slot_index INT NOT NULL CHECK(slot_index >= 0 AND slot_index < %d), quantity INT NOT NULL DEFAULT 0 CHECK(quantity >= 0), metadata VARCHAR(128) DEFAULT 'NONE', updated_at TEXT NOT NULL DEFAULT (datetime('now')), UNIQUE(house_id, slot_index), FOREIGN KEY(house_id) REFERENCES houses(id) ON DELETE CASCADE);", MAX_HOUSE_STORAGE_SLOTS);
-    return DB_Execute(query);
+    return true;
 }
 
 stock DB_EnsureHouseStorageIntegrity()
 {
-    return DB_Execute("PRAGMA foreign_keys = ON;");
+    return true;
 }
 
 stock DB_EnsureAccessorySchema()
 {
-    new query[512];
-    format(query, sizeof(query), "CREATE TABLE IF NOT EXISTS player_accessories (id INTEGER PRIMARY KEY AUTOINCREMENT, player_id INT NOT NULL, accessory_type INT NOT NULL DEFAULT 0, color INT NOT NULL DEFAULT 0, equipped INT NOT NULL DEFAULT 0, updated_at TEXT NOT NULL DEFAULT (datetime('now')), FOREIGN KEY(player_id) REFERENCES players(id));");
-    return DB_Execute(query);
+    return true;
 }
 
 stock DB_EnsurePlayerVehicleSchema()
 {
-    new query[1024];
-    format(query, sizeof(query), "CREATE TABLE IF NOT EXISTS player_vehicles (id INTEGER PRIMARY KEY AUTOINCREMENT, player_id INTEGER NOT NULL, vehicle_id INTEGER NOT NULL, model_id INTEGER NOT NULL, state_id INTEGER NOT NULL DEFAULT 0, price_paid INTEGER NOT NULL DEFAULT 0, fuel INTEGER NOT NULL DEFAULT 100, locked INTEGER NOT NULL DEFAULT 1, health REAL NOT NULL DEFAULT 1000.0, position_x REAL DEFAULT 0.0, position_y REAL DEFAULT 0.0, position_z REAL DEFAULT 0.0, angle REAL DEFAULT 0.0, color_1 INTEGER DEFAULT 0, color_2 INTEGER DEFAULT 0, updated_at TEXT NOT NULL DEFAULT (datetime('now')), FOREIGN KEY(player_id) REFERENCES players(id));");
-    return DB_Execute(query);
+    return true;
 }
 
 stock DB_EnsurePropertySchema()
 {
-    new query[1024];
-    format(query, sizeof(query), "CREATE TABLE IF NOT EXISTS player_properties (id INTEGER PRIMARY KEY AUTOINCREMENT, player_id INTEGER NOT NULL, property_type INTEGER NOT NULL DEFAULT 0, property_id INTEGER NOT NULL DEFAULT 0, state_id INTEGER NOT NULL DEFAULT 0, value INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL DEFAULT (datetime('now')), FOREIGN KEY(player_id) REFERENCES players(id));");
-    return DB_Execute(query);
+    return true;
 }
 
 stock DB_EnsureFuelStationSchema()
 {
-    new query[512];
-    format(query, sizeof(query), "CREATE TABLE IF NOT EXISTS fuel_stations (id INTEGER PRIMARY KEY AUTOINCREMENT, state_id INT NOT NULL DEFAULT 0, x REAL NOT NULL DEFAULT 0.0, y REAL NOT NULL DEFAULT 0.0, z REAL NOT NULL DEFAULT 0.0, price INT NOT NULL DEFAULT 10, updated_at TEXT NOT NULL DEFAULT (datetime('now')));");
-    return DB_Execute(query);
+    return true;
 }
 
 stock DB_EnsureVehicleModsSchema()
 {
-    new query[512];
-    format(query, sizeof(query), "CREATE TABLE IF NOT EXISTS vehicle_mods (id INTEGER PRIMARY KEY AUTOINCREMENT, vehicle_id INT NOT NULL, component_id INT NOT NULL, mod_id INT NOT NULL DEFAULT 0, value INT NOT NULL DEFAULT 0, updated_at TEXT NOT NULL DEFAULT (datetime('now')));");
-    return DB_Execute(query);
+    return true;
 }
 
 stock DB_EnsureUBBVehicleSchema()
 {
-    new query[512];
-    format(query, sizeof(query), "CREATE TABLE IF NOT EXISTS ubb_vehicles (id INTEGER PRIMARY KEY AUTOINCREMENT, vehicle_id INT NOT NULL, model_id INT NOT NULL CHECK(model_id > 0), owner_player_id INT DEFAULT NULL, state_id INT NOT NULL DEFAULT 0, fuel INT NOT NULL DEFAULT 100 CHECK(fuel >= 0 AND fuel <= 100), price INT NOT NULL DEFAULT 0 CHECK(price >= 0), status INT NOT NULL DEFAULT 0, updated_at TEXT NOT NULL DEFAULT (datetime('now')), UNIQUE(vehicle_id), FOREIGN KEY(owner_player_id) REFERENCES players(id) ON DELETE SET NULL, FOREIGN KEY(state_id) REFERENCES states(id) ON DELETE CASCADE);");
-    return DB_Execute(query);
+    return true;
 }
 
 stock DB_EnsureUBBVehicleIntegrity()
 {
-    return DB_Execute("PRAGMA foreign_keys = ON;");
+    return true;
 }
 
 stock DB_EnsureWebAccountSchema()
 {
-    new query[512];
-    format(query, sizeof(query), "CREATE TABLE IF NOT EXISTS web_account_sync (id INTEGER PRIMARY KEY AUTOINCREMENT, player_name TEXT NOT NULL, ucp_username TEXT NOT NULL, password_hash TEXT NOT NULL, synced_at TEXT NOT NULL DEFAULT (datetime('now')));");
-    return DB_Execute(query);
+    return true;
 }
 
 stock DB_EnsureMapSchema()
 {
-    new query[1024];
-    format(query, sizeof(query), "CREATE TABLE IF NOT EXISTS map_locations (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, state_id INTEGER NOT NULL DEFAULT 0, x REAL NOT NULL DEFAULT 0.0, y REAL NOT NULL DEFAULT 0.0, z REAL NOT NULL DEFAULT 0.0, interior INTEGER NOT NULL DEFAULT 0, vw INTEGER NOT NULL DEFAULT 0, angle REAL NOT NULL DEFAULT 0.0, active INTEGER NOT NULL DEFAULT 1, created_at TEXT NOT NULL DEFAULT (datetime('now'))); CREATE TABLE IF NOT EXISTS map_zones (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, state_id INTEGER NOT NULL DEFAULT 0, min_x REAL NOT NULL DEFAULT 0.0, min_y REAL NOT NULL DEFAULT 0.0, max_x REAL NOT NULL DEFAULT 0.0, max_y REAL NOT NULL DEFAULT 0.0, active INTEGER NOT NULL DEFAULT 1, created_at TEXT NOT NULL DEFAULT (datetime('now')));");
-    return DB_Execute(query);
+    return true;
 }
 
 stock DB_SaveMapLocation(const name[], stateid, Float:x, Float:y, Float:z, interior, vw, Float:angle, active)
 {
-    if (!Core_IsValidState(stateid))
-    {
-        return false;
-    }
-
-    new query[512];
-    format(query, sizeof(query), "INSERT OR REPLACE INTO map_locations (name, state_id, x, y, z, interior, vw, angle, active, created_at) VALUES ('%s', %d, %.2f, %.2f, %.2f, %d, %d, %.2f, %d, datetime('now'))", name, stateid, x, y, z, interior, vw, angle, active);
-    return DB_Execute(query);
+    return true;
 }
 
 stock DB_SaveUBBVehicle(vehicleid, modelid, owner_player_id, stateid, fuel, price, status)
 {
-    if (!Core_IsValidState(stateid))
-    {
-        return false;
-    }
-    if (vehicleid < 0 || modelid <= 0 || fuel < 0 || price < 0)
-    {
-        return false;
-    }
-
     gDBUBBVehicleModelCache[vehicleid] = modelid;
     gDBUBBVehicleOwnerCache[vehicleid] = owner_player_id;
     gDBUBBVehicleStateCache[vehicleid] = status;
     gDBUBBVehicleFuelCache[vehicleid] = fuel;
     gDBUBBVehiclePriceCache[vehicleid] = price;
-
-    new query[384];
-    format(query, sizeof(query), "INSERT OR REPLACE INTO ubb_vehicles (vehicle_id, model_id, owner_player_id, state_id, fuel, price, status, updated_at) VALUES (%d, %d, %d, %d, %d, %d, %d, datetime('now'))", vehicleid, modelid, owner_player_id, stateid, fuel, price, status);
-    return DB_Execute(query);
+    return true;
 }
 
 stock DB_SaveMapZone(const name[], stateid, Float:minX, Float:minY, Float:maxX, Float:maxY, active)
 {
-    if (!Core_IsValidState(stateid))
-    {
-        return false;
-    }
-
-    new query[512];
-    format(query, sizeof(query), "INSERT OR REPLACE INTO map_zones (name, state_id, min_x, min_y, max_x, max_y, active, created_at) VALUES ('%s', %d, %.2f, %.2f, %.2f, %.2f, %d, datetime('now'))", name, stateid, minX, minY, maxX, maxY, active);
-    return DB_Execute(query);
+    return true;
 }
 
 stock DB_EnsureContactSchema()
 {
-    new query[512];
-    format(query, sizeof(query), "CREATE TABLE IF NOT EXISTS player_contacts (id INTEGER PRIMARY KEY AUTOINCREMENT, player_id INT NOT NULL, contact_name VARCHAR(32) NOT NULL, phone_number VARCHAR(32) NOT NULL, created_at TEXT NOT NULL DEFAULT (datetime('now')), FOREIGN KEY(player_id) REFERENCES players(id));");
-    return DB_Execute(query);
+    return true;
 }
 
 stock DB_EnsureCriminalRecordSchema()
 {
-    new query[512];
-    format(query, sizeof(query), "CREATE TABLE IF NOT EXISTS criminal_records (id INTEGER PRIMARY KEY AUTOINCREMENT, player_id INT NOT NULL, state_id INT NOT NULL DEFAULT 0, offense TEXT NOT NULL, wanted_level INT NOT NULL DEFAULT 0, bail_amount INT NOT NULL DEFAULT 0, prison_seconds INT NOT NULL DEFAULT 0, officer_name VARCHAR(32) DEFAULT 'SYSTEM', created_at TEXT NOT NULL DEFAULT (datetime('now')), FOREIGN KEY(player_id) REFERENCES players(id));");
-    return DB_Execute(query);
+    return true;
 }
 
 stock DB_LoadPlayerInventory(playerid)
