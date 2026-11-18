@@ -43,7 +43,9 @@ stock TextWars_Initialize()
         TextWars_Reset(i);
     }
 
-    gTWTimer = SetTimer("TextWars_Tick", 1000, true);
+    new timerFunc[32];
+    format(timerFunc, sizeof(timerFunc), "TextWars_Tick");
+    gTWTimer = SetTimer(timerFunc, 1000, true);
     print("[TEXT_WARS] Klickbare Kriegs-Widgets initialisiert");
     Core_MarkModuleReady("factions");
 }
@@ -95,7 +97,7 @@ stock int:TextWars_GetPlayerFaction(playerid)
 
 stock TextWars_IsFactionLeader(playerid, factionid)
 {
-    return factionid >= 0 && (gFactionLeader[factionid] == playerid || FactionSystem_GetRank(playerid) >= 3);
+    return (factionid >= 0) && (gFactionLeader[factionid] == playerid || FactionSystem_GetRank(playerid) >= 3);
 }
 
 stock TextWars_GetFactionName(factionid, output[], len)
@@ -123,9 +125,12 @@ stock TextWars_NotifyFaction(factionid, color, const message[])
     }
 }
 
-stock PlayerText:TextWars_CreateLabel(playerid, Float:x, Float:y, text[], Float:lw, Float:lh, color)
+stock PlayerText:TextWars_CreateLabel(playerid, Float:x, Float:y, const text[], Float:lw, Float:lh, color)
 {
-    new PlayerText:t = CreatePlayerTextDraw(playerid, x, y, text);
+    new PlayerText:t;
+    new labelText[128];
+    format(labelText, sizeof(labelText), "%s", text);
+    t = CreatePlayerTextDraw(playerid, x, y, labelText);
     PlayerTextDrawLetterSize(playerid, t, lw, lh);
     PlayerTextDrawColor(playerid, t, color);
     PlayerTextDrawFont(playerid, t, 1);
@@ -134,7 +139,7 @@ stock PlayerText:TextWars_CreateLabel(playerid, Float:x, Float:y, text[], Float:
     return t;
 }
 
-stock PlayerText:TextWars_CreateButton(playerid, Float:x, Float:y, text[])
+stock PlayerText:TextWars_CreateButton(playerid, Float:x, Float:y, const text[])
 {
     new PlayerText:t = TextWars_CreateLabel(playerid, x, y, text, 0.22, 1.0, 0xFFFFFFFF);
     PlayerTextDrawAlignment(playerid, t, 2);
@@ -172,7 +177,8 @@ stock TextWars_Show(playerid)
 
     TextWars_Hide(playerid);
 
-    new PlayerText:box = CreatePlayerTextDraw(playerid, 470.0, 150.0, "_");
+    new const boxText[] = "_";
+    new PlayerText:box = UiDialog_CreatePlayerTextDraw(playerid, 470.0, 150.0, boxText);
     PlayerTextDrawUseBox(playerid, box, 1);
     PlayerTextDrawBoxColor(playerid, box, 0x000000AA);
     PlayerTextDrawTextSize(playerid, box, 632.0, 0.0);
@@ -294,9 +300,9 @@ public TextWars_Tick()
 
 stock TextWars_ShowMain(playerid)
 {
-    ShowPlayerDialog(playerid, DIALOG_WAR_MAIN, DIALOG_STYLE_LIST, "Text-Wars",
-        "Kriegs- & Fight-Status\nGebiete\nGangwar erklären\nGangfight starten\nTruppenbewegungen\nLive-Widget umschalten",
-        UI_DIALOG_BUTTON_OK, UI_DIALOG_BUTTON_CLOSE);
+    new const warMainCaption[] = "Text-Wars";
+    new const warMainInfo[] = "Kriegs- & Fight-Status\nGebiete\nGangwar erklären\nGangfight starten\nTruppenbewegungen\nLive-Widget umschalten";
+    UiDialog_Show(playerid, DIALOG_WAR_MAIN, DIALOG_STYLE_LIST, warMainCaption, warMainInfo, UI_DIALOG_BUTTON_OK, UI_DIALOG_BUTTON_CLOSE);
 }
 
 stock TextWars_ShowStatus(playerid)
@@ -331,7 +337,8 @@ stock TextWars_ShowStatus(playerid)
         format(fightText, sizeof(fightText), "\nGangfight: keiner aktiv");
     }
     strcat(info, fightText);
-    ShowPlayerDialog(playerid, DIALOG_WAR_INFO, DIALOG_STYLE_MSGBOX, "Kriegsstatus", info, UI_DIALOG_BUTTON_BACK, UI_DIALOG_BUTTON_CLOSE);
+    new const warStatusCaption[] = "Kriegsstatus";
+    UiDialog_Show(playerid, DIALOG_WAR_INFO, DIALOG_STYLE_MSGBOX, warStatusCaption, info, UI_DIALOG_BUTTON_BACK, UI_DIALOG_BUTTON_CLOSE);
 }
 
 stock TextWars_ShowTerritories(playerid)
@@ -360,7 +367,9 @@ stock TextWars_ShowTerritories(playerid)
         gTWTerritoryList[playerid][gTWTerritoryCount[playerid]++] = tid;
     }
 
-    ShowPlayerDialog(playerid, DIALOG_WAR_TERRITORY_LIST, DIALOG_STYLE_TABLIST_HEADERS, "Gebiete deines Staates", list, "Wählen", UI_DIALOG_BUTTON_BACK);
+    new const territoryCaption[] = "Gebiete deines Staates";
+    new const territoryButton[] = "Wählen";
+    UiDialog_Show(playerid, DIALOG_WAR_TERRITORY_LIST, DIALOG_STYLE_TABLIST_HEADERS, territoryCaption, list, territoryButton, UI_DIALOG_BUTTON_BACK);
 }
 
 stock TextWars_ShowFactionPick(playerid, mode)
@@ -398,7 +407,9 @@ stock TextWars_ShowFactionPick(playerid, mode)
         return;
     }
 
-    ShowPlayerDialog(playerid, DIALOG_WAR_FACTION_PICK, DIALOG_STYLE_LIST, (mode == TW_MODE_WAR) ? ("Gangwar erklären gegen...") : ("Gangfight starten gegen..."), list, "Angreifen", UI_DIALOG_BUTTON_BACK);
+    new title[48];
+    format(title, sizeof(title), "%s", (mode == TW_MODE_WAR) ? ("Gangwar erklären gegen...") : ("Gangfight starten gegen..."));
+    UiDialog_Show(playerid, DIALOG_WAR_FACTION_PICK, DIALOG_STYLE_LIST, title, list, "Angreifen", UI_DIALOG_BUTTON_BACK);
 }
 
 stock TextWars_ShowTroops(playerid)
@@ -430,7 +441,8 @@ stock TextWars_ShowTroops(playerid)
         format(line, sizeof(line), "%s\t%.0f\t%.0f\t%.0f, %.0f\n", name, hp, armor, x, y);
         strcat(list, line);
     }
-    ShowPlayerDialog(playerid, DIALOG_WAR_INFO, DIALOG_STYLE_TABLIST_HEADERS, "Truppenbewegungen", list, UI_DIALOG_BUTTON_BACK, UI_DIALOG_BUTTON_CLOSE);
+    new const troopCaption[] = "Truppenbewegungen";
+    UiDialog_Show(playerid, DIALOG_WAR_INFO, DIALOG_STYLE_TABLIST_HEADERS, troopCaption, list, UI_DIALOG_BUTTON_BACK, UI_DIALOG_BUTTON_CLOSE);
 }
 
 stock TextWars_StartAttack(playerid, targetFaction, mode)
@@ -620,7 +632,7 @@ stock TextWars_OnDialogResponse(playerid, dialogid, response, listitem, const in
             TerritorySystem_GetName(gTWTerritoryPick[playerid], name, sizeof(name));
             new text[160];
             format(text, sizeof(text), "%s beanspruchen?\nKosten: $%d aus der Fraktionskasse.\nNur für Fraktionsleiter.", name, TW_CLAIM_COST);
-            ShowPlayerDialog(playerid, DIALOG_WAR_TERRITORY_ACTION, DIALOG_STYLE_MSGBOX, "Gebiet beanspruchen", text, "Beanspruchen", UI_DIALOG_BUTTON_BACK);
+            UiDialog_Show(playerid, DIALOG_WAR_TERRITORY_ACTION, DIALOG_STYLE_MSGBOX, "Gebiet beanspruchen", text, "Beanspruchen", UI_DIALOG_BUTTON_BACK);
         }
         case DIALOG_WAR_TERRITORY_ACTION:
         {

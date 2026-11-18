@@ -67,14 +67,14 @@ stock StateControl_ShowMain(playerid)
     new title[64];
     format(title, sizeof(title), "Staats-Leitstand | %s", stateName);
 
-    ShowPlayerDialog(playerid, DIALOG_STATE_MAIN, DIALOG_STYLE_LIST, title,
+    UiDialog_Show(playerid, DIALOG_STATE_MAIN, DIALOG_STYLE_LIST, title,
         "Staat wechseln\nÜbersicht & Kasse\nSteuersatz ändern\nTreasury-Transfer\nPolitik setzen\nJob-Lohnfaktor\nBudget genehmigen\nText-Wars öffnen\nGangwar-System an/aus\nRegierungsinfo (Chat)",
         UI_DIALOG_BUTTON_OK, UI_DIALOG_BUTTON_CLOSE);
 }
 
 stock StateControl_ShowPick(playerid)
 {
-    ShowPlayerDialog(playerid, DIALOG_STATE_PICK, DIALOG_STYLE_LIST, "Staat wählen", "Los Santos\nSan Fierro\nLas Venturas", UI_DIALOG_BUTTON_OK, UI_DIALOG_BUTTON_BACK);
+    UiDialog_Show(playerid, DIALOG_STATE_PICK, DIALOG_STYLE_LIST, "Staat wählen", "Los Santos\nSan Fierro\nLas Venturas", UI_DIALOG_BUTTON_OK, UI_DIALOG_BUTTON_BACK);
 }
 
 stock StateControl_ShowOverview(playerid, stateid)
@@ -90,12 +90,16 @@ stock StateControl_ShowOverview(playerid, stateid)
     format(info, sizeof(info), "Staat: %s\nLeiter: %s\nStaatskasse: $%d\nSteuersatz: %d%%\nSteuereinnahmen: $%d\nInfrastruktur: $%d\nPolitik: %s\nRegierungslevel: %d\nJob-Lohnfaktor: %d%%\nTransportarbeiter: %d",
         stateName, leaderName, StateSystem_GetBankCash(stateid), StateSystem_GetTaxRate(stateid), StateSystem_GetTaxRevenue(stateid), StateSystem_GetInfrastructureRevenue(stateid),
         policy, StateGovernance_GetLevel(stateid), StateJobs_GetPayMultiplier(stateid), TransportWorkers_GetStateWorkerCount(stateid));
-    ShowPlayerDialog(playerid, DIALOG_STATE_ACTION, DIALOG_STYLE_MSGBOX, "Übersicht & Kasse", info, UI_DIALOG_BUTTON_BACK, UI_DIALOG_BUTTON_CLOSE);
+    UiDialog_Show(playerid, DIALOG_STATE_ACTION, DIALOG_STYLE_MSGBOX, "Übersicht & Kasse", info, UI_DIALOG_BUTTON_BACK, UI_DIALOG_BUTTON_CLOSE);
 }
 
-stock StateControl_ShowInput(playerid, dialogid, title[], prompt[])
+stock StateControl_ShowInput(playerid, dialogid, const title[], const prompt[])
 {
-    ShowPlayerDialog(playerid, dialogid, DIALOG_STYLE_INPUT, title, prompt, "Anwenden", UI_DIALOG_BUTTON_BACK);
+    new caption[64];
+    new info[128];
+    format(caption, sizeof(caption), "%s", title);
+    format(info, sizeof(info), "%s", prompt);
+    UiDialog_Show(playerid, dialogid, DIALOG_STYLE_INPUT, caption, info, "Anwenden", UI_DIALOG_BUTTON_BACK);
 }
 
 stock StateControl_DoTransfer(playerid, stateid, direction, amount)
@@ -180,7 +184,8 @@ stock StateControl_OnDialogResponse(playerid, dialogid, response, listitem, cons
                 case 2: StateControl_ShowInput(playerid, DIALOG_STATE_TAX_INPUT, "Steuersatz", "Neuer Steuersatz in Prozent (0-30):");
                 case 3:
                 {
-                    ShowPlayerDialog(playerid, DIALOG_STATE_TRANSFER_DIR, DIALOG_STYLE_LIST, "Treasury-Transfer", "Einzahlen (aus eigener Bank)\nAuszahlen (auf eigene Bank, nur Leader)", UI_DIALOG_BUTTON_OK, UI_DIALOG_BUTTON_BACK);
+                    new const transferMenu[] = "Einzahlen (aus eigener Bank)\nAuszahlen (auf eigene Bank, nur Leader)";
+                    UiDialog_Show(playerid, DIALOG_STATE_TRANSFER_DIR, DIALOG_STYLE_LIST, "Treasury-Transfer", transferMenu, UI_DIALOG_BUTTON_OK, UI_DIALOG_BUTTON_BACK);
                 }
                 case 4: StateControl_ShowInput(playerid, DIALOG_STATE_POLICY_INPUT, "Staatspolitik", "Neue Politik (max. 23 Zeichen, ohne Sonderzeichen):");
                 case 5: StateControl_ShowInput(playerid, DIALOG_STATE_WAGE_INPUT, "Job-Lohnfaktor", "Lohnfaktor in Prozent (50-300):");

@@ -85,7 +85,7 @@ stock JobCenter_ShowMain(playerid)
 
     new list[256];
     format(list, sizeof(list), "Jobs im Staat ansehen & annehmen\nAuftrag starten\nAuftrag abbrechen\nFortschritt & Lohn\nJob kündigen");
-    ShowPlayerDialog(playerid, DIALOG_JOB_MAIN, DIALOG_STYLE_LIST, header, list, UI_DIALOG_BUTTON_OK, UI_DIALOG_BUTTON_CLOSE);
+    UiDialog_Show(playerid, DIALOG_JOB_MAIN, DIALOG_STYLE_LIST, header, list, UI_DIALOG_BUTTON_OK, UI_DIALOG_BUTTON_CLOSE);
 }
 
 stock JobCenter_ShowJobList(playerid)
@@ -121,7 +121,7 @@ stock JobCenter_ShowJobList(playerid)
 
     new title[64];
     format(title, sizeof(title), "Jobs in %s", stateName);
-    ShowPlayerDialog(playerid, DIALOG_JOB_LIST, DIALOG_STYLE_TABLIST_HEADERS, title, list, "Annehmen", UI_DIALOG_BUTTON_BACK);
+    UiDialog_Show(playerid, DIALOG_JOB_LIST, DIALOG_STYLE_TABLIST_HEADERS, title, list, "Annehmen", UI_DIALOG_BUTTON_BACK);
 }
 
 stock JobCenter_ShowStatus(playerid)
@@ -137,13 +137,13 @@ stock JobCenter_ShowStatus(playerid)
         ProgressionSystem_GetLevel(playerid), ProgressionSystem_GetXP(playerid), ProgressionSystem_GetRep(playerid),
         Core_GetPlayerBank(playerid),
         (gJobTaskStage[playerid] == JOB_TASK_NONE) ? ("keiner") : ((gJobTaskStage[playerid] == JOB_TASK_PICKUP) ? ("Ware abholen") : ("Ware abliefern")));
-    ShowPlayerDialog(playerid, DIALOG_JOB_STATUS, DIALOG_STYLE_MSGBOX, "Job-Fortschritt", info, UI_DIALOG_BUTTON_BACK, UI_DIALOG_BUTTON_CLOSE);
+    UiDialog_Show(playerid, DIALOG_JOB_STATUS, DIALOG_STYLE_MSGBOX, "Job-Fortschritt", info, UI_DIALOG_BUTTON_BACK, UI_DIALOG_BUTTON_CLOSE);
 }
 
 stock JobCenter_AcceptJob(playerid, jobid)
 {
     new stateid = StateSystem_GetPlayerState(playerid);
-    if (!DynamicJobSystem_AssignPlayerJob(playerid, jobid, stateid))
+    if (!DynamicJobSystem_AssignPlayerJobToState(playerid, jobid, stateid))
     {
         SendClientMessage(playerid, 0xFF6666AA, "[JOBS] Dieser Job ist nicht verfügbar.");
         return false;
@@ -307,7 +307,7 @@ stock JobCenter_OnDialogResponse(playerid, dialogid, response, listitem, const i
                 case 3: JobCenter_ShowStatus(playerid);
                 case 4:
                 {
-                    ShowPlayerDialog(playerid, DIALOG_JOB_QUIT, DIALOG_STYLE_MSGBOX, "Job kündigen", "Willst du deinen aktuellen Job wirklich kündigen?", "Kündigen", "Abbrechen");
+                    UiDialog_Show(playerid, DIALOG_JOB_QUIT, DIALOG_STYLE_MSGBOX, "Job kündigen", "Willst du deinen aktuellen Job wirklich kündigen?", "Kündigen", "Abbrechen");
                 }
             }
         }
@@ -328,7 +328,7 @@ stock JobCenter_OnDialogResponse(playerid, dialogid, response, listitem, const i
             DynamicJobSystem_GetJobName(gJobCenterPick[playerid], jobName, sizeof(jobName));
             new text[128];
             format(text, sizeof(text), "Möchtest du den Job \"%s\" annehmen?", jobName);
-            ShowPlayerDialog(playerid, DIALOG_JOB_CONFIRM, DIALOG_STYLE_MSGBOX, "Job annehmen", text, "Annehmen", UI_DIALOG_BUTTON_BACK);
+            UiDialog_Show(playerid, DIALOG_JOB_CONFIRM, DIALOG_STYLE_MSGBOX, "Job annehmen", text, "Annehmen", UI_DIALOG_BUTTON_BACK);
         }
         case DIALOG_JOB_CONFIRM:
         {

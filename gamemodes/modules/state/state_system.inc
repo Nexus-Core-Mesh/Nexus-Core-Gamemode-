@@ -61,9 +61,9 @@ stock int:StateSystem_NormalizeStateId(stateid)
 {
     if (stateid >= 0 && stateid < STATE_COUNT)
     {
-        return stateid;
+        return int:stateid;
     }
-    return STATE_LOS_SANTOS;
+    return int:STATE_LOS_SANTOS;
 }
 
 stock StateSystem_IsValidState(stateid)
@@ -219,7 +219,7 @@ stock int:StateSystem_GetPlayerState(playerid)
 {
     if (!Core_IsValidPlayerId(playerid))
     {
-        return STATE_LOS_SANTOS;
+        return int:STATE_LOS_SANTOS;
     }
     return Core_ResolveStateId(Core_GetPlayerState(playerid));
 }
@@ -263,9 +263,9 @@ stock int:StateSystem_GetBankCash(stateid)
 {
     if (stateid < 0 || stateid >= STATE_COUNT)
     {
-        return 0;
+        return int:0;
     }
-    return gStateBankCash[stateid];
+    return int:gStateBankCash[stateid];
 }
 
 stock StateSystem_SetTreasuryBalance(stateid, amount)
@@ -300,7 +300,7 @@ stock StateSystem_TransferToBank(stateid, amount)
 
 stock int:StateSystem_AbsInt(value)
 {
-    return value < 0 ? -value : value;
+    return int:(value < 0 ? -value : value);
 }
 
 stock StateSystem_ApplyTreasuryDelta(stateid, delta)
@@ -332,9 +332,9 @@ stock int:StateSystem_GetTaxRate(stateid)
 {
     if (stateid < 0 || stateid >= STATE_COUNT)
     {
-        return 0;
+        return int:0;
     }
-    return gStateTaxRate[stateid];
+    return int:gStateTaxRate[stateid];
 }
 
 stock StateSystem_SetTaxRate(stateid, rate)
@@ -356,18 +356,18 @@ stock int:StateSystem_GetTaxRevenue(stateid)
 {
     if (!StateSystem_IsValidState(stateid))
     {
-        return 0;
+        return int:0;
     }
-    return gStateTaxRevenue[stateid];
+    return int:gStateTaxRevenue[stateid];
 }
 
 stock int:StateSystem_GetInfrastructureRevenue(stateid)
 {
     if (!StateSystem_IsValidState(stateid))
     {
-        return 0;
+        return int:0;
     }
-    return gStateInfrastructureRevenue[stateid];
+    return int:gStateInfrastructureRevenue[stateid];
 }
 
 stock StateSystem_SetLeaderName(stateid, const name[])

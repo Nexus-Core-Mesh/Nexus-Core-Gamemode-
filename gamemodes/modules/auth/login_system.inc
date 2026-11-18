@@ -39,43 +39,52 @@ stock LoginSystem_ShowRegisterScreen(playerid)
 {
     LoginSystem_HideRegisterScreen(playerid);
 
-    gLoginTD[playerid][0] = TextDrawCreate(320.0, 40.0, "GTA:SA Reallife");
+    new const loginTitle[] = "GTA:SA Reallife";
+    new const loginRegister[] = "REGISTRIERUNG";
+    new const loginHome[] = "Bitte w~hle deine Heimatstadt:";
+    new const loginCities[] = "LS - Los Santos   SF - San Fierro   LV - Las Venturas";
+    new const loginCmds[] = "Befehle:";
+    new const loginCommandHelp[] = "/register <Name> <Passwort> /city <LS|SF|LV>";
+    new const loginTutorial[] = "Nach der Registrierung startet das Tutorial.";
+    new const loginLink[] = "https://example.com/reallife";
+
+    gLoginTD[playerid][0] = UiDialog_TextDrawCreate(320.0, 40.0, loginTitle);
     TextDrawAlignment(gLoginTD[playerid][0], 2);
     TextDrawLetterSize(gLoginTD[playerid][0], 0.8, 2.2);
     TextDrawUseBox(gLoginTD[playerid][0], 0);
     TextDrawColor(gLoginTD[playerid][0], 0x00D9FFFF);
 
-    gLoginTD[playerid][1] = TextDrawCreate(320.0, 75.0, "REGISTRIERUNG");
+    gLoginTD[playerid][1] = UiDialog_TextDrawCreate(320.0, 75.0, loginRegister);
     TextDrawAlignment(gLoginTD[playerid][1], 2);
     TextDrawLetterSize(gLoginTD[playerid][1], 0.45, 1.4);
     TextDrawColor(gLoginTD[playerid][1], 0xFFFFFFFF);
 
-    gLoginTD[playerid][2] = TextDrawCreate(320.0, 110.0, "Bitte w~hle deine Heimatstadt:");
+    gLoginTD[playerid][2] = UiDialog_TextDrawCreate(320.0, 110.0, loginHome);
     TextDrawAlignment(gLoginTD[playerid][2], 2);
     TextDrawLetterSize(gLoginTD[playerid][2], 0.28, 1.0);
     TextDrawColor(gLoginTD[playerid][2], 0xFFFFFFFF);
 
-    gLoginTD[playerid][3] = TextDrawCreate(320.0, 140.0, "LS - Los Santos   SF - San Fierro   LV - Las Venturas");
+    gLoginTD[playerid][3] = UiDialog_TextDrawCreate(320.0, 140.0, loginCities);
     TextDrawAlignment(gLoginTD[playerid][3], 2);
     TextDrawLetterSize(gLoginTD[playerid][3], 0.28, 1.0);
     TextDrawColor(gLoginTD[playerid][3], 0x55FF55FF);
 
-    gLoginTD[playerid][4] = TextDrawCreate(320.0, 170.0, "Befehle:");
+    gLoginTD[playerid][4] = UiDialog_TextDrawCreate(320.0, 170.0, loginCmds);
     TextDrawAlignment(gLoginTD[playerid][4], 2);
     TextDrawLetterSize(gLoginTD[playerid][4], 0.28, 1.0);
     TextDrawColor(gLoginTD[playerid][4], 0xFFFFFFFF);
 
-    gLoginTD[playerid][5] = TextDrawCreate(320.0, 190.0, "/register <Name> <Passwort> /city <LS|SF|LV>");
+    gLoginTD[playerid][5] = UiDialog_TextDrawCreate(320.0, 190.0, loginCommandHelp);
     TextDrawAlignment(gLoginTD[playerid][5], 2);
     TextDrawLetterSize(gLoginTD[playerid][5], 0.25, 1.0);
     TextDrawColor(gLoginTD[playerid][5], 0xFFCC66FF);
 
-    gLoginTD[playerid][6] = TextDrawCreate(320.0, 212.0, "Nach der Registrierung startet das Tutorial.");
+    gLoginTD[playerid][6] = UiDialog_TextDrawCreate(320.0, 212.0, loginTutorial);
     TextDrawAlignment(gLoginTD[playerid][6], 2);
     TextDrawLetterSize(gLoginTD[playerid][6], 0.24, 0.9);
     TextDrawColor(gLoginTD[playerid][6], 0xBBBBBBFF);
 
-    gLoginTD[playerid][7] = TextDrawCreate(320.0, 245.0, "https://example.com/reallife");
+    gLoginTD[playerid][7] = UiDialog_TextDrawCreate(320.0, 245.0, loginLink);
     TextDrawAlignment(gLoginTD[playerid][7], 2);
     TextDrawLetterSize(gLoginTD[playerid][7], 0.2, 0.8);
     TextDrawColor(gLoginTD[playerid][7], 0x8CC6FFFF);
@@ -129,7 +138,7 @@ stock int:LoginSystem_GetHomeState(playerid)
     return gPlayerHomeState[playerid];
 }
 
-stock LoginSystem_CompleteRegistration(playerid)
+stock LoginSystem_CompleteReg(playerid)
 {
     LoginSystem_HideRegisterScreen(playerid);
     gLoginState[playerid] = LOGIN_STATE_ACTIVE;

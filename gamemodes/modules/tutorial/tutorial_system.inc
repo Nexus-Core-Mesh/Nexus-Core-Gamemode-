@@ -30,53 +30,66 @@ stock TutorialSystem_ShowStage(playerid, stage)
 
     if (stage == TUTORIAL_STAGE_INTRO)
     {
-        gTutorialTD[playerid][0] = TextDrawCreate(320.0, 120.0, "Tutorial");
+        new const tutorialTitle[] = "Tutorial";
+        new const tutorialWelcome[] = "Willkommen in Los Santos";
+        new const tutorialIntro[] = "Nutze /help, /city und /gov, um loszulegen.";
+
+        gTutorialTD[playerid][0] = UiDialog_TextDrawCreate(320.0, 120.0, tutorialTitle);
         TextDrawAlignment(gTutorialTD[playerid][0], 2);
         TextDrawLetterSize(gTutorialTD[playerid][0], 0.6, 1.8);
         TextDrawColor(gTutorialTD[playerid][0], 0x00D9FFFF);
 
-        gTutorialTD[playerid][1] = TextDrawCreate(320.0, 160.0, "Willkommen in Los Santos");
+        gTutorialTD[playerid][1] = UiDialog_TextDrawCreate(320.0, 160.0, tutorialWelcome);
         TextDrawAlignment(gTutorialTD[playerid][1], 2);
         TextDrawLetterSize(gTutorialTD[playerid][1], 0.35, 1.2);
         TextDrawColor(gTutorialTD[playerid][1], 0xFFFFFFFF);
 
-        gTutorialTD[playerid][2] = TextDrawCreate(320.0, 185.0, "Nutze /help, /city und /gov, um loszulegen.");
+        gTutorialTD[playerid][2] = UiDialog_TextDrawCreate(320.0, 185.0, tutorialIntro);
         TextDrawAlignment(gTutorialTD[playerid][2], 2);
         TextDrawLetterSize(gTutorialTD[playerid][2], 0.28, 1.0);
         TextDrawColor(gTutorialTD[playerid][2], 0xFFCC66FF);
     }
     else if (stage == TUTORIAL_STAGE_HOME)
     {
-        gTutorialTD[playerid][0] = TextDrawCreate(320.0, 120.0, "Heimatstadt");
+        new const tutorialHomeTitle[] = "Heimatstadt";
+        new const tutorialHomeDesc[] = "Deine Heimatstadt bestimmt dein Spawn und deine Regierung.";
+
+        gTutorialTD[playerid][0] = UiDialog_TextDrawCreate(320.0, 120.0, tutorialHomeTitle);
         TextDrawAlignment(gTutorialTD[playerid][0], 2);
         TextDrawLetterSize(gTutorialTD[playerid][0], 0.55, 1.6);
         TextDrawColor(gTutorialTD[playerid][0], 0x00FF00AA);
 
-        gTutorialTD[playerid][1] = TextDrawCreate(320.0, 160.0, "Deine Heimatstadt bestimmt dein Spawn und deine Regierung.");
+        gTutorialTD[playerid][1] = UiDialog_TextDrawCreate(320.0, 160.0, tutorialHomeDesc);
         TextDrawAlignment(gTutorialTD[playerid][1], 2);
         TextDrawLetterSize(gTutorialTD[playerid][1], 0.28, 1.0);
         TextDrawColor(gTutorialTD[playerid][1], 0xFFFFFFFF);
     }
     else if (stage == TUTORIAL_STAGE_GOV)
     {
-        gTutorialTD[playerid][0] = TextDrawCreate(320.0, 120.0, "Regierung");
+        new const tutorialGovTitle[] = "Regierung";
+        new const tutorialGovDesc[] = "Jeder Staat hat eine eigene Kasse, Verwaltung und Befehle.";
+
+        gTutorialTD[playerid][0] = UiDialog_TextDrawCreate(320.0, 120.0, tutorialGovTitle);
         TextDrawAlignment(gTutorialTD[playerid][0], 2);
         TextDrawLetterSize(gTutorialTD[playerid][0], 0.6, 1.7);
         TextDrawColor(gTutorialTD[playerid][0], 0x8CC6FFFF);
 
-        gTutorialTD[playerid][1] = TextDrawCreate(320.0, 160.0, "Jeder Staat hat eine eigene Kasse, Verwaltung und Befehle.");
+        gTutorialTD[playerid][1] = UiDialog_TextDrawCreate(320.0, 160.0, tutorialGovDesc);
         TextDrawAlignment(gTutorialTD[playerid][1], 2);
         TextDrawLetterSize(gTutorialTD[playerid][1], 0.28, 1.0);
         TextDrawColor(gTutorialTD[playerid][1], 0xFFFFFFFF);
     }
     else if (stage == TUTORIAL_STAGE_FINISH)
     {
-        gTutorialTD[playerid][0] = TextDrawCreate(320.0, 120.0, "Tutorial abgeschlossen");
+        new const tutorialDoneTitle[] = "Tutorial abgeschlossen";
+        new const tutorialDoneDesc[] = "Du bist bereit f~r die Welt von GTA:SA Reallife.";
+
+        gTutorialTD[playerid][0] = UiDialog_TextDrawCreate(320.0, 120.0, tutorialDoneTitle);
         TextDrawAlignment(gTutorialTD[playerid][0], 2);
         TextDrawLetterSize(gTutorialTD[playerid][0], 0.55, 1.6);
         TextDrawColor(gTutorialTD[playerid][0], 0x00FF00AA);
 
-        gTutorialTD[playerid][1] = TextDrawCreate(320.0, 160.0, "Du bist bereit f~r die Welt von GTA:SA Reallife.");
+        gTutorialTD[playerid][1] = UiDialog_TextDrawCreate(320.0, 160.0, tutorialDoneDesc);
         TextDrawAlignment(gTutorialTD[playerid][1], 2);
         TextDrawLetterSize(gTutorialTD[playerid][1], 0.28, 1.0);
         TextDrawColor(gTutorialTD[playerid][1], 0xFFFFFFFF);

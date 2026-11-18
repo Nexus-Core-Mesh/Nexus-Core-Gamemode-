@@ -71,4 +71,31 @@ stock UiDialog_IsSafeText(const text[])
     return true;
 }
 
+stock UiDialog_Show(playerid, dialogid, style, const caption[], const info[], const button1[], const button2[])
+{
+    new tmpCaption[128];
+    new tmpInfo[1024];
+    new tmpButton1[32];
+    new tmpButton2[32];
+    format(tmpCaption, sizeof(tmpCaption), "%s", caption);
+    format(tmpInfo, sizeof(tmpInfo), "%s", info);
+    format(tmpButton1, sizeof(tmpButton1), "%s", button1);
+    format(tmpButton2, sizeof(tmpButton2), "%s", button2);
+    ShowPlayerDialog(playerid, dialogid, style, tmpCaption, tmpInfo, tmpButton1, tmpButton2);
+}
+
+stock Text:UiDialog_TextDrawCreate(Float:x, Float:y, const text[])
+{
+    new tmp[128];
+    format(tmp, sizeof(tmp), "%s", text);
+    return TextDrawCreate(x, y, tmp);
+}
+
+stock PlayerText:UiDialog_CreatePlayerTextDraw(playerid, Float:x, Float:y, const text[])
+{
+    new tmp[128];
+    format(tmp, sizeof(tmp), "%s", text);
+    return CreatePlayerTextDraw(playerid, x, y, tmp);
+}
+
 #endif
