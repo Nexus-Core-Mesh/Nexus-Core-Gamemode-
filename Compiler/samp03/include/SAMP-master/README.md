@@ -1,3 +1,5 @@
-This is the old SA-MP server and will no longer be updated.
+# Alte SA-MP-Server-Referenz
 
-Please see the [SAMPRacing](https://github.com/GRGServer/SAMPRacing) repository for the new SA-MP server.
+Diese Datei ist veraltet und wird nicht weiter aktualisiert.
+
+Für das aktuelle Projekt und die aktive Build-/Serverlogik gilt das Repository-Root mit `gamemodes/gamemode.pwn` und der Laufzeitdatei `Compiler/samp03/gamemodes/gtasa_reallife.amx`.
