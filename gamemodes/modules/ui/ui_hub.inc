@@ -66,14 +66,20 @@ stock UiHub_ShowMain(playerid)
         return;
     }
 
-    ShowPlayerDialog(playerid, DIALOG_UI_MAIN, DIALOG_STYLE_LIST, "Nexus Core | Hauptmenü",
-        "Inventar\nHandy\nBusiness\nAmmu-Nation\nMission-Board\nGarage\nFahrzeug-Tuning\nJob-Zentrum\nText-Wars\nStaats-Leitstand\nSpieler-Dashboard",
-        UI_DIALOG_BUTTON_OK, UI_DIALOG_BUTTON_CLOSE);
+    new const title[] = "Nexus Core | Hauptmenü";
+    new const menu[] = "Inventar\nHandy\nBusiness\nAmmu-Nation\nMission-Board\nGarage\nFahrzeug-Tuning\nJob-Zentrum\nText-Wars\nStaats-Leitstand\nSpieler-Dashboard";
+    UiDialog_Show(playerid, DIALOG_UI_MAIN, DIALOG_STYLE_LIST, title, menu, UI_DIALOG_BUTTON_OK, UI_DIALOG_BUTTON_CLOSE);
 }
 
-stock UiHub_ShowText(playerid, title[], text[])
+stock UiHub_ShowText(playerid, const title[], const text[])
 {
-    ShowPlayerDialog(playerid, DIALOG_UI_NONE, DIALOG_STYLE_MSGBOX, title, text, UI_DIALOG_BUTTON_CLOSE, "");
+    new caption[64];
+    new info[256];
+    format(caption, sizeof(caption), "%s", title);
+    format(info, sizeof(info), "%s", text);
+    new closeButton[1];
+    closeButton[0] = 0;
+    UiDialog_Show(playerid, DIALOG_UI_NONE, DIALOG_STYLE_MSGBOX, caption, info, UI_DIALOG_BUTTON_CLOSE, closeButton);
 }
 
 // ---------------------------------------------------------------- Inventar
@@ -119,7 +125,7 @@ stock UiHub_ShowInventory(playerid)
 
     new title[64];
     format(title, sizeof(title), "Inventar | Freie Slots: %d", InventorySystem_GetFreeSlots(playerid));
-    ShowPlayerDialog(playerid, DIALOG_UI_INV_LIST, DIALOG_STYLE_TABLIST_HEADERS, title, list, "Aktion", UI_DIALOG_BUTTON_CLOSE);
+    UiDialog_Show(playerid, DIALOG_UI_INV_LIST, DIALOG_STYLE_TABLIST_HEADERS, title, list, "Aktion", UI_DIALOG_BUTTON_CLOSE);
 }
 
 stock UiHub_SlotStillValid(playerid)
@@ -146,7 +152,7 @@ stock UiHub_ShowInventoryAction(playerid)
     UiHub_GetItemName(gUiInvItem[playerid], name, sizeof(name));
     new title[64];
     format(title, sizeof(title), "%s (%dx)", name, gInventoryItemQty[playerid][gUiInvSlot[playerid]]);
-    ShowPlayerDialog(playerid, DIALOG_UI_INV_ACTION, DIALOG_STYLE_LIST, title,
+    UiDialog_Show(playerid, DIALOG_UI_INV_ACTION, DIALOG_STYLE_LIST, title,
         "Benutzen\n1 wegwerfen\nAlle wegwerfen\nAn Spieler übertragen\nIn Haussafe legen", UI_DIALOG_BUTTON_OK, UI_DIALOG_BUTTON_BACK);
 }
 
@@ -216,7 +222,7 @@ stock UiHub_InventoryGive(playerid, const inputtext[], bool:askQuantity)
 
         if (gInventoryItemQty[playerid][gUiInvSlot[playerid]] > 1)
         {
-            ShowPlayerDialog(playerid, DIALOG_UI_INV_GIVE_QTY, DIALOG_STYLE_INPUT, "Menge übertragen", "Wie viele Stück übertragen?", "Senden", UI_DIALOG_BUTTON_BACK);
+            UiDialog_Show(playerid, DIALOG_UI_INV_GIVE_QTY, DIALOG_STYLE_INPUT, "Menge übertragen", "Wie viele Stück übertragen?", "Senden", UI_DIALOG_BUTTON_BACK);
             return;
         }
         UiHub_InventoryTransfer(playerid, 1);
@@ -254,8 +260,8 @@ stock UiHub_ShowPhone(playerid)
 {
     new title[48];
     format(title, sizeof(title), "Handy | Nummer %d", gPhoneNumber[playerid]);
-    ShowPlayerDialog(playerid, DIALOG_UI_PHONE_MAIN, DIALOG_STYLE_LIST, title,
-        "Kontakte ansehen\nKontakt hinzufügen\nSMS verfassen\nNachrichten lesen", UI_DIALOG_BUTTON_OK, UI_DIALOG_BUTTON_CLOSE);
+    new const phoneMenu[] = "Kontakte ansehen\nKontakt hinzufügen\nSMS verfassen\nNachrichten lesen";
+    UiDialog_Show(playerid, DIALOG_UI_PHONE_MAIN, DIALOG_STYLE_LIST, title, phoneMenu, UI_DIALOG_BUTTON_OK, UI_DIALOG_BUTTON_CLOSE);
 }
 
 stock UiHub_ShowPhoneContacts(playerid)
@@ -270,7 +276,7 @@ stock UiHub_ShowPhoneContacts(playerid)
     {
         format(list, sizeof(list), "Keine Kontakte gespeichert.");
     }
-    ShowPlayerDialog(playerid, DIALOG_UI_PHONE_MAIN + 3, DIALOG_STYLE_MSGBOX, "Kontakte", list, UI_DIALOG_BUTTON_BACK, UI_DIALOG_BUTTON_CLOSE);
+    UiDialog_Show(playerid, DIALOG_UI_PHONE_MAIN + 3, DIALOG_STYLE_MSGBOX, "Kontakte", list, UI_DIALOG_BUTTON_BACK, UI_DIALOG_BUTTON_CLOSE);
 }
 
 stock UiHub_ShowPhoneMessages(playerid)
@@ -285,7 +291,7 @@ stock UiHub_ShowPhoneMessages(playerid)
     {
         format(list, sizeof(list), "Keine Nachrichten.");
     }
-    ShowPlayerDialog(playerid, DIALOG_UI_PHONE_MAIN + 3, DIALOG_STYLE_MSGBOX, "Nachrichten", list, UI_DIALOG_BUTTON_BACK, UI_DIALOG_BUTTON_CLOSE);
+    UiDialog_Show(playerid, DIALOG_UI_PHONE_MAIN + 3, DIALOG_STYLE_MSGBOX, "Nachrichten", list, UI_DIALOG_BUTTON_BACK, UI_DIALOG_BUTTON_CLOSE);
 }
 
 // ---------------------------------------------------------------- Business
@@ -311,7 +317,9 @@ stock UiHub_ShowBusinessList(playerid)
         gUiPick[playerid][gUiPickCount[playerid]++] = b;
     }
 
-    ShowPlayerDialog(playerid, DIALOG_UI_BIZ_LIST, DIALOG_STYLE_TABLIST_HEADERS, "Business-Verwaltung", list, "Öffnen", UI_DIALOG_BUTTON_CLOSE);
+    new const bizCaption[] = "Business-Verwaltung";
+    new const bizButton[] = "Öffnen";
+    UiDialog_Show(playerid, DIALOG_UI_BIZ_LIST, DIALOG_STYLE_TABLIST_HEADERS, bizCaption, list, bizButton, UI_DIALOG_BUTTON_CLOSE);
 }
 
 stock UiHub_ShowBusinessAction(playerid, bizid)
@@ -320,15 +328,18 @@ stock UiHub_ShowBusinessAction(playerid, bizid)
     format(title, sizeof(title), "%s", gBizName[bizid]);
     if (gBizOwner[bizid] == -1)
     {
-        ShowPlayerDialog(playerid, DIALOG_UI_BIZ_ACTION, DIALOG_STYLE_LIST, title, "Informationen\nKaufen", UI_DIALOG_BUTTON_OK, UI_DIALOG_BUTTON_BACK);
+        new const bizInfoBuy[] = "Informationen\nKaufen";
+        UiDialog_Show(playerid, DIALOG_UI_BIZ_ACTION, DIALOG_STYLE_LIST, title, bizInfoBuy, UI_DIALOG_BUTTON_OK, UI_DIALOG_BUTTON_BACK);
     }
     else if (gBizOwner[bizid] == playerid)
     {
-        ShowPlayerDialog(playerid, DIALOG_UI_BIZ_ACTION, DIALOG_STYLE_LIST, title, "Informationen\nEinkommen auszahlen", UI_DIALOG_BUTTON_OK, UI_DIALOG_BUTTON_BACK);
+        new const bizInfoPayout[] = "Informationen\nEinkommen auszahlen";
+        UiDialog_Show(playerid, DIALOG_UI_BIZ_ACTION, DIALOG_STYLE_LIST, title, bizInfoPayout, UI_DIALOG_BUTTON_OK, UI_DIALOG_BUTTON_BACK);
     }
     else
     {
-        ShowPlayerDialog(playerid, DIALOG_UI_BIZ_ACTION, DIALOG_STYLE_LIST, title, "Informationen", UI_DIALOG_BUTTON_OK, UI_DIALOG_BUTTON_BACK);
+        new const bizInfo[] = "Informationen";
+        UiDialog_Show(playerid, DIALOG_UI_BIZ_ACTION, DIALOG_STYLE_LIST, title, bizInfo, UI_DIALOG_BUTTON_OK, UI_DIALOG_BUTTON_BACK);
     }
 }
 
@@ -364,7 +375,9 @@ stock UiHub_ShowAmmu(playerid)
         SendClientMessage(playerid, 0xFFCC66AA, "[AMMU] Keine Waffen im aktuellen Staat verfügbar.");
         return;
     }
-    ShowPlayerDialog(playerid, DIALOG_UI_AMMU_LIST, DIALOG_STYLE_TABLIST_HEADERS, "Ammu-Nation", list, "Kaufen", UI_DIALOG_BUTTON_CLOSE);
+    new const ammuCaption[] = "Ammu-Nation";
+    new const ammuButton[] = "Kaufen";
+    UiDialog_Show(playerid, DIALOG_UI_AMMU_LIST, DIALOG_STYLE_TABLIST_HEADERS, ammuCaption, list, ammuButton, UI_DIALOG_BUTTON_CLOSE);
 }
 
 // ---------------------------------------------------------------- Mission-Board
@@ -393,7 +406,9 @@ stock UiHub_ShowMissions(playerid)
         UiHub_ShowText(playerid, "Mission-Board", "Aktuell sind keine Aufgaben verfügbar.");
         return;
     }
-    ShowPlayerDialog(playerid, DIALOG_UI_MISSION_LIST, DIALOG_STYLE_TABLIST_HEADERS, "Mission-Board", list, "Annehmen", UI_DIALOG_BUTTON_CLOSE);
+    new const missionCaption[] = "Mission-Board";
+    new const missionButton[] = "Annehmen";
+    UiDialog_Show(playerid, DIALOG_UI_MISSION_LIST, DIALOG_STYLE_TABLIST_HEADERS, missionCaption, list, missionButton, UI_DIALOG_BUTTON_CLOSE);
 }
 
 // ---------------------------------------------------------------- Garage & Tuning
@@ -413,7 +428,9 @@ stock UiHub_ShowGarages(playerid)
         strcat(list, line);
         gUiPick[playerid][gUiPickCount[playerid]++] = g;
     }
-    ShowPlayerDialog(playerid, DIALOG_UI_GARAGE_LIST, DIALOG_STYLE_TABLIST_HEADERS, "Garagen", list, "Öffnen", UI_DIALOG_BUTTON_CLOSE);
+    new const garageCaption[] = "Garagen";
+    new const garageButton[] = "Öffnen";
+    UiDialog_Show(playerid, DIALOG_UI_GARAGE_LIST, DIALOG_STYLE_TABLIST_HEADERS, garageCaption, list, garageButton, UI_DIALOG_BUTTON_CLOSE);
 }
 
 stock UiHub_ShowTuning(playerid)
@@ -433,7 +450,9 @@ stock UiHub_ShowTuning(playerid)
         format(line, sizeof(line), "%s\t$%d\n", gUiTuneName[t], gUiTunePrice[t]);
         strcat(list, line);
     }
-    ShowPlayerDialog(playerid, DIALOG_UI_TUNING_LIST, DIALOG_STYLE_TABLIST_HEADERS, "Fahrzeug-Tuning", list, "Einbauen", UI_DIALOG_BUTTON_CLOSE);
+    new const tuningCaption[] = "Fahrzeug-Tuning";
+    new const tuningButton[] = "Einbauen";
+    UiDialog_Show(playerid, DIALOG_UI_TUNING_LIST, DIALOG_STYLE_TABLIST_HEADERS, tuningCaption, list, tuningButton, UI_DIALOG_BUTTON_CLOSE);
 }
 
 stock UiHub_BuyTuning(playerid, option)
@@ -529,7 +548,7 @@ stock UiHub_OnDialogResponse(playerid, dialogid, response, listitem, const input
                     UiHub_InventoryDrop(playerid, true);
                     UiHub_ShowInventory(playerid);
                 }
-                case 3: ShowPlayerDialog(playerid, DIALOG_UI_INV_GIVE_TARGET, DIALOG_STYLE_INPUT, "Übertragen", "Spieler-ID oder Name (in deiner Nähe):", "Weiter", UI_DIALOG_BUTTON_BACK);
+                case 3: UiDialog_Show(playerid, DIALOG_UI_INV_GIVE_TARGET, DIALOG_STYLE_INPUT, "Übertragen", "Spieler-ID oder Name (in deiner Nähe):", "Weiter", UI_DIALOG_BUTTON_BACK);
                 case 4:
                 {
                     UiHub_InventoryToSafe(playerid);
@@ -565,8 +584,8 @@ stock UiHub_OnDialogResponse(playerid, dialogid, response, listitem, const input
             switch (listitem)
             {
                 case 0: UiHub_ShowPhoneContacts(playerid);
-                case 1: ShowPlayerDialog(playerid, DIALOG_UI_PHONE_ADD, DIALOG_STYLE_INPUT, "Kontakt hinzufügen", "Name des Kontakts:", "Speichern", UI_DIALOG_BUTTON_BACK);
-                case 2: ShowPlayerDialog(playerid, DIALOG_UI_PHONE_SMS, DIALOG_STYLE_INPUT, "SMS verfassen", "Nachricht (max. 63 Zeichen):", "Senden", UI_DIALOG_BUTTON_BACK);
+                case 1: UiDialog_Show(playerid, DIALOG_UI_PHONE_ADD, DIALOG_STYLE_INPUT, "Kontakt hinzufügen", "Name des Kontakts:", "Speichern", UI_DIALOG_BUTTON_BACK);
+                case 2: UiDialog_Show(playerid, DIALOG_UI_PHONE_SMS, DIALOG_STYLE_INPUT, "SMS verfassen", "Nachricht (max. 63 Zeichen):", "Senden", UI_DIALOG_BUTTON_BACK);
                 case 3: UiHub_ShowPhoneMessages(playerid);
             }
         }
@@ -660,7 +679,7 @@ stock UiHub_OnDialogResponse(playerid, dialogid, response, listitem, const input
             gUiSelected[playerid] = gUiPick[playerid][listitem];
             new text[128];
             format(text, sizeof(text), "%s für $%d kaufen?", gWeaponShopName[gUiSelected[playerid]], gWeaponShopPrice[gUiSelected[playerid]]);
-            ShowPlayerDialog(playerid, DIALOG_UI_AMMU_CONFIRM, DIALOG_STYLE_MSGBOX, "Kauf bestätigen", text, "Kaufen", UI_DIALOG_BUTTON_BACK);
+            UiDialog_Show(playerid, DIALOG_UI_AMMU_CONFIRM, DIALOG_STYLE_MSGBOX, "Kauf bestätigen", text, "Kaufen", UI_DIALOG_BUTTON_BACK);
         }
         case DIALOG_UI_AMMU_CONFIRM:
         {
@@ -684,7 +703,7 @@ stock UiHub_OnDialogResponse(playerid, dialogid, response, listitem, const input
             gUiSelected[playerid] = gUiPick[playerid][listitem];
             new text[128];
             format(text, sizeof(text), "Aufgabe \"%s\" annehmen? Belohnung: $%d", gMissionBoardName[gUiSelected[playerid]], gMissionBoardReward[gUiSelected[playerid]]);
-            ShowPlayerDialog(playerid, DIALOG_UI_MISSION_CONFIRM, DIALOG_STYLE_MSGBOX, "Mission annehmen", text, "Annehmen", UI_DIALOG_BUTTON_BACK);
+            UiDialog_Show(playerid, DIALOG_UI_MISSION_CONFIRM, DIALOG_STYLE_MSGBOX, "Mission annehmen", text, "Annehmen", UI_DIALOG_BUTTON_BACK);
         }
         case DIALOG_UI_MISSION_CONFIRM:
         {
@@ -706,7 +725,7 @@ stock UiHub_OnDialogResponse(playerid, dialogid, response, listitem, const input
                 return true;
             }
             gUiSelected[playerid] = gUiPick[playerid][listitem];
-            ShowPlayerDialog(playerid, DIALOG_UI_GARAGE_ACTION, DIALOG_STYLE_LIST, gGarageName[gUiSelected[playerid]],
+            UiDialog_Show(playerid, DIALOG_UI_GARAGE_ACTION, DIALOG_STYLE_LIST, gGarageName[gUiSelected[playerid]],
                 "Zur Garage teleportieren\nAktuelles Fahrzeug einlagern\nTuning öffnen", UI_DIALOG_BUTTON_OK, UI_DIALOG_BUTTON_BACK);
         }
         case DIALOG_UI_GARAGE_ACTION:
@@ -743,7 +762,7 @@ stock UiHub_OnDialogResponse(playerid, dialogid, response, listitem, const input
             gUiSelected[playerid] = listitem;
             new text[96];
             format(text, sizeof(text), "%s für $%d einbauen?", gUiTuneName[listitem], gUiTunePrice[listitem]);
-            ShowPlayerDialog(playerid, DIALOG_UI_TUNING_CONFIRM, DIALOG_STYLE_MSGBOX, "Tuning bestätigen", text, "Einbauen", UI_DIALOG_BUTTON_BACK);
+            UiDialog_Show(playerid, DIALOG_UI_TUNING_CONFIRM, DIALOG_STYLE_MSGBOX, "Tuning bestätigen", text, "Einbauen", UI_DIALOG_BUTTON_BACK);
         }
         case DIALOG_UI_TUNING_CONFIRM:
         {

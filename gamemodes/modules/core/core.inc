@@ -48,24 +48,24 @@ stock Float:GetDistanceBetweenPoints3D(Float:x1, Float:y1, Float:z1, Float:x2, F
 // 3. Module dürfen keine eigenen globalen Player-Daten als „zweite Quelle der Wahrheit" definieren.
 // 4. Beim Hinzufügen neuer Module immer zuerst das zentrale Profil erweitern und danach die einzelnen Module kompatibel halten.
 
-enum E_PLAYER_PROFILE
-{
-    E_PLAYER_STATE,
-    E_PLAYER_HOME_STATE,
-    E_PLAYER_ADMIN_LEVEL,
-    E_PLAYER_ADMIN_STATE,
-    E_PLAYER_LEVEL,
-    E_PLAYER_XP,
-    E_PLAYER_REP,
-    E_PLAYER_BANK,
-    E_PLAYER_WANTED,
-    E_PLAYER_JAIL_ACTIVE,
-    E_PLAYER_JAIL_TIME,
-    E_PLAYER_LAW_ROLE,
-    E_PLAYER_EMERGENCY_ROLE,
-    E_PLAYER_EMERGENCY_STATE,
-    E_PLAYER_PROFILE_COUNT
-};
+// Pawn-Tag-Problem: enum-Member sind standardmäßig tagged; als Array-Indizes
+// müssen sie nur als untagged Integer-Konstanten auftauchen, damit der Core
+// konsistent mit den nachgelagerten int-Return-Funktionen arbeitet.
+const E_PLAYER_STATE = 0;
+const E_PLAYER_HOME_STATE = 1;
+const E_PLAYER_ADMIN_LEVEL = 2;
+const E_PLAYER_ADMIN_STATE = 3;
+const E_PLAYER_LEVEL = 4;
+const E_PLAYER_XP = 5;
+const E_PLAYER_REP = 6;
+const E_PLAYER_BANK = 7;
+const E_PLAYER_WANTED = 8;
+const E_PLAYER_JAIL_ACTIVE = 9;
+const E_PLAYER_JAIL_TIME = 10;
+const E_PLAYER_LAW_ROLE = 11;
+const E_PLAYER_EMERGENCY_ROLE = 12;
+const E_PLAYER_EMERGENCY_STATE = 13;
+const E_PLAYER_PROFILE_COUNT = 14;
 
 new gPlayerData[MAX_PLAYERS][E_PLAYER_PROFILE_COUNT];
 new gPlayerBank[MAX_PLAYERS];
@@ -106,13 +106,13 @@ stock Core_IsValidState(stateid)
     return (stateid >= STATE_LOS_SANTOS && stateid < STATE_COUNT);
 }
 
-stock int:Core_ResolveStateId(stateid)
+stock int:Core_ResolveStateId(int:stateid)
 {
     if (Core_IsValidState(stateid))
     {
         return stateid;
     }
-    return STATE_LOS_SANTOS;
+    return int:STATE_LOS_SANTOS;
 }
 
 stock Core_IsValidAdminState(stateid)
@@ -124,9 +124,9 @@ stock int:Core_GetPlayerState(playerid)
 {
     if (!Core_IsValidPlayerId(playerid))
     {
-        return STATE_LOS_SANTOS;
+        return int:STATE_LOS_SANTOS;
     }
-    return gPlayerData[playerid][E_PLAYER_STATE];
+    return int:gPlayerData[playerid][E_PLAYER_STATE];
 }
 
 stock Core_NormalizePlayerState(playerid)
@@ -151,13 +151,13 @@ stock int:Core_GetPlayerBank(playerid)
 {
     if (!Core_IsValidPlayerId(playerid))
     {
-        return 0;
+        return int:0;
     }
     if (gPlayerData[playerid][E_PLAYER_BANK] != gPlayerBank[playerid])
     {
         gPlayerData[playerid][E_PLAYER_BANK] = gPlayerBank[playerid];
     }
-    return gPlayerData[playerid][E_PLAYER_BANK];
+    return int:gPlayerData[playerid][E_PLAYER_BANK];
 }
 
 stock Core_SetPlayerBank(playerid, amount)
@@ -177,7 +177,7 @@ stock Core_ChangePlayerBank(playerid, delta)
         return false;
     }
 
-    new nextBank = Core_GetPlayerBank(playerid) + delta;
+    new nextBank = Core_GetPlayerBank(playerid) + int:delta;
     if (nextBank < 0)
     {
         return false;
@@ -192,18 +192,18 @@ stock int:Core_GetPlayerAdminLevel(playerid)
 {
     if (!Core_IsValidPlayerId(playerid))
     {
-        return 0;
+        return int:0;
     }
-    return gPlayerData[playerid][E_PLAYER_ADMIN_LEVEL];
+    return int:gPlayerData[playerid][E_PLAYER_ADMIN_LEVEL];
 }
 
 stock int:Core_GetPlayerAdminState(playerid)
 {
     if (!Core_IsValidPlayerId(playerid))
     {
-        return -1;
+        return int:-1;
     }
-    return gPlayerData[playerid][E_PLAYER_ADMIN_STATE];
+    return int:gPlayerData[playerid][E_PLAYER_ADMIN_STATE];
 }
 
 stock Core_SetPlayerState(playerid, stateid)
@@ -350,18 +350,18 @@ stock int:Core_GetPlayerHomeState(playerid)
 {
     if (!Core_IsValidPlayerId(playerid))
     {
-        return STATE_LOS_SANTOS;
+        return int:STATE_LOS_SANTOS;
     }
-    return gPlayerData[playerid][E_PLAYER_HOME_STATE];
+    return int:gPlayerData[playerid][E_PLAYER_HOME_STATE];
 }
 
 stock int:Core_GetPlayerCash(playerid)
 {
     if (!Core_IsValidPlayerId(playerid))
     {
-        return 0;
+        return int:0;
     }
-    return gPlayerCash[playerid];
+    return int:gPlayerCash[playerid];
 }
 
 stock Core_SetPlayerCash(playerid, amount)
@@ -406,6 +406,7 @@ stock Core_OnPlayerConnect(playerid)
 
 stock Core_OnPlayerDisconnect(playerid, reason)
 {
+    (void:reason);
     if (!Core_IsValidPlayerId(playerid))
     {
         return;

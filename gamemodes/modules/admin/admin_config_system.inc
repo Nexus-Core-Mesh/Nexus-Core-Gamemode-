@@ -73,12 +73,16 @@ stock AdminConfigSystem_ShowMenu(playerid)
 {
     AdminConfigSystem_HideMenu(playerid);
 
-    gAdminConfigTD[playerid][0] = TextDrawCreate(320.0, 28.0, "ADMIN CONFIG");
+    new adminTitle[32];
+    format(adminTitle, sizeof(adminTitle), "ADMIN CONFIG");
+    gAdminConfigTD[playerid][0] = TextDrawCreate(320.0, 28.0, adminTitle);
     TextDrawAlignment(gAdminConfigTD[playerid][0], 2);
     TextDrawLetterSize(gAdminConfigTD[playerid][0], 0.55, 1.6);
     TextDrawColor(gAdminConfigTD[playerid][0], 0xFFD700FF);
 
-    gAdminConfigTD[playerid][1] = TextDrawCreate(320.0, 52.0, "LS / SF / LV States");
+    new stateHeader[32];
+    format(stateHeader, sizeof(stateHeader), "LS / SF / LV States");
+    gAdminConfigTD[playerid][1] = TextDrawCreate(320.0, 52.0, stateHeader);
     TextDrawAlignment(gAdminConfigTD[playerid][1], 2);
     TextDrawLetterSize(gAdminConfigTD[playerid][1], 0.24, 1.0);
     TextDrawColor(gAdminConfigTD[playerid][1], 0xFFFFFFFF);
@@ -104,17 +108,23 @@ stock AdminConfigSystem_ShowMenu(playerid)
     TextDrawLetterSize(gAdminConfigTD[playerid][4], 0.22, 1.0);
     TextDrawColor(gAdminConfigTD[playerid][4], 0xFF9999FF);
 
-    gAdminConfigTD[playerid][5] = TextDrawCreate(320.0, 138.0, "Befehle: /togglestate /togglewar /setbudget /settax");
+    new configCommands[64];
+    format(configCommands, sizeof(configCommands), "Befehle: /togglestate /togglewar /setbudget /settax");
+    gAdminConfigTD[playerid][5] = TextDrawCreate(320.0, 138.0, configCommands);
     TextDrawAlignment(gAdminConfigTD[playerid][5], 2);
     TextDrawLetterSize(gAdminConfigTD[playerid][5], 0.20, 0.9);
     TextDrawColor(gAdminConfigTD[playerid][5], 0xFFFFFFFF);
 
-    gAdminConfigTD[playerid][6] = TextDrawCreate(320.0, 160.0, "Beispiel: /setbudget 0 600000");
+    new configExample[64];
+    format(configExample, sizeof(configExample), "Beispiel: /setbudget 0 600000");
+    gAdminConfigTD[playerid][6] = TextDrawCreate(320.0, 160.0, configExample);
     TextDrawAlignment(gAdminConfigTD[playerid][6], 2);
     TextDrawLetterSize(gAdminConfigTD[playerid][6], 0.20, 0.9);
     TextDrawColor(gAdminConfigTD[playerid][6], 0xFFFFFFFF);
 
-    gAdminConfigTD[playerid][7] = TextDrawCreate(320.0, 182.0, "Konfiguration live via Adminsystem");
+    new configLive[64];
+    format(configLive, sizeof(configLive), "Konfiguration live via Adminsystem");
+    gAdminConfigTD[playerid][7] = TextDrawCreate(320.0, 182.0, configLive);
     TextDrawAlignment(gAdminConfigTD[playerid][7], 2);
     TextDrawLetterSize(gAdminConfigTD[playerid][7], 0.18, 0.8);
     TextDrawColor(gAdminConfigTD[playerid][7], 0xBBBBBBFF);

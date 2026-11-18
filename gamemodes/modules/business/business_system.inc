@@ -140,8 +140,8 @@ stock int:BusinessSystem_PayoutToOwner(playerid, bizid)
         return -1;
     }
 
-    new income = max(0, gBizIncome[bizid]);
-    new net = income - income / 4;
+    new int:income = max(0, gBizIncome[bizid]);
+    new int:net = income - income / 4;
     if (income == 0 || !BusinessSystem_CollectIncome(bizid))
     {
         return 0;

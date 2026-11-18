@@ -55,7 +55,7 @@ stock int:StateJobs_GetPayMultiplier(stateid)
     {
         return 100;
     }
-    return gStateJobPayPercent[stateid];
+    return int:gStateJobPayPercent[stateid];
 }
 
 stock StateJobs_SetPayMultiplier(stateid, percent)
