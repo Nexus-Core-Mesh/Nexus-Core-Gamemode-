@@ -15,7 +15,7 @@ cat > "$CFG_PATH" <<EOF
 gamemode0 ${MODE_NAME} 1
 
 # Plugins order
-plugins crashdetect streamer sscanf2 sqlite mysql zcmd
+plugins crashdetect streamer sscanf2 zcmd
 
 # Server details
 hostname GTA:SA Reallife Modular
@@ -30,9 +30,6 @@ maxnpc 0
 
 # Logging
 logtimeformat [%H:%M:%S]
-
-# Database / script deps (if used by the host environment)
-# Set these values as needed by your server launcher.
 EOF
 
 if [ ! -f "$DB_PATH" ]; then

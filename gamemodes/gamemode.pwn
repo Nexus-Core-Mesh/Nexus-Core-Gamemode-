@@ -1,3 +1,4 @@
+#include "../includes/dini.inc"
 #include <a_samp>
 #include <sscanf2>
 
