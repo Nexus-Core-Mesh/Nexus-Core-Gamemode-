@@ -31,6 +31,8 @@ qemu-i386 "$PAWNCC_BIN" \
   -i"$ROOT_DIR/Compiler/samp03/include" \
   -d3
 
+python3 "$ROOT_DIR/tools/patch_legacy_amx_version.py" "$TARGET_AMX"
+
 find "$SERVER_DIR/gamemodes" -maxdepth 1 -type f -name '*.amx' ! -name 'gtasa_reallife.amx' -delete
 
 if [ -f "$TARGET_AMX" ] && [ -s "$TARGET_AMX" ]; then
