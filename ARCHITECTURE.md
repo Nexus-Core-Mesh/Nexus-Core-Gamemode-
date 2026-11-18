@@ -10,7 +10,8 @@ Die Kernidee ist eine saubere Trennung von Verantwortlichkeiten, damit das Syste
 - `gamemodes/modules/` – komplette modulare Funktionalität von Core bis World
 - `includes/` – SA:MP- und Projekt-Includes
 - `config/` – Server- und Konfigurationsdateien
-- `data/db/` – persistenter SQLite-Speicherpfad
+- `Compiler/samp03/scriptfiles/` – primärer Dini-Persistenzpfad für INI-Style-Dateispeicherung
+- `data/db/` – optionale lokale SQLite/MySQL-Autosync-Schnittstelle, nicht als Startvoraussetzung
 - `Compiler/` – lokale Pawn-Toolchain und Serverruntime
 - `Compiler/samp03/` – laufende SA:MP-Serverumgebung
 - `scripts/` – Setup, Build, Deployment, Debugging
@@ -243,15 +244,15 @@ gamemode0 gtasa_reallife 1
 
 Diese beiden Einträge müssen identisch zusammenpassen. Jede Abweichung führt zu Laufzeitproblemen wie falschem Modus- oder Spawnfluss.
 
-### 2.6 SQLite-Datenbank und Persistenzmodel
+### 2.6 Dini-Persistenz und Fallback-Model
 
-Das Projekt geht bewusst `SQLite-first` und nutzt den Pfad:
+Das Projekt bootet jetzt Dini-first und nutzt den Pfad:
 
 ```text
-data/db/gtasa_reallife.db
+Compiler/samp03/scriptfiles/
 ```
 
-Dieser Pfad bildet die Basis für:
+Die persistente Laufzeitbasis liegt dabei im INI-/Dateifallsystem, mit optionalem SQLite/MySQL-Autosync im laufenden Betrieb. Damit werden diese Datenbereiche abgesichert:
 
 - Login- und Charakterdaten
 - Inventar- und Safe-Strukturen
@@ -259,7 +260,7 @@ Dieser Pfad bildet die Basis für:
 - Staatskassen und Wirtschaftslogs
 - Zustandsdaten aus Economy, Jobs, Factions, Inventory und Fahrzeuge
 
-Das DB-Setup ist Teil der Boot- und Runtime-Initialisierung, und die erforderlichen Verzeichnisse werden in den Scripts vorausgesetzt und angelegt.
+Das Dini-Setup ist Teil der Start- und Runtime-Initialisierung, und die erforderlichen Verzeichnisse werden im Framework selbstständig angelegt bzw. als sichere Fallback-Schicht verwendet, ohne die Server-Initialisierung zu blockieren.
 
 ---
 

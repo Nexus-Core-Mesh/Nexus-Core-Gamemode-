@@ -10,7 +10,7 @@ Dieses Projekt ist als modularer, erweiterbarer GTA:SA-Reallife-Gamemode für ei
 - eigene Staatskasse pro Staat
 - eigene Verwaltung, Steuern, Revenue- und Treasury-Logik je Staat
 - 3x/1Admin-Architektur mit globalem Admin, staatlichem Admin und State-Leitung
-- SQLite-First-Design mit sauberer Backend-Abstraktionsschicht für späteres MySQL 4.1
+- Dini-first Persistenz mit robuster `scriptfiles/`-Fallback-Schicht und optionaler SQLite/MySQL-Autosync-Integration
 - modulare Struktur für einzelne Systeme, die unabhängig ausgebaut werden können
 - Textdraw-basierte Auth- und Login-Flows
 - Heimatstadt-, Tutorial- und Intro-Camera-Systeme
