@@ -71,7 +71,8 @@ Wichtige Einzelheiten:
 - `gamemodes/modules/` enthält das komplette modulare Spielsystem
 - `Compiler/pawncc/pawncc` ist der lokale 32-Bit-Pawn-Compiler
 - `Compiler/samp03/` ist der echte Server-Root für SA:MP
-- `data/db/` ist der SQLite-Speicherort
+- `Compiler/samp03/scriptfiles/` ist der Dini-/INI-Speicherort für das Start- und Persistenz-Fallback
+- `data/db/` bleibt nur optionaler SQLite-/Autosync-Pfad, darf die Serverinitialisierung aber nicht erzwingen
 
 ---
 
@@ -339,7 +340,7 @@ Deshalb muss die Datei immer genau den Namen `gtasa_reallife.amx` tragen.
 
 ## 11. SQLite-Datenbank vorbereiten
 
-Das Projekt nutzt eine lokale SQLite-Datenbank, die im Root unter `data/db/` liegen soll.
+Das Projekt nutzt eine lokale Dini-/INI-Base als primäre Persistenz, die im Laufzeitroot unter `Compiler/samp03/scriptfiles/` liegen soll. Optional kann weiterhin eine lokale SQLite-Datenbank unter `data/db/` existieren, aber sie darf den Bootstrap nicht erzwingen.
 
 ### 11.1 Verzeichnis anlegen
 
@@ -671,7 +672,7 @@ Pfad:
 - `data/db/`
 - `data/sql/`
 
-Das Projekt ist SQLite-first aufgebaut. Das heißt, die primäre Persistenz erfolgt über lokale SQLite-Datenbanken und SQL-Skripte. Die Produktivkonfiguration kann später auf MySQL erweitert werden, aber die Basis ist heute auf SQLite ausgerichtet.
+Das Projekt ist Dini-first aufgebaut. Das heißt, die primäre Persistenz erfolgt über lokale INI-/Datei-Storage im Laufzeitroot unter `Compiler/samp03/scriptfiles/`. Optional kann eine SQLite-/MySQL-Autosync-Schicht im laufenden Betrieb aktiviert werden, aber sie darf die Serverinitialisierung nicht erzwingen.
 
 Typische Dateien:
 

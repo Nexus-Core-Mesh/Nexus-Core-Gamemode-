@@ -9,7 +9,7 @@ Das Projekt als modularen, erweiterbaren GTA:SA-Reallife-Gamemode mit 3-Staaten-
 ### P0 – Kernsysteme und Stabilität
 - [x] Projektstruktur auf modularen Layern aufbauen
 - [x] Core-State-/Player-Modelle definieren
-- [x] DB-Abstraktionsschicht und SQLite-First-Design etablieren
+- [x] DB-Abstraktionsschicht mit Dini-first Fallback und optionaler SQLite/MySQL-Autosync etabliert
 - [x] Hooks, Lifecycle- und Runtime-Registrierung vereinheitlichen
 - [x] kritische Übergabepunkte zwischen DB, Inventar, Safe und UBB-Fahrzeugen abschirmen
 - [x] zentrale Treasury-/Bank-/State-APIs anlegen
