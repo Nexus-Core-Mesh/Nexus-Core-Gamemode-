@@ -228,6 +228,11 @@ Zusätzlich wurden die kritischen Übergänge auf einen konsistenten Datenfluss 
 
 Damit bleibt das Projekt als modularer, erweiterbarer Ausgangspunkt für ein reales 3-Staaten-Reallife-System nachvollziehbar, sauber strukturiert und für spätere Live-Validierung vorbereitet.
 
+## Projekt-Dokumentation
+
+- `SEASON.md` – vollständige Season- und World-Progression-Konzeption für das RP-System
+- `HowToSetup.md` – komplette Setup-, Server-, V-Server- und Deployment-Anleitung
+
 ## Nächste Entwicklungsstufen
 
 ### Phase 1 – Production-safe persistence (architektonisch umgesetzt)
