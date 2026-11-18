@@ -21,7 +21,7 @@ stock ProgressionSystem_Initialize()
     print("[PROGRESSION] Levelsystem und Spielerfortschritt initialisiert");
 }
 
-stock ProgressionSystem_OnPlayerConnect(playerid)
+stock ProgressionSystem_Connect(playerid)
 {
     gPlayerLevel[playerid] = 1;
     gPlayerXP[playerid] = 0;

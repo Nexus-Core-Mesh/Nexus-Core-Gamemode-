@@ -154,7 +154,7 @@ stock int:BusinessSystem_PayoutToOwner(playerid, bizid)
     return net;
 }
 
-stock BusinessSystem_TransferIncomeToOwner(bizid, amount)
+stock BusinessSystem_TransferIncome(bizid, amount)
 {
     if (bizid < 0 || bizid >= MAX_BUSINESSES)
     {

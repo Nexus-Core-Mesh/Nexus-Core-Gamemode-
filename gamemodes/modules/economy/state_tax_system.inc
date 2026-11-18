@@ -84,7 +84,7 @@ stock int:StateTaxSystem_GetInfrastructureRevenue(stateid)
     {
         return 0;
     }
-    return StateSystem_GetInfrastructureRevenue(stateid);
+    return StateSystem_GetInfraRev(stateid);
 }
 
 stock StateTaxSystem_ShowSummary(playerid, stateid)
@@ -99,7 +99,7 @@ stock StateTaxSystem_ShowSummary(playerid, stateid)
     StateSystem_GetStateName(stateid, stateName, sizeof(stateName));
 
     new msg[256];
-    format(msg, sizeof(msg), "[STATE_TAX] %s | Treasury: $%d | TaxRevenue: $%d | Infra: $%d", stateName, StateSystem_GetBankCash(stateid), StateSystem_GetTaxRevenue(stateid), StateSystem_GetInfrastructureRevenue(stateid));
+    format(msg, sizeof(msg), "[STATE_TAX] %s | Treasury: $%d | TaxRevenue: $%d | Infra: $%d", stateName, StateSystem_GetBankCash(stateid), StateSystem_GetTaxRevenue(stateid), StateSystem_GetInfraRev(stateid));
     SendClientMessage(playerid, 0x00D9FFFF, msg);
 
     if (gStateTaxSourceCount[stateid] > 0)

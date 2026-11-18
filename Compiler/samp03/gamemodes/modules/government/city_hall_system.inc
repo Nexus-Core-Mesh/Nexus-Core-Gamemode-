@@ -81,7 +81,7 @@ stock CityHallSystem_IsNearCityHall(playerid, stateid, Float:radius)
     return GetDistanceBetweenPoints3D(x, y, z, gCityHallPosX[stateid], gCityHallPosY[stateid], gCityHallPosZ[stateid]) <= radius;
 }
 
-stock CityHallSystem_NotifyNearbyPlayer(playerid)
+stock CityHallSystem_NotifyNear(playerid)
 {
     new stateid = Core_GetPlayerState(playerid);
     if (!Core_IsValidState(stateid))

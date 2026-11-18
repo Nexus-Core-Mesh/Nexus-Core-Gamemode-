@@ -32,7 +32,7 @@ stock UBBVehicleSystem_Initialize()
     print("[UBB_VEHICLE] Fahrzeug- und Besitzsystem für UBB/Portal-Integration initialisiert");
 }
 
-stock UBBVehicleSystem_RegisterVehicle(vehicleid, modelid, ownerid, stateid, price)
+stock UBBVehicleSystem_RegVeh(vehicleid, modelid, ownerid, stateid, price)
 {
     if (!Core_ValidateVehicleIndex(vehicleid))
     {
@@ -65,7 +65,7 @@ stock UBBVehicleSystem_RegisterVehicle(vehicleid, modelid, ownerid, stateid, pri
     return true;
 }
 
-stock UBBVehicleSystem_SetVehicleState(vehicleid, newState)
+stock UBBVehicleSystem_SetState(vehicleid, newState)
 {
     if (!Core_ValidateVehicleIndex(vehicleid))
     {
@@ -169,7 +169,7 @@ stock int:UBBVehicleSystem_GetFuel(vehicleid)
     return gUbbVehicleFuel[vehicleid];
 }
 
-stock UBBVehicleSystem_OnPlayerConnect(playerid)
+stock UBBVehicleSystem_Connect(playerid)
 {
     if (!Core_ValidatePlayerSlot(playerid))
     {

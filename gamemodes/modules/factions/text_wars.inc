@@ -259,7 +259,7 @@ stock TextWars_Refresh(playerid)
     }
     PlayerTextDrawSetString(playerid, gTWDraw[playerid][TW_DRAW_WAR], line);
 
-    new fightid = GangFightSystem_GetActiveFightForState(stateid);
+    new fightid = GangFightSystem_GetFight(stateid);
     if (fightid != -1)
     {
         format(line, sizeof(line), "Fight: %d:%d | %ds", GangFightSystem_GetScoreA(fightid), GangFightSystem_GetScoreB(fightid), GangFightSystem_GetTimeLeft(fightid));
@@ -324,7 +324,7 @@ stock TextWars_ShowStatus(playerid)
         format(info, sizeof(info), "Gangwar in %s: keiner aktiv\n", stateName);
     }
 
-    new fightid = GangFightSystem_GetActiveFightForState(stateid);
+    new fightid = GangFightSystem_GetFight(stateid);
     new fightText[160];
     if (fightid != -1)
     {
@@ -506,7 +506,7 @@ stock TextWars_OnPlayerDeath(playerid, killerid)
         }
     }
 
-    new fightid = GangFightSystem_GetActiveFightForState(FactionSystem_GetState(killerFaction));
+    new fightid = GangFightSystem_GetFight(FactionSystem_GetState(killerFaction));
     if (fightid != -1)
     {
         new fa = GangFightSystem_GetFactionA(fightid);

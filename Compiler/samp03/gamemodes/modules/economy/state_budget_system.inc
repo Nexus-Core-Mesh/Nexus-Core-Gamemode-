@@ -38,7 +38,7 @@ stock StateBudgetSystem_Transfer(stateid, amount, const reason[], const actor[])
         gStateBudgetAlert[stateid] = 0;
     }
 
-    return StateLedgerSystem_LogTransaction(stateid, (amount > 0) ? 1 : 4, amount, actor, reason);
+    return StateLedgerSystem_LogTx(stateid, (amount > 0) ? 1 : 4, amount, actor, reason);
 }
 
 stock int:StateBudgetSystem_GetAlertState(stateid)
@@ -50,7 +50,7 @@ stock int:StateBudgetSystem_GetAlertState(stateid)
     return gStateBudgetAlert[stateid];
 }
 
-stock int:StateBudgetSystem_GetLastTransfer(stateid)
+stock int:StateBudgetSystem_GetLastTx(stateid)
 {
     if (!Core_IsValidState(stateid))
     {

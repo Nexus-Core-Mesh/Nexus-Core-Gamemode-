@@ -57,17 +57,17 @@ stock AdminMappingSystem_Initialize()
         gAdminMapMode[i] = 0;
     }
 
-    AdminMappingSystem_RegisterLocation("LS_Spawn", STATE_LOS_SANTOS, 1500.0, -1710.0, 13.0, 0, 0, 0.0, MAP_LOCATION_ACTIVE);
-    AdminMappingSystem_RegisterLocation("LS_PD", STATE_LOS_SANTOS, 1561.0, -1675.0, 16.0, 0, 0, 180.0, MAP_LOCATION_ACTIVE);
-    AdminMappingSystem_RegisterLocation("LS_Hospital", STATE_LOS_SANTOS, 1187.0, -1323.0, 14.0, 0, 0, 90.0, MAP_LOCATION_ACTIVE);
+    AdminMappingSystem_RegLoc("LS_Spawn", STATE_LOS_SANTOS, 1500.0, -1710.0, 13.0, 0, 0, 0.0, MAP_LOCATION_ACTIVE);
+    AdminMappingSystem_RegLoc("LS_PD", STATE_LOS_SANTOS, 1561.0, -1675.0, 16.0, 0, 0, 180.0, MAP_LOCATION_ACTIVE);
+    AdminMappingSystem_RegLoc("LS_Hospital", STATE_LOS_SANTOS, 1187.0, -1323.0, 14.0, 0, 0, 90.0, MAP_LOCATION_ACTIVE);
 
-    AdminMappingSystem_RegisterLocation("SF_Spawn", STATE_SAN_FIERRO, -1930.0, 120.0, 27.0, 0, 0, 90.0, MAP_LOCATION_ACTIVE);
-    AdminMappingSystem_RegisterLocation("SF_PD", STATE_SAN_FIERRO, -1626.0, 690.0, 12.0, 0, 0, 90.0, MAP_LOCATION_ACTIVE);
-    AdminMappingSystem_RegisterLocation("SF_Hospital", STATE_SAN_FIERRO, -2672.0, 410.0, 7.0, 0, 0, 90.0, MAP_LOCATION_ACTIVE);
+    AdminMappingSystem_RegLoc("SF_Spawn", STATE_SAN_FIERRO, -1930.0, 120.0, 27.0, 0, 0, 90.0, MAP_LOCATION_ACTIVE);
+    AdminMappingSystem_RegLoc("SF_PD", STATE_SAN_FIERRO, -1626.0, 690.0, 12.0, 0, 0, 90.0, MAP_LOCATION_ACTIVE);
+    AdminMappingSystem_RegLoc("SF_Hospital", STATE_SAN_FIERRO, -2672.0, 410.0, 7.0, 0, 0, 90.0, MAP_LOCATION_ACTIVE);
 
-    AdminMappingSystem_RegisterLocation("LV_Spawn", STATE_LAS_VENTURAS, 1700.0, 1210.0, 16.0, 0, 0, 180.0, MAP_LOCATION_ACTIVE);
-    AdminMappingSystem_RegisterLocation("LV_PD", STATE_LAS_VENTURAS, 1590.0, 1000.0, 10.0, 0, 0, 270.0, MAP_LOCATION_ACTIVE);
-    AdminMappingSystem_RegisterLocation("LV_Hospital", STATE_LAS_VENTURAS, 1421.0, 1853.0, 13.0, 0, 0, 270.0, MAP_LOCATION_ACTIVE);
+    AdminMappingSystem_RegLoc("LV_Spawn", STATE_LAS_VENTURAS, 1700.0, 1210.0, 16.0, 0, 0, 180.0, MAP_LOCATION_ACTIVE);
+    AdminMappingSystem_RegLoc("LV_PD", STATE_LAS_VENTURAS, 1590.0, 1000.0, 10.0, 0, 0, 270.0, MAP_LOCATION_ACTIVE);
+    AdminMappingSystem_RegLoc("LV_Hospital", STATE_LAS_VENTURAS, 1421.0, 1853.0, 13.0, 0, 0, 270.0, MAP_LOCATION_ACTIVE);
 
     AdminMappingSystem_RegisterZone("LS_Gangwar", STATE_LOS_SANTOS, 1500.0, -1800.0, 1900.0, -1200.0, MAP_ZONE_ACTIVE);
     AdminMappingSystem_RegisterZone("SF_Gangwar", STATE_SAN_FIERRO, -2100.0, -200.0, -1400.0, 500.0, MAP_ZONE_ACTIVE);
@@ -76,7 +76,7 @@ stock AdminMappingSystem_Initialize()
     print("[ADMIN_MAP] Vollwertiges Mapping-/Teleport-System initialisiert");
 }
 
-stock AdminMappingSystem_RegisterLocation(const name[], stateid, Float:x, Float:y, Float:z, interior, vw, Float:angle, active)
+stock AdminMappingSystem_RegLoc(const name[], stateid, Float:x, Float:y, Float:z, interior, vw, Float:angle, active)
 {
     if (gMapLocationCount >= MAX_MAP_LOCATIONS)
     {
@@ -126,7 +126,7 @@ stock AdminMappingSystem_RegisterZone(const name[], stateid, Float:minX, Float:m
     return true;
 }
 
-stock AdminMappingSystem_CreateLocationForPlayer(playerid, const name[], stateid)
+stock AdminMappingSystem_CreateLoc(playerid, const name[], stateid)
 {
     if (playerid < 0 || playerid >= MAX_PLAYERS)
     {
@@ -141,10 +141,10 @@ stock AdminMappingSystem_CreateLocationForPlayer(playerid, const name[], stateid
     GetPlayerPos(playerid, x, y, z);
     GetPlayerFacingAngle(playerid, a);
 
-    return AdminMappingSystem_RegisterLocation(name, stateid, x, y, z, GetPlayerInterior(playerid), GetPlayerVirtualWorld(playerid), a, MAP_LOCATION_ACTIVE);
+    return AdminMappingSystem_RegLoc(name, stateid, x, y, z, GetPlayerInterior(playerid), GetPlayerVirtualWorld(playerid), a, MAP_LOCATION_ACTIVE);
 }
 
-stock AdminMappingSystem_UpdateLocation(locationid, const name[], stateid)
+stock AdminMappingSystem_UpdateLoc(locationid, const name[], stateid)
 {
     if (locationid < 0 || locationid >= gMapLocationCount)
     {
@@ -161,7 +161,7 @@ stock AdminMappingSystem_UpdateLocation(locationid, const name[], stateid)
     return true;
 }
 
-stock AdminMappingSystem_RemoveLocation(locationid)
+stock AdminMappingSystem_RemoveLoc(locationid)
 {
     if (locationid < 0 || locationid >= gMapLocationCount)
     {
@@ -176,7 +176,7 @@ stock AdminMappingSystem_RemoveLocation(locationid)
     return true;
 }
 
-stock AdminMappingSystem_TeleportPlayerToLocation(playerid, locationid)
+stock AdminMappingSystem_TpToLoc(playerid, locationid)
 {
     if (playerid < 0 || playerid >= MAX_PLAYERS)
     {
@@ -195,7 +195,7 @@ stock AdminMappingSystem_TeleportPlayerToLocation(playerid, locationid)
     return true;
 }
 
-stock AdminMappingSystem_ShowLocationList(playerid)
+stock AdminMappingSystem_ShowLocs(playerid)
 {
     SendClientMessage(playerid, 0x00D9FFFF, "[MAP] Verfügbare Orte:");
     for (new i = 0; i < gMapLocationCount && i < 20; i++)
@@ -217,9 +217,9 @@ stock AdminMappingSystem_ShowZoneList(playerid)
     }
 }
 
-stock AdminMappingSystem_ShowAdminMenu(playerid)
+stock AdminMappingSystem_ShowMenu(playerid)
 {
-    AdminMappingSystem_HideAdminMenu(playerid);
+    AdminMappingSystem_HideMenu(playerid);
 
     gAdminMapTD[playerid][0] = TextDrawCreate(320.0, 30.0, "MAPPING CONTROL");
     TextDrawAlignment(gAdminMapTD[playerid][0], 2);
@@ -257,7 +257,7 @@ stock AdminMappingSystem_ShowAdminMenu(playerid)
     }
 }
 
-stock AdminMappingSystem_HideAdminMenu(playerid)
+stock AdminMappingSystem_HideMenu(playerid)
 {
     for (new i = 0; i < 12; i++)
     {
@@ -270,7 +270,7 @@ stock AdminMappingSystem_HideAdminMenu(playerid)
     }
 }
 
-stock AdminMappingSystem_HandleCommand(playerid, const cmdtext[])
+stock AdminMappingSystem_HandleCmd(playerid, const cmdtext[])
 {
     if (cmdtext[0] != '/')
     {
@@ -291,7 +291,7 @@ stock AdminMappingSystem_HandleCommand(playerid, const cmdtext[])
 
     if (strcmp(cmd, "/mapmenu", true) == 0)
     {
-        AdminMappingSystem_ShowAdminMenu(playerid);
+        AdminMappingSystem_ShowMenu(playerid);
         return true;
     }
 
@@ -306,7 +306,7 @@ stock AdminMappingSystem_HandleCommand(playerid, const cmdtext[])
             return true;
         }
 
-        if (AdminMappingSystem_CreateLocationForPlayer(playerid, name, stateid))
+        if (AdminMappingSystem_CreateLoc(playerid, name, stateid))
         {
             SendClientMessage(playerid, 0x00FF00AA, "[MAP] Standort gespeichert.");
         }
@@ -327,7 +327,7 @@ stock AdminMappingSystem_HandleCommand(playerid, const cmdtext[])
             return true;
         }
 
-        if (AdminMappingSystem_TeleportPlayerToLocation(playerid, locid))
+        if (AdminMappingSystem_TpToLoc(playerid, locid))
         {
             new locationName[48];
             format(locationName, sizeof(locationName), "%s", gMapLocations[locid][EML_NAME]);
@@ -343,7 +343,7 @@ stock AdminMappingSystem_HandleCommand(playerid, const cmdtext[])
 
     if (strcmp(cmd, "/maplist", true) == 0)
     {
-        AdminMappingSystem_ShowLocationList(playerid);
+        AdminMappingSystem_ShowLocs(playerid);
         return true;
     }
 
@@ -363,7 +363,7 @@ stock AdminMappingSystem_HandleCommand(playerid, const cmdtext[])
             return true;
         }
 
-        if (AdminMappingSystem_RemoveLocation(locid))
+        if (AdminMappingSystem_RemoveLoc(locid))
         {
             SendClientMessage(playerid, 0x00FF00AA, "[MAP] Location gelöscht.");
         }

@@ -21,7 +21,7 @@ stock RelationshipSystem_Initialize()
     print("[RELATIONSHIP] Social relationship system initialized");
 }
 
-stock RelationshipSystem_OnPlayerConnect(playerid)
+stock RelationshipSystem_Connect(playerid)
 {
     if (playerid < 0 || playerid >= MAX_PLAYERS)
     {

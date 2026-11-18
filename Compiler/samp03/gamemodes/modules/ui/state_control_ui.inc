@@ -88,8 +88,8 @@ stock StateControl_ShowOverview(playerid, stateid)
 
     new info[512];
     format(info, sizeof(info), "Staat: %s\nLeiter: %s\nStaatskasse: $%d\nSteuersatz: %d%%\nSteuereinnahmen: $%d\nInfrastruktur: $%d\nPolitik: %s\nRegierungslevel: %d\nJob-Lohnfaktor: %d%%\nTransportarbeiter: %d",
-        stateName, leaderName, StateSystem_GetBankCash(stateid), StateSystem_GetTaxRate(stateid), StateSystem_GetTaxRevenue(stateid), StateSystem_GetInfrastructureRevenue(stateid),
-        policy, StateGovernance_GetLevel(stateid), StateJobs_GetPayMultiplier(stateid), TransportWorkers_GetStateWorkerCount(stateid));
+        stateName, leaderName, StateSystem_GetBankCash(stateid), StateSystem_GetTaxRate(stateid), StateSystem_GetTaxRevenue(stateid), StateSystem_GetInfraRev(stateid),
+        policy, StateGovernance_GetLevel(stateid), StateJobs_GetPayMultiplier(stateid), TransportWorkers_GetWorkerCount(stateid));
     ShowPlayerDialog(playerid, DIALOG_STATE_ACTION, DIALOG_STYLE_MSGBOX, "Übersicht & Kasse", info, UI_DIALOG_BUTTON_BACK, UI_DIALOG_BUTTON_CLOSE);
 }
 
@@ -149,7 +149,7 @@ stock StateControl_ApproveBudget(playerid, stateid, amount)
 {
     new actor[MAX_PLAYER_NAME];
     GetPlayerName(playerid, actor, sizeof(actor));
-    return StateGovernance_ApproveBudget(stateid, amount) && StateLedgerSystem_LogTransaction(stateid, STATE_LEDGER_TYPE_GOV, amount, actor, "ui_budget_approval");
+    return StateGovernance_ApproveBudget(stateid, amount) && StateLedgerSystem_LogTx(stateid, STATE_LEDGER_TYPE_GOV, amount, actor, "ui_budget_approval");
 }
 
 stock StateControl_OnDialogResponse(playerid, dialogid, response, listitem, const inputtext[])

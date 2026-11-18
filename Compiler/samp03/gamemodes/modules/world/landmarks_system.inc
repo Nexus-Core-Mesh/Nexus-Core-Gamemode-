@@ -24,17 +24,17 @@ stock LandmarksSystem_Initialize()
         format(gLandmarkName[i], 48, "Landmark");
     }
 
-    LandmarksSystem_RegisterLandmark(STATE_LOS_SANTOS, "Alhambra", "landmark", 1194.0, 1024.0, 10.0);
-    LandmarksSystem_RegisterLandmark(STATE_LOS_SANTOS, "Vinewood Sign", "landmark", 1339.0, 1030.0, 12.0);
-    LandmarksSystem_RegisterLandmark(STATE_SAN_FIERRO, "San Fierro Airport", "airport", -1318.0, -123.0, 14.0);
-    LandmarksSystem_RegisterLandmark(STATE_SAN_FIERRO, "Bayside Marina", "harbor", -1903.0, 157.0, 12.0);
-    LandmarksSystem_RegisterLandmark(STATE_LAS_VENTURAS, "Las Venturas Strip", "casino", 2034.0, 1118.0, 10.0);
-    LandmarksSystem_RegisterLandmark(STATE_LAS_VENTURAS, "Alhambra", "landmark", 1968.0, 1207.0, 11.0);
+    LandmarksSystem_RegLandmark(STATE_LOS_SANTOS, "Alhambra", "landmark", 1194.0, 1024.0, 10.0);
+    LandmarksSystem_RegLandmark(STATE_LOS_SANTOS, "Vinewood Sign", "landmark", 1339.0, 1030.0, 12.0);
+    LandmarksSystem_RegLandmark(STATE_SAN_FIERRO, "San Fierro Airport", "airport", -1318.0, -123.0, 14.0);
+    LandmarksSystem_RegLandmark(STATE_SAN_FIERRO, "Bayside Marina", "harbor", -1903.0, 157.0, 12.0);
+    LandmarksSystem_RegLandmark(STATE_LAS_VENTURAS, "Las Venturas Strip", "casino", 2034.0, 1118.0, 10.0);
+    LandmarksSystem_RegLandmark(STATE_LAS_VENTURAS, "Alhambra", "landmark", 1968.0, 1207.0, 11.0);
 
     print("[LANDMARKS] Stadtmarken und Landmarken initialisiert");
 }
 
-stock LandmarksSystem_RegisterLandmark(stateid, const name[], const type[], Float:x, Float:y, Float:z)
+stock LandmarksSystem_RegLandmark(stateid, const name[], const type[], Float:x, Float:y, Float:z)
 {
     if (!Core_IsValidState(stateid))
     {
@@ -57,7 +57,7 @@ stock LandmarksSystem_RegisterLandmark(stateid, const name[], const type[], Floa
     return false;
 }
 
-stock LandmarksSystem_GetNearestLandmark(playerid, stateid, landmarkName[], landmarkNameLen, Float:radius)
+stock LandmarksSystem_GetNearest(playerid, stateid, landmarkName[], landmarkNameLen, Float:radius)
 {
     if (!Core_IsValidState(stateid) || playerid < 0 || playerid >= MAX_PLAYERS)
     {
@@ -94,7 +94,7 @@ stock LandmarksSystem_GetNearestLandmark(playerid, stateid, landmarkName[], land
     return true;
 }
 
-stock LandmarksSystem_NotifyNearbyLandmarks(playerid)
+stock LandmarksSystem_NotifyNear(playerid)
 {
     new stateid = StateSystem_GetPlayerState(playerid);
     if (!Core_IsValidState(stateid))
@@ -103,7 +103,7 @@ stock LandmarksSystem_NotifyNearbyLandmarks(playerid)
     }
 
     new landmarkName[48];
-    if (LandmarksSystem_GetNearestLandmark(playerid, stateid, landmarkName, sizeof(landmarkName), 30.0))
+    if (LandmarksSystem_GetNearest(playerid, stateid, landmarkName, sizeof(landmarkName), 30.0))
     {
         SendClientMessage(playerid, 0xD6D6D6AA, "[LANDMARK] In deiner Nähe: %s", landmarkName);
     }

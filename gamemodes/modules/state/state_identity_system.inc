@@ -36,7 +36,7 @@ stock StateIdentitySystem_Initialize()
     print("[STATE_IDENTITY] Staatliche Identitäten und Wirtschaftsprofile initialisiert");
 }
 
-stock StateIdentitySystem_RegisterStateIdentity(stateid, const name[], const shortName[], const capital[], const focus[], taxRate, treasury)
+stock StateIdentitySystem_RegStateId(stateid, const name[], const shortName[], const capital[], const focus[], taxRate, treasury)
 {
     if (!Core_IsValidState(stateid))
     {
@@ -53,7 +53,7 @@ stock StateIdentitySystem_RegisterStateIdentity(stateid, const name[], const sho
     return true;
 }
 
-stock StateIdentitySystem_GetStateSummary(stateid, output[], len)
+stock StateIdentitySystem_GetSummary(stateid, output[], len)
 {
     if (!Core_IsValidState(stateid))
     {
@@ -66,7 +66,7 @@ stock StateIdentitySystem_GetStateSummary(stateid, output[], len)
     format(output, len, "%s | %s | Hauptstadt: %s | Fokus: %s | Steuer: %d%% | Kasse: $%d", stateName, gStateIdentityShort[stateid], gStateIdentityCapital[stateid], gStateIdentityFocus[stateid], gStateIdentityTaxRate[stateid], gStateIdentityTreasury[stateid]);
 }
 
-stock StateIdentitySystem_ApplyRevenue(stateid, amount)
+stock StateIdentitySystem_ApplyRev(stateid, amount)
 {
     if (!Core_IsValidState(stateid))
     {
@@ -95,7 +95,7 @@ stock StateIdentitySystem_ShowSummary(playerid, stateid)
     }
 
     new summary[256];
-    StateIdentitySystem_GetStateSummary(stateid, summary, sizeof(summary));
+    StateIdentitySystem_GetSummary(stateid, summary, sizeof(summary));
     SendClientMessage(playerid, 0x00D9FFFF, summary);
 }
 

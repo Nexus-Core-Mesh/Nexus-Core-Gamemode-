@@ -21,12 +21,12 @@ forward LoginSystem_OnPlayerDisconnect(playerid, reason);
 forward StateSystem_OnPlayerConnect(playerid);
 forward StateSystem_OnPlayerDisconnect(playerid, reason);
 forward InventorySystem_OnPlayerConnect(playerid);
-forward HouseStorageSystem_OnPlayerConnect(playerid);
-forward UBBVehicleSystem_OnPlayerConnect(playerid);
+forward HouseStorageSystem_Connect(playerid);
+forward UBBVehicleSystem_Connect(playerid);
 forward AdminSystem_OnPlayerConnect(playerid);
 forward AdminSystem_OnPlayerDisconnect(playerid, reason);
 forward JobsCore_OnPlayerConnect(playerid);
-forward ProgressionSystem_OnPlayerConnect(playerid);
+forward ProgressionSystem_Connect(playerid);
 forward JobCenter_OnPlayerConnect(playerid);
 forward TextWars_OnPlayerConnect(playerid);
 forward StateControl_OnPlayerConnect(playerid);
@@ -76,7 +76,7 @@ stock Core_ConnectHookExists(const hookName[])
     return false;
 }
 
-stock Core_RegisterPlayerConnectHook(const hookName[])
+stock Core_RegisterConnectHook(const hookName[])
 {
     if (Core_ConnectHookExists(hookName))
     {
@@ -105,7 +105,7 @@ stock Core_DisconnectHookExists(const hookName[])
     return false;
 }
 
-stock Core_RegisterPlayerDisconnectHook(const hookName[])
+stock Core_RegisterDisconnectHook(const hookName[])
 {
     if (Core_DisconnectHookExists(hookName))
     {
@@ -155,9 +155,9 @@ stock Core_RunPlayerConnectHooks(playerid)
     LoginSystem_OnPlayerConnect(playerid);
     StateSystem_OnPlayerConnect(playerid);
     InventorySystem_OnPlayerConnect(playerid);
-    HouseStorageSystem_OnPlayerConnect(playerid);
-    UBBVehicleSystem_OnPlayerConnect(playerid);
-    ProgressionSystem_OnPlayerConnect(playerid);
+    HouseStorageSystem_Connect(playerid);
+    UBBVehicleSystem_Connect(playerid);
+    ProgressionSystem_Connect(playerid);
     JobsCore_OnPlayerConnect(playerid);
     JobCenter_OnPlayerConnect(playerid);
     TextWars_OnPlayerConnect(playerid);
@@ -194,27 +194,27 @@ stock Core_RegisterDefaultRuntimeModules()
     Core_RegisterRuntimeModule("web");
     Core_RegisterRuntimeModule("ui");
 
-    Core_RegisterPlayerConnectHook("Core_OnPlayerConnect");
-    Core_RegisterPlayerConnectHook("AdminSystem_OnPlayerConnect");
-    Core_RegisterPlayerConnectHook("LoginSystem_OnPlayerConnect");
-    Core_RegisterPlayerConnectHook("StateSystem_OnPlayerConnect");
-    Core_RegisterPlayerConnectHook("InventorySystem_OnPlayerConnect");
-    Core_RegisterPlayerConnectHook("HouseStorageSystem_OnPlayerConnect");
-    Core_RegisterPlayerConnectHook("UBBVehicleSystem_OnPlayerConnect");
-    Core_RegisterPlayerConnectHook("ProgressionSystem_OnPlayerConnect");
-    Core_RegisterPlayerConnectHook("JobsCore_OnPlayerConnect");
-    Core_RegisterPlayerConnectHook("JobCenter_OnPlayerConnect");
-    Core_RegisterPlayerConnectHook("TextWars_OnPlayerConnect");
-    Core_RegisterPlayerConnectHook("StateControl_OnPlayerConnect");
-    Core_RegisterPlayerConnectHook("UiHub_OnPlayerConnect");
+    Core_RegisterConnectHook("Core_OnPlayerConnect");
+    Core_RegisterConnectHook("AdminSystem_OnPlayerConnect");
+    Core_RegisterConnectHook("LoginSystem_OnPlayerConnect");
+    Core_RegisterConnectHook("StateSystem_OnPlayerConnect");
+    Core_RegisterConnectHook("InventorySystem_OnPlayerConnect");
+    Core_RegisterConnectHook("HouseStorageSystem_Connect");
+    Core_RegisterConnectHook("UBBVehicleSystem_Connect");
+    Core_RegisterConnectHook("ProgressionSystem_Connect");
+    Core_RegisterConnectHook("JobsCore_OnPlayerConnect");
+    Core_RegisterConnectHook("JobCenter_OnPlayerConnect");
+    Core_RegisterConnectHook("TextWars_OnPlayerConnect");
+    Core_RegisterConnectHook("StateControl_OnPlayerConnect");
+    Core_RegisterConnectHook("UiHub_OnPlayerConnect");
 
-    Core_RegisterPlayerDisconnectHook("TextWars_OnPlayerDisconnect");
-    Core_RegisterPlayerDisconnectHook("JobCenter_OnPlayerDisconnect");
-    Core_RegisterPlayerDisconnectHook("JobsCore_OnPlayerDisconnect");
-    Core_RegisterPlayerDisconnectHook("LoginSystem_OnPlayerDisconnect");
-    Core_RegisterPlayerDisconnectHook("AdminSystem_OnPlayerDisconnect");
-    Core_RegisterPlayerDisconnectHook("StateSystem_OnPlayerDisconnect");
-    Core_RegisterPlayerDisconnectHook("Core_OnPlayerDisconnect");
+    Core_RegisterDisconnectHook("TextWars_OnPlayerDisconnect");
+    Core_RegisterDisconnectHook("JobCenter_OnPlayerDisconnect");
+    Core_RegisterDisconnectHook("JobsCore_OnPlayerDisconnect");
+    Core_RegisterDisconnectHook("LoginSystem_OnPlayerDisconnect");
+    Core_RegisterDisconnectHook("AdminSystem_OnPlayerDisconnect");
+    Core_RegisterDisconnectHook("StateSystem_OnPlayerDisconnect");
+    Core_RegisterDisconnectHook("Core_OnPlayerDisconnect");
 
     return true;
 }

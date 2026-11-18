@@ -29,23 +29,23 @@ stock TerritorySystem_Initialize()
         format(gTerritoryName[i], 40, "");
     }
 
-    TerritorySystem_RegisterTerritory(STATE_LOS_SANTOS, "Downtown Core", TERRITORY_TYPE_COMMERCIAL, 450000, STATE_LOS_SANTOS);
-    TerritorySystem_RegisterTerritory(STATE_LOS_SANTOS, "Vinewood Heights", TERRITORY_TYPE_RESIDENTIAL, 325000, STATE_LOS_SANTOS);
-    TerritorySystem_RegisterTerritory(STATE_LOS_SANTOS, "Harbor Industrial", TERRITORY_TYPE_INDUSTRIAL, 510000, STATE_LOS_SANTOS);
+    TerritorySystem_RegTerr(STATE_LOS_SANTOS, "Downtown Core", TERRITORY_TYPE_COMMERCIAL, 450000, STATE_LOS_SANTOS);
+    TerritorySystem_RegTerr(STATE_LOS_SANTOS, "Vinewood Heights", TERRITORY_TYPE_RESIDENTIAL, 325000, STATE_LOS_SANTOS);
+    TerritorySystem_RegTerr(STATE_LOS_SANTOS, "Harbor Industrial", TERRITORY_TYPE_INDUSTRIAL, 510000, STATE_LOS_SANTOS);
 
-    TerritorySystem_RegisterTerritory(STATE_SAN_FIERRO, "Bayview District", TERRITORY_TYPE_RESIDENTIAL, 310000, STATE_SAN_FIERRO);
-    TerritorySystem_RegisterTerritory(STATE_SAN_FIERRO, "Airport Logistics", TERRITORY_TYPE_INDUSTRIAL, 470000, STATE_SAN_FIERRO);
-    TerritorySystem_RegisterTerritory(STATE_SAN_FIERRO, "City Center", TERRITORY_TYPE_COMMERCIAL, 420000, STATE_SAN_FIERRO);
+    TerritorySystem_RegTerr(STATE_SAN_FIERRO, "Bayview District", TERRITORY_TYPE_RESIDENTIAL, 310000, STATE_SAN_FIERRO);
+    TerritorySystem_RegTerr(STATE_SAN_FIERRO, "Airport Logistics", TERRITORY_TYPE_INDUSTRIAL, 470000, STATE_SAN_FIERRO);
+    TerritorySystem_RegTerr(STATE_SAN_FIERRO, "City Center", TERRITORY_TYPE_COMMERCIAL, 420000, STATE_SAN_FIERRO);
 
-    TerritorySystem_RegisterTerritory(STATE_LAS_VENTURAS, "The Strip", TERRITORY_TYPE_COMMERCIAL, 620000, STATE_LAS_VENTURAS);
-    TerritorySystem_RegisterTerritory(STATE_LAS_VENTURAS, "Marina Plaza", TERRITORY_TYPE_RECREATIONAL, 360000, STATE_LAS_VENTURAS);
-    TerritorySystem_RegisterTerritory(STATE_LAS_VENTURAS, "Old Town", TERRITORY_TYPE_RESIDENTIAL, 340000, STATE_LAS_VENTURAS);
+    TerritorySystem_RegTerr(STATE_LAS_VENTURAS, "The Strip", TERRITORY_TYPE_COMMERCIAL, 620000, STATE_LAS_VENTURAS);
+    TerritorySystem_RegTerr(STATE_LAS_VENTURAS, "Marina Plaza", TERRITORY_TYPE_RECREATIONAL, 360000, STATE_LAS_VENTURAS);
+    TerritorySystem_RegTerr(STATE_LAS_VENTURAS, "Old Town", TERRITORY_TYPE_RESIDENTIAL, 340000, STATE_LAS_VENTURAS);
 
     print("[TERRITORY] Territorien, Districts und Einflusszonen initialisiert");
     Core_MarkModuleReady("world");
 }
 
-stock TerritorySystem_RegisterTerritory(stateid, const name[], type, value, controller)
+stock TerritorySystem_RegTerr(stateid, const name[], type, value, controller)
 {
     if (!Core_IsValidState(stateid) || gTerritoryCount >= MAX_TERRITORIES)
     {
@@ -123,7 +123,7 @@ stock int:TerritorySystem_GetControlCount(controlState)
     return count;
 }
 
-stock int:TerritorySystem_GetCountForState(stateid)
+stock int:TerritorySystem_GetCount(stateid)
 {
     if (!Core_IsValidState(stateid))
     {
@@ -152,7 +152,7 @@ stock TerritorySystem_ShowTerritories(playerid, stateid)
     new stateName[32];
     StateSystem_GetStateName(stateid, stateName, sizeof(stateName));
     new message[256];
-    format(message, sizeof(message), "[TERRITORY] %s | Bezirke: %d", stateName, TerritorySystem_GetCountForState(stateid));
+    format(message, sizeof(message), "[TERRITORY] %s | Bezirke: %d", stateName, TerritorySystem_GetCount(stateid));
     SendClientMessage(playerid, 0x00D9FFFF, message);
 
     for (new i = 0; i < gTerritoryCount; i++)
