@@ -17,6 +17,13 @@ jobs:
         run: |
           mkdir -p data/db Compiler/samp03/gamemodes Compiler/samp03/data/db
 
+      - name: Install 32-bit build runtime
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt-get update
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            qemu-user libc6-i386 lib32gcc-s1 lib32stdc++6 zlib1g:i386 libgcc-s1:i386
+
       - name: Compile gamemode
         env:
           SA_SERVER_ROOT: ${{ github.workspace }}/Compiler/samp03
@@ -31,11 +38,6 @@ jobs:
             -iincludes \
             -iCompiler/samp03/include \
             -d3
-
-      - name: Verify AMX target name
-        run: |
-          test -f Compiler/samp03/gamemodes/gtasa_reallife.amx
-          ls -l Compiler/samp03/gamemodes/gtasa_reallife.amx
 
       - name: Verify AMX target name
         run: |
