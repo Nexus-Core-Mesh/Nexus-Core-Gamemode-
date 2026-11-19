@@ -11,12 +11,12 @@ Die Kernidee ist eine saubere Trennung von Verantwortlichkeiten, damit das Syste
 - `includes/` – SA:MP- und Projekt-Includes
 - `config/` – Server- und Konfigurationsdateien
 - `Compiler/samp03/scriptfiles/` – primärer Dini-Persistenzpfad für INI-Style-Dateispeicherung
-- `data/db/` – optionale lokale SQLite/MySQL-Autosync-Schnittstelle, nicht als Startvoraussetzung
+- `data/db/` – optionale lokale SQLite/MySQL-Autosync-Schnittstelle, nicht als primäre Source of Truth für den laufenden Serverzustand
 - `Compiler/` – lokale Pawn-Toolchain und Serverruntime
 - `Compiler/samp03/` – laufende SA:MP-Serverumgebung
 - `scripts/` – Setup, Build, Deployment, Debugging
 
-Das wichtigste Designprinzip lautet: Der Quellcode wird im Root entwickelt, gebaut und kompiliert, während der Serverordner nur die Laufzeitbinary und runtime-required Files enthält. Dadurch bleibt die Deployment-Kette reproduzierbar und frei von veralteten Alias-Dateien.
+Das wichtigste Designprinzip lautet: Der Quellcode wird im Root entwickelt, gebaut und kompiliert, während der Serverordner nur die Laufzeitbinary und runtime-required Files enthält. Dadurch bleibt die Deployment-Kette reproduzierbar und frei von veralteten Alias-Dateien. Die Architektur ist bewusst auf den Dini-first-Laufpfad ausgelegt; SQLite/MySQL sind optionale Konsistenz- und Monitoring-Schnittstellen, nicht die primäre Runtime-Quelle.
 
 ---
 
@@ -260,7 +260,60 @@ Die persistente Laufzeitbasis liegt dabei im INI-/Dateifallsystem, mit optionale
 - Staatskassen und Wirtschaftslogs
 - Zustandsdaten aus Economy, Jobs, Factions, Inventory und Fahrzeuge
 
-Das Dini-Setup ist Teil der Start- und Runtime-Initialisierung, und die erforderlichen Verzeichnisse werden im Framework selbstständig angelegt bzw. als sichere Fallback-Schicht verwendet, ohne die Server-Initialisierung zu blockieren.
+Das Dini-Setup ist Teil der Start- und Runtime-Initialisierung, und die erforderlichen Verzeichnisse müssen vor dem Start der Daemons physisch existieren. Die Pflege dieser Strukturen ist Teil der produktiven Betriebsbereitschaft, nicht nur ein optionaler Fallback.
+
+Wichtiger Produktionshinweis für Ubuntu-VM/Linux:
+
+- `Compiler/samp03/scriptfiles/` ist der primäre Persistenzpfad, aber Unterordner wie `players/`, `houses/`, `safes/`, `vehicles/` und `state/` müssen vor dem Start der Daemons physisch angelegt werden.
+- Dini schreibt zeilenweise in Textdateien; es gibt keine SQL-Transaktions-Atomicity. Deshalb müssen kritische Transfers als atomare Datei-Operationen umgesetzt werden: write-temp → validate → rename.
+- Der optional Sync zu SQLite/MySQL darf nicht als alleinige Datenquelle dienen, weil `control-panel/server.js` laut Spezifikation read-only auf SQLite arbeitet und deshalb veraltete oder leere Werte anzeigen kann, wenn Dini-Änderungen nicht auch mit einem konsistenten Upsert propagiert werden.
+
+### 2.7 Produktions-Checkliste für echte Live-Umgebungen
+
+Vor dem Start von `samp.service`, `samp2.service` oder `omp-server.service` auf der Ubuntu-VM müssen diese Voraussetzungen erfüllt sein:
+
+```bash
+mkdir -p Compiler/samp03/scriptfiles/players \
+         Compiler/samp03/scriptfiles/houses \
+         Compiler/samp03/scriptfiles/safes \
+         Compiler/samp03/scriptfiles/vehicles \
+         Compiler/samp03/scriptfiles/ubb \
+         Compiler/samp03/scriptfiles/backups \
+         Compiler/samp03/scriptfiles/state/ls \
+         Compiler/samp03/scriptfiles/state/sf \
+         Compiler/samp03/scriptfiles/state/lv
+chmod 755 Compiler/samp03/scriptfiles \
+         Compiler/samp03/scriptfiles/players \
+         Compiler/samp03/scriptfiles/houses \
+         Compiler/samp03/scriptfiles/safes \
+         Compiler/samp03/scriptfiles/vehicles \
+         Compiler/samp03/scriptfiles/ubb \
+         Compiler/samp03/scriptfiles/backups \
+         Compiler/samp03/scriptfiles/state/ls \
+         Compiler/samp03/scriptfiles/state/sf \
+         Compiler/samp03/scriptfiles/state/lv
+```
+
+Danach gilt:
+
+- `pawncc` muss den Gamemode ohne Compile-Fehler erzeugen
+- `gtasa_reallife.amx` muss in `Compiler/samp03/gamemodes/` liegen
+- `server.cfg` muss exakt `gamemode0 gtasa_reallife 1` enthalten
+- `control-panel/server.js` muss dieselben Live-Daten wie Dini/INI lesen oder den SQLite-Upsert-Pfad synchron halten
+- Spieler-, House-, Safe-, Fahrzeug- und State-Transfers müssen nach einem Crash nicht in halben Zuständen stehen
+
+### 2.8 Atomicity- und Recovery-Regeln für Dini-Schreibpfade
+
+Dini arbeitet ohne SQL-Transaktions-Logik. Für kritische Pfade gilt deshalb eine explizite Datei-Atomicity-Policy:
+
+- `StateLedgerSystem_Transfer()` darf nur dann Geld aus einer Kasse abbuchen und einer anderen gutschreiben, wenn beide Schreibschritte als Teil einer durchgehend validierten Datei-Transaktion erfolgen.
+- `house_storage_system.inc` und Fahrzeug-/Inventar-Transfers müssen temp-Dateien verwenden und nur nach erfolgreichem Schreiben/Validieren atomar umbenennen.
+- Wenn ein Lesevorgang auf eine teilweise oder beschädigte INI-Datei trifft, muss der Loader einen Repair- oder Fallback-Pfad aktivieren und die betroffenen Werte als ungültig markieren, statt sie als gültige Daten zu akzeptieren.
+- Der SQLite-Autosync darf nur als ergänzende, asynchrone Konsistenzschicht dienen. Er kann nicht als Ersatz für die Dini-Atomicity- und Recovery-Regeln fungieren.
+- Dadurch bleibt der reale Datenfluss: Dini-first-Save → validieren → atomar umbenennen → optional SQLite-Upsert/Replication → read-only Panel-Query. Ein fehlender oder veralteter SQLite-Update-Pfad zählt als operativer Mismatch, nicht als normaler Zustand.
+
+Damit bleibt die Datenbasis zwischen Dini-first-Storage und SQLite-Read-Only-Panel in einem konsistenten, prüfbaren Zyklus: Save → validate → atomic rename → optional SQLite upsert → panel read.
+
 
 ---
 

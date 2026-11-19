@@ -2,7 +2,9 @@
 
 ## Veröffentlichungsstatus
 
-Dieses Projekt ist als modularer, erweiterbarer GTA:SA-Reallife-Gamemode für einen 3-Staaten-Server veröffentlicht. Die Kernidee ist bewusst: keine monolithische `gamemode.pwn`-Logik, sondern ein klares Modul- und Layer-System mit separaten Bereichen für Core, State, Government, Economy, Housing, Jobs, Factions, Vehicles, Inventory, Services und Web-Management.
+Dieses Projekt ist als modularer, erweiterbarer GTA:SA-Reallife-Gamemode für einen 3-Staaten-Server dokumentiert. Der aktuelle Stand ist ein konsistenter Dini-first-/Fallback-Architektur- und Build-Validierungsstand, aber keine finale Live-Release-Freigabe für einen echten Ubuntu-VM-Produktionslauf. Der reale Freigabe-Gate bleibt erst dann erfüllt, wenn `pawncc`/`qemu-i386`, die vollständige `scriptfiles/`-Struktur, der echte Service-Start und die SQLite-/Control-Panel-Synchronisierung auf der Ziel-VM ohne offene Blocker bestanden sind.
+
+Die Kernidee ist bewusst: keine monolithische `gamemode.pwn`-Logik, sondern ein klares Modul- und Layer-System mit separaten Bereichen für Core, State, Government, Economy, Housing, Jobs, Factions, Vehicles, Inventory, Services und Web-Management.
 
 ### Kerneigenschaften
 
@@ -17,11 +19,11 @@ Dieses Projekt ist als modularer, erweiterbarer GTA:SA-Reallife-Gamemode für ei
 - RP-optimierte Regierung-, Wirtschafts- und Fraktionsarchitektur
 - Housing-, Inventory-, Vehicle-, Business- und Property-Logik mit eigener Ownership-Schicht
 - Web-/Dashboard-Integration als separates Kontrollpanel mit SQLite-Read-Only-Lesezugriff
-- `c++`-Mirror: Strukturtreuer 1:1-Spiegel des Projekts als C++-sichtbare Projektebene für Audit, Überblick und Tooling
+- `c++`-Mirror (optional / falls vorhanden): strukturtreuer Projektspiegel als C++-sichtbare Projektebene für Audit, Überblick und Tooling
 
 ## Aktueller Entwicklungsstand
 
-Das Projekt hat einen vollständigen modularen RP-Framework-Stand erreicht und ist als robuste Basis für reale SA:MP-Entwicklung nutzbar. Zusätzlich existiert im Ordner `c++` ein strukturtreuer Spiegel des gesamten Projekts, um die Modularität, Dateistruktur und Quellhistorie auch in C++-sichtbarer Form nachvollziehbar zu halten. Die wichtigsten Systembereiche sind bereits als eigenständige Module angelegt und an die Haupt-Architektur angehängt.
+Das Projekt hat einen vollständigen modularen RP-Framework-Stand erreicht und ist als robuste Basis für reale SA:MP-Entwicklung dokumentiert. Wenn ein `c++`-Spiegel im Repository vorhanden ist, dient er als strukturtreuer Projektspiegel für Audit, Überblick und Tooling; er ist kein Laufzeitbestandteil des SA:MP-Servers. Die wichtigsten Systembereiche sind bereits als eigenständige Module angelegt und an die Haupt-Architektur angehängt. Der aktuelle Härtungsstand bezieht sich jedoch auf den aktuellen Code-/Build-Stand und die Architektur-Validierung; ein echter Live-Server-Start auf Ubuntu-VM bleibt noch als separate Produktionsprüfung auszuführen.
 
 ### Umgesetzte Kernmodule
 
@@ -58,9 +60,10 @@ Die letzte Erweiterungsphase war bewusst auf echte Produktionsrelevanz ausgerich
    - `module_contract.inc` ergänzt den Boot- und Runtime-Flow mit definierter Stufenfolge: Boot → DB-ready → State-ready → Runtime-ready.
    - `Core_SetLifecycleStage()` und `Core_AssertLifecycleStage()` erzwingen ein vorhersehbares Startprotokoll, damit Module nicht implizit in falscher Reihenfolge initialisiert werden.
 
-3. SQLite-Transaktionen wurden als atomare Schreibpfade formalisiert.
-   - `DB_BeginTransaction()` nutzt `BEGIN EXCLUSIVE TRANSACTION`.
-   - `DB_CommitTransaction()` und `DB_RollbackTransaction()` sind als zentrale Fehlerbehandlung eingebaut.
+3. Dini-first-Atomarität und SQL-Sync-Abgrenzung wurden explizit getrennt.
+   - `DB_BeginTransaction()`/`DB_CommitTransaction()` sind für optionale SQLite/MySQL-Sync- und Audit-Pfade relevant, aber sie ersetzen nicht die primäre Dini-first-Transaktionslogik im laufenden Serverzustand.
+   - Der echte primäre Schreibpfad bleibt `scriptfiles/`-Dini; kritische Transfers müssen als temp-Datei → validate → rename ohne halbe Zustände abgewickelt werden.
+   - SQLite/MySQL dient ergänzend als Autosync- oder Dashboard-Quelle und niemals als alleiniger Ersatz für den Dini-first-Save-Stack.
 
 4. Schema- und Constraint-Logik wurde für die wichtigen Tabellen erweitert.
    - `houses` hat klare `ON DELETE CASCADE`-/`SET NULL`-Beziehungen.
@@ -68,7 +71,7 @@ Die letzte Erweiterungsphase war bewusst auf echte Produktionsrelevanz ausgerich
    - `inventory`, `house_storage_items`, `ubb_vehicles` sind mit gültigen Index- und Value-Grenzen versehen.
 
 5. State- und Treasury-Logik wurde auf eine gemeinsame Quelle zurückgeführt.
-   - `Core_*`-Bankwerte, `StateSystem_*`-Kassen und `DB_*`-Treasury-Pfade sind als einheitlicher Datenfluss konzipiert.
+   - `Core_*`-Bankwerte, `StateSystem_*`-Kassen und die Dini-/SQLite-Reload-Pfade bilden einen konsistenten Datenfluss; die primäre Live-Quelle bleibt jedoch der Dini-first-Storage in `scriptfiles/`.
 
 6. Für kritische Systeme gibt es Guard-Checks gegen ungültige Werte.
    - Arrayslots, Item-Quantitäten und Fahrzeug-/Safe-Operationen prüfen explizit Grenzen und Zustände.
@@ -203,30 +206,94 @@ Empfohlener Stack:
 - `MapAndreas`
 - `pawn-plus` / kompatible Helper-Includes
 
+## Live-Betrieb auf Ubuntu-VM: Übergabepunkte und harte Regeln
+
+Die reale Produktionsvalidierung muss auf der Ubuntu-VM erfolgen, nicht im Container. Dort stehen die echten Laufzeitbestandteile zur Verfügung: `pawncc`, `qemu-i386`, `samp.service` / `omp-server.service`, `Compiler/samp03/scriptfiles/` und `control-panel/server.js`.
+
+### Kritische Übergangspunkte
+
+1. Dini-first vs. Control Panel
+   - Das Web-Dashboard ist offiziell als SQLite-Read-Only-Lesezugriff konzipiert.
+   - Wenn der Gamemode im Alltag primär per Dini in `Compiler/samp03/scriptfiles/` schreibt, muss jeder relevante Save-Pfad entweder synchron in SQLite upserted werden oder das Node.js-Backend muss die INI-Dateien direkt lesen.
+   - Ohne diese Synchronisation bleiben Staatskassen, Häuser und Spielerstatus in `control-panel/server.js` veraltet oder leer.
+
+2. Atomarität bei Dini statt SQL-Transaction
+   - `DB_BeginTransaction()`/`BEGIN EXCLUSIVE TRANSACTION` ist für SQL-Backends geeignet, aber Dini schreibt direkt in Textdateien ohne Transaktions-Rollback.
+   - Für kritische Pfade (`StateLedgerSystem_Transfer()`, Haus-Safes, Fahrzeug- und Inventar-Transfers) muss die Speicherlogik absichtlich robust sein: temp-Datei schreiben, atomisch umbenennen, dabei keine halben Zustände zulassen.
+   - Wenn ein Server-Crash mitten im Schreibvorgang auftritt, dürfen keine Werte als "abgebucht aber nicht gutgeschrieben" in scriptfiles/ landen.
+
+3. Include-Reihenfolge und Guard-Layer
+   - Die Reihenfolge `Core → DB → State → Admin → Auth → Economy → Jobs → Laws → Housing/Vehicle → Leisure/Web` bleibt bindend.
+   - `core.inc` und `production_guard.inc` müssen mit `pawncc` gegen den echten Compiler laufen, damit Makro-, Tag- und Include-Konflikte sichtbar werden.
+   - Gerade Dini-Wrapper und `DB_*`-Signaturen müssen gegen die reale Pawn-Toolchain geprüft werden, nicht nur in der Container-Struktur.
+
+4. Echte scriptfiles/-Verzeichnisstruktur unter Linux
+   - Dini legt Unterordner nicht automatisch an.
+   - Vor dem Start der SAMP-/OMP-Daemons müssen alle erwarteten Ordner in `Compiler/samp03/scriptfiles/` physisch existieren, etwa für Spieler, Häuser, Safes, UBB-Fahrzeuge und die Staatskassen LS/SF/LV.
+   - Schreibrechte und Dateierstellung müssen sauber auf den Servernutzer passen.
+
+### Ubuntu-VM-Verifikation
+
+Realer Live-Check auf der Ubuntu-VM:
+
+```bash
+cd /home/youruser/Nexus-Core-Gamemode
+git pull --ff-only
+qemu-i386 Compiler/pawncc/pawncc \
+  -o"$PWD/Compiler/samp03/gamemodes/gtasa_reallife.amx" \
+  gamemodes/gamemode.pwn \
+  -iincludes \
+  -i"$PWD/Compiler/samp03/include" \
+  -d3
+
+find Compiler/samp03/scriptfiles -maxdepth 2 -type d | sort
+ls -ld Compiler/samp03/scriptfiles Compiler/samp03/scriptfiles/*
+```
+
+Danach wird verifiziert:
+
+- `gtasa_reallife.amx` wird gebaut
+- keine Makro-/Tag-Fehler aus der Dini-Umstellung
+- `scriptfiles/` enthält die erwarteten Verzeichnisse mit Schreibrechten
+- `samp.service`, `samp2.service` oder `omp-server.service` startet ohne Runtime-Fehler
+- `control-panel/server.js` zeigt denselben Stand wie die Dini-Dateien bzw. liest dieselben Daten synchronisiert
+
+### Abnahme-/Erfolgs-Kriterien
+
+Die Übergabe gilt als erfüllt, wenn alle folgenden Kriterien in der echten Ubuntu-VM gleichzeitig erfüllt sind:
+
+- Kompilierung: `pawncc` via `qemu-i386` läuft ohne blockierende Fehler und erzeugt die aktuelle `.amx` im `Compiler/samp03/gamemodes/`-Pfad.
+- Persistenz & Reconnect: Registrierung, Login, Home-State-Wahl LS/SF/LV und Reconnect schreiben erwartete Schlüssel-Wert-Einträge in `scriptfiles/` und laden sie identisch wieder.
+- Autosync & Control Panel: Nach einem Dini-Write landet der gleiche Stand in SQLite bzw. wird im Panel lesend konsistent dargestellt, ohne falsche Annahmen über Schreibrechte.
+- Mirror & Doku: Änderungen an Modulen, c++-Spiegeln und Dokumentation bleiben zueinander synchronisiert; veraltete Pfade und tote Verweise sind nicht mehr enthalten.
+
 ## Verifikation und Einschränkungen
 
-Die Umgebung enthält keine SA:MP/Pawn-Compiler-Toolchain. Daher konnten keine echten Kompilierungen oder Live-Gameplay-Tests in diesem Container durchgeführt werden. Die Verifikation erfolgte über:
+Dieser Container ist nicht die reale Produktionsumgebung; dort müssen die echten Ubuntu-VM-Checks laufen. Die Verifikation im aktuellen Container ist daher nur Teil-Validierung und keine endgültige Live-Bestätigung. Die inhaltliche Prüfung erfolgte über:
 
 - strukturelle Konsistenz der Module
 - Include-/Abhängigkeitsprüfung
 - DB-Schema- und SQL-Constraint-Review
 - Hook-/Lifecycle-Logik-Review
+- Dini-first-/Fallback-Review und kritische Übergangspunkte
 - Kontrollpanel- und API-Checks auf projektinternes Setup
 - Sanierung kritischer Makro-/Include-Definitionskonflikte, damit die Core-, DB- und Guard-Layer in einer deterministischen Reihenfolge verwendbar sind
 
+Ergebnis: Die Build- und Architektur-Validierung ist sauber, aber die vollständige Live-Prüfung auf der Ubuntu-VM mit `pawncc`, `qemu-i386`, `samp.service` und den realen Dini-Pfaden ist der entscheidende letzte Gate.
+
 ## Stabilisierung und Release-Status
 
-Die Projektbasis wurde auf Release-Qualität für die modularen Kernschichten gehoben. Nach der letzten Review- und Stabilisierungslauf wurde eine zentrale Korrektur durchgesetzt: gemeinsame Grenzwerte für Inventar, House-Storage und UBB-Fahrzeuge werden jetzt zentral in `core.inc` und `production_guard.inc` definiert, um Include-Reihenfolge- und Präprozessor-Konflikte zu vermeiden.
+Die Projektbasis wurde auf einen konsistenten, überprüfbaren Build-/Architektur-Stand gehoben. Nach der letzten Review- und Stabilisierungslauf wurde eine zentrale Korrektur durchgesetzt: gemeinsame Grenzwerte für Inventar, House-Storage und UBB-Fahrzeuge werden jetzt zentral in `core.inc` und `production_guard.inc` definiert, um Include-Reihenfolge- und Präprozessor-Konflikte zu vermeiden.
 
 Zusätzlich wurden die kritischen Übergänge auf einen konsistenten Datenfluss gebracht:
 
-- DB-Transaktions-Wrapper für atomare Schreibpfade
+- DB-Transaktions-Wrapper für optionale SQL-Sync-/Audit-Pfade
 - definierte Hook-Reihenfolge im Connect-/Disconnect-Lifecycle
 - Guards für Array-Slots und Stack-Grenzen
-- State-Kassensystem als gemeinsame Single Source of Truth
+- State-Kassensystem als gemeinsame Single Source of Truth im Dini-first-Livepfad
 - Schema-Definitionen für Inventar, House-Safe und UBB-Fahrzeuge mit validierten Constraints
 
-Damit bleibt das Projekt als modularer, erweiterbarer Ausgangspunkt für ein reales 3-Staaten-Reallife-System nachvollziehbar, sauber strukturiert und für spätere Live-Validierung vorbereitet.
+Damit bleibt das Projekt als modularer, erweiterbarer Ausgangspunkt für ein reales 3-Staaten-Reallife-System nachvollziehbar, sauber strukturiert und für die letzte reale Ubuntu-VM-Validierung vorbereitet. Ein formeller Release-Status gilt erst mit erfolgreichem Live-Start, sauberem `pawncc`-Build und erfolgreichem Dini-/SQLite-/Control-Panel-Check auf der Ziel-VM.
 
 ## Projekt-Dokumentation
 
@@ -259,4 +326,4 @@ Damit bleibt das Projekt als modularer, erweiterbarer Ausgangspunkt für ein rea
 
 ## Abschluss
 
-Die Projektbasis ist jetzt als vollständige, publikationsreife modularer RP-Framework veröffentlicht. Sie ist breit genug für echtes Reallife-Gameplay, stabil genug für produktionsnahe Architekturreflexionen und modular genug, um künftig einzelne Komponenten ohne kompletten Rewrite zu erweitern.
+Die Projektbasis ist jetzt als konsistenter modularer RP-Framework-Stand dokumentiert und für den aktuellen Build-/Architektur-Abschnitt verifiziert. Die Dokumentation ist breit genug für echtes Reallife-Gameplay, stabil genug für produktionsnahe Architekturreflexionen und modular genug, um künftig einzelne Komponenten ohne kompletten Rewrite zu erweitern. Eine formelle Live-Release-Freigabe bleibt jedoch explizit offen, bis der echte Ubuntu-VM-Produktionslauf mit Kompilierung, Dini-Persistenz, Autosync, Panel-Validierung und Server-Daemonen bestanden ist.

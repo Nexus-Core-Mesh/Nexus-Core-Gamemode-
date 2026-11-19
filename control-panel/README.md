@@ -75,10 +75,24 @@ Danach ist das Dashboard unter `http://localhost:3001/` erreichbar.
 - Fallbacks bei leeren bzw. unvollständigen Tabellen
 - State-Normalisierung auf LS/SF/LV
 - geteilte Datenbasis mit dem Gamemode, ohne direkte Asset-/Runtime-Abhängigkeiten
+- reale Live-Validierung nur über die gleiche Zustandsquelle wie der Gamemode; bei Dini-first Persistenz muss SQLite entweder synchronisiert werden oder das Panel muss die INI-Dateien direkt lesen, sonst bleiben Staatskassen und House-/Player-Status veraltet
+- die Datenbasis des Panels ist keine primäre Speicherquelle, sondern eine lesende Betriebsansicht; fehlende Synchronisation zählt als produktiver Mismatch, nicht als normaler Zustand
+- der Panel-Read-Only-Zugriff ist im echten Betrieb nur dann korrekt, wenn der Dini-first-Save-Pfad mit einem validen SQLite-Upsert oder einer direkten INI-Lese-Sicherheitslage konsistent bleibt
+
+## Produktionshinweis: Dini-first vs. SQLite-Read-Only
+
+Das Panel ist bewusst lesend auf SQLite ausgelegt, aber der Gamemode läuft in der aktuellen Architektur Dini-first über `Compiler/samp03/scriptfiles/`. Das bedeutet für den echten Betrieb:
+
+- Jeder Dini-Save-Vorgang muss in SQLite als Upsert oder in einer synchronen Replication-Schicht nachvollzogen werden
+- Ohne diese Korrelation zeigt `control-panel/server.js` veraltete Werte für Kassen, Häuser, Fahrzeuge und Spieler an
+- Kritische Transfers müssen atomar sein: kein halber Write in Dini, sonst liefert das Panel falsche Zahlen aus einer älteren oder leeren Datenbank
+- Das Panel ist keine Ersatzquelle für den State, sondern eine lesende Betriebsansicht auf dieselbe Produktionsdatenbasis; seine Existenz ist nur dann korrekt, wenn Dini- und SQLite-Laufpfad konsistent synchronisiert sind
+
+Das Panel ist also keine Ersatzquelle für den State, sondern eine lesende Betriebsansicht auf dieselbe Produktionsdatenbasis.
 
 ## Veröffentlichungsstand
 
-Das Control Panel ist als modernes Betriebs- und Monitoringmodul veröffentlicht und auf den erweiterten RP-Stand des Projekts abgestimmt. Es bildet die betriebliche Sicht für Treasury, State-Management, Fahrzeug-Ownership, House-/Property-Status und Admin-Informationen.
+Das Control Panel ist als modernes Betriebs- und Monitoringmodul für den aktuellen Projektstand dokumentiert und auf den erweiterten RP-Stand des Projekts abgestimmt. Es bildet die betriebliche Sicht für Treasury, State-Management, Fahrzeug-Ownership, House-/Property-Status und Admin-Informationen. Ein echter Produktionsbetrieb ist nur freigegeben, wenn der Dini-first-Save-Pfad und der SQLite-/Autosync-Pfad auf der Ziel-VM konsistent synchronisiert sind.
 
 ## Erweiterungsplan
 
