@@ -16,8 +16,9 @@ Die folgenden Prüfungen wurden real ausgeführt:
 2. Build-Pipeline und Single-Target-Validierung
 3. Konfigurations- und Datenbank-Check
 4. Server-Start und Live-Diagnostics
+5. Architektur-/Dokumentationskonsistenz und reale Release-Gate-Abgrenzung
 
-Für jede Prüfung wurden die realen Befehle im System ausgeführt, Exit-Codes dokumentiert und die Ergebnisse protokolliert.
+Für jede Prüfung wurden die realen Befehle im System ausgeführt, Exit-Codes dokumentiert und die Ergebnisse protokolliert. Wichtig ist die klare Trennung zwischen Container-/Struktur-Validierung und der echten Ubuntu-VM-Live-Freigabe: Nur letzteres erfüllt die reale Release-Anforderung.
 
 ---
 
@@ -303,10 +304,32 @@ Die technische Grundlage für einen produktiven Einsatz ist sauber vorbereitet:
 - Konfiguration stimmt mit dem Build überein
 - SQLite-Pfad ist vorhanden und initialisiert
 - Keine redundanten `.amx`-Duplikate im Server-Verzeichnis
+- Dini-first-Architektur ist dokumentiert und als primäre Laufzeitquelle klar eingeordnet
 
-Die produktive Startfreigabe kann in einer echten SA-MP-Laufzeitumgebung erfolgen, wenn der Serverhost die erforderlichen 32-Bit- und Host-Abhängigkeiten vollständig bereitstellt. In der aktuellen Sandbox ist die Verifikation auf das Build-/Config-Level erfolgreich; der echte Live-Start kann hier nicht final bestätigt werden.
+Die produktive Startfreigabe kann in einer echten SA-MP-Laufzeitumgebung erfolgen, wenn der Serverhost die erforderlichen 32-Bit- und Host-Abhängigkeiten vollständig bereitstellt. In der aktuellen Sandbox ist die Verifikation auf das Build-/Config-/Dokumentations-Level erfolgreich; der echte Live-Start kann hier nicht final bestätigt werden und bleibt als expliziter Release-Gate auf der Ubuntu-VM offen.
 
-### 7.3 Empfehlung für produktiven Start
+### 7.3 Reale Produktions-Checkliste für die Ubuntu-VM
+
+Die reale Übergabe in den Live-Betrieb muss auf der Ubuntu-VM mit den produktiven Daemonen erfolgen. Die konkrete Reihenfolge lautet:
+
+1. `git pull --ff-only` im Projekt-Root
+2. `qemu-i386 Compiler/pawncc/pawncc` mit `gamemodes/gamemode.pwn` bauen und die neue `.amx` im Zielpfad verifizieren
+3. `Compiler/samp03/scriptfiles/` inklusive `players/`, `houses/`, `safes/`, `vehicles/`, `ubb/`, `backups/` und `state/{ls,sf,lv}/` physisch anlegen und mit Berechtigungen versehen
+4. `samp.service`, `samp2.service` oder `omp-server.service` mit `server.cfg` starten
+5. `control-panel/server.js` gegen die Live-Daten prüfen und Staleness/Leeren Zuständen als Fehler bewerten
+6. Registrierungen, Home-State-Wahl LS/SF/LV, Inventar-/Safe-Belegung, Fahrzeug-/UBB-Daten und Reconnects gegen die Dini-Dateien validieren
+
+Abnahmekriterien:
+
+- Kompilierung: Der reale `pawncc`-Build läuft ohne blockierende Fehler, erzeugt die aktuelle `.amx` und bleibt im Single-Target-Vertrag.
+- Persistenz & Reconnect: Spieler- und State-Daten werden in `scriptfiles/` korrekt als INI-/Textdateien geschrieben und beim Reconnect identisch wieder geladen.
+- Autosync & Control Panel: Ein Dini-Write muss entweder in SQLite mit Upsert konsistent landen oder das Panel muss die entsprechenden INI-Dateien direkt lesen; veraltete Kassen-/House-/Player-Status gelten als nicht bestanden.
+- Critical paths: StateLedger-, Haus-Safe-, Inventar- und Fahrzeug-Transfers müssen nach einem Crash keine halben Zustände hinterlassen.
+- `production_guard.inc` und die Include-Reihenfolge müssen mit dem echten `pawncc`-Build gegen die Live-Toolchain geprüft werden.
+
+Damit ist der Übergang vom Container-Check zur realen Ubuntu-VM-Validierung klar definiert: Der Build darf nicht nur strukturell sauber sein, sondern muss auf der echten Service-/Runtime-Umgebung mit den tatsächlichen Dini-Pfaden und Daemons laufen.
+
+### 7.4 Empfehlung für produktiven Start
 
 Für den echten Produktivstart auf einem kompatiblen Linux-Server gilt:
 
