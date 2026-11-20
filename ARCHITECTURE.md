@@ -207,8 +207,24 @@ Im Build-Workflow werden these Includes über `-iincludes` und `-iCompiler/samp0
 
 `Compiler/` ist die lokale Build-Umgebung. Sie ist bewusst physisch im Projekt enthalten, damit das Projekt reproduzierbar gebaut werden kann. Die beiden kritischen Bestandteile sind:
 
+Die Laufzeitstruktur unter `Compiler/samp03/scriptfiles/` ist ebenfalls Teil dieser Umgebung und wurde komplett auf die Dini-first-Save-/Load-Architektur ausgerichtet. Die kritischen Laufzeitordner wurden ergänzend angelegt, damit `temp` → prüfen → atomisch rename für Spieler-, House-, Safe-, Vehicle- und State-Daten nicht unvermittelt an fehlenden Ordnern scheitert:
+
+- `players/`
+- `houses/`
+- `house_storage/`
+- `safes/`
+- `vehicles/`
+- `ubb_vehicles/`
+- `state/LS/`, `state/SF/`, `state/LV/`
+- `state_kasse/LS/`, `state_kasse/SF/`, `state_kasse/LV/`
+- `business/`, `factions/`, `inventory/`, `temp/`, `backup/`, `logs/`
+
+Dadurch bleibt der Laufpfad für den 7780-Contract konsistent und frei von stummen Ordnerfehlern bei Offline-Checks oder späterem Host-Deploy.
+
 - `Compiler/pawncc/pawncc` – der lokale 32-Bit-Pawn-Compiler
 - `Compiler/samp03/` – der Laufzeitordner des tatsächlichen Servers
+
+Der Plugin-Bereich unter `Compiler/samp03/plugins/` ist ebenfalls Teil dieser Laufzeitumgebung, aber bewusst rein dokumentarisch organisiert, sofern keine verlässlichen Ziel-VM-Binaries vorliegen. Der Repo-Stand hält keine erfundenen oder vorgeschobenen Plugin-Binaries; der real vorhandene Plugin-Stack (`crashdetect`, `streamer`, `sscanf2`, `sqlite`, `mysql`, `zcmd`, `foreach`, `MapAndreas`, `pawn-plus`) ist als offener Stack dokumentiert, mit klarer Unterscheidung zwischen Git-Repo und Ziel-VM-Installationen.
 
 Auf 64-Bit-Hosts muss dieser Compiler über `qemu-i386` ausgeführt werden, da es sich um ein 32-Bit-Binary handelt. Genau deshalb gibt es die Logik:
 

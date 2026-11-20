@@ -63,3 +63,25 @@ python3 tools/autorun.py --root . --server-bin ./samp03svr --log ./logs/server.l
 ## Hinweis
 
 Diese Hilfswerkzeuge sind keine Plattform- oder Hosting-Umstellung. Sie sind bewusst als lokales Debug- und Wartungs-Tooling im Projekt selbst verankert, damit man ohne Wechsel zu externen Plattformen schnell auf Fehler und Konfigurationsprobleme reagieren kann.
+
+## 7780- und Plugin-Contract
+
+Die Offline-Checks unter `tools/` sind bewusst auf den Single-Target-Contract der `Compiler/samp03/`-Umgebung ausgerichtet. Die wichtigsten Prüfungen bleiben:
+
+- `qemu_7780_readiness_check.py` – statische 7780-Readiness ohne Serverstart
+- `runtime_contract_guard.py` – Audit für `gtasa_reallife.amx`, `gamemode0 gtasa_reallife 1`, `port 7780` und Verhinderung von `7777`-Drift
+- `validate_server_cfg.py` – Konfigurationsprüfung für `server.cfg`/`sql.cfg`
+- `db_and_state_inspector.py` – schreibgeschützte Inspektion des Dini-/SQLite-State-Pfads mit Fokus auf `scriptfiles/`
+
+Der Plugin-Ordner `Compiler/samp03/plugins/` wird dabei als dokumentierter, transparent verwalteter Stack behandelt; es werden keine erdachten Binaries oder unautorisierte Port-7777-Konfigurationen im Repository verankert.
+
+## Scriptfiles-/Persistenzstruktur
+
+Die Laufzeitstruktur unter `Compiler/samp03/scriptfiles/` wurde für den Dini-first-Workflow ergänzt. Die kritischen Verzeichnisse für Spieler-, House-, Safe-, Fahrzeug-, Staatskasse-, Budget-, Business- und Inventory-Daten wurden physisch angelegt, damit die Arbeitslogik "temp -> validieren -> atomisch umbenennen" nicht an fehlenden Ordnern scheitert. Die Struktur enthält dabei:
+
+- `players/`, `houses/`, `house_storage/`, `safes/`, `vehicles/`, `ubb_vehicles/`
+- `state/LS/`, `state/SF/`, `state/LV/`
+- `state_kasse/LS/`, `state_kasse/SF/`, `state_kasse/LV/`
+- `business/`, `factions/`, `inventory/`, `temp/`, `backup/`, `logs/`
+
+Diese Ordner dienen nur als Laufzeit- und Persistenz-Hülle. Sie werden ergänzt, ohne die Offline-Checks oder den 7780-Contract zu verletzen.

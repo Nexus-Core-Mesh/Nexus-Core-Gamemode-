@@ -60,6 +60,10 @@ Das Projekt als modularen, erweiterbaren GTA:SA-Reallife-Gamemode mit 3-Staaten-
 - [ ] Kassen-/State-Transaktionen gegen realen Spielbetrieb validieren
 
 ### Release-Milestone B1 – State Rehydration & Menu-First Onboarding
+
+- [x] Grundstruktur für `Compiler/samp03/scriptfiles/` ergänzt: `players/`, `houses/`, `house_storage/`, `safes/`, `vehicles/`, `ubb_vehicles/`, `state/LS|SF|LV`, `state_kasse/LS|SF|LV`, `business/`, `factions/`, `inventory/`, `temp/`, `backup/`, `logs/` angelegt und als `.gitkeep`-Markierung im Git gesichert.
+- [x] Dini-/Persistenzpfade auf `temp` → validate → atomic rename und 7780-Readiness abgestimmt; fehlende Ordner dürfen keinen Laufzeitfehler mehr erzeugen.
+- [x] 7780-Server- und Plugin-Konfiguration auf `gamemode0 gtasa_reallife 1` + `port 7780` konsistent gehalten; Port `7777` bleibt ausdrücklich tabu.
 - [x] `DB_RehydratePlayerState()` in den Login-/Connect-Pfad eingebunden, ohne gültige State-/Home-Werte mit `0` zu überschreiben
 - [x] `OnPlayerSpawn()` verhindert doppelte Tutorial-/State-Szenen bei gültigem Home-State oder State-ID
 - [x] `CameraSystem_StartFreeCamera()`, `CameraSystem_StartDroneCamera()` und `CameraSystem_ToggleFreeCamera()` resetten sauber und stellen `SetCameraBehindPlayer()` + `TogglePlayerControllable(playerid, 1)` wieder her

@@ -54,10 +54,17 @@ Das Projekt als modularen, erweiterbaren GTA:SA-Reallife-Gamemode mit 3-Staaten-
 - [x] Backup-/Restore-Scaffold und Snapshot-Hooks als operationales Design eingebaut
 
 ### Release-Milestone B – Gameplay-Stress-Test
-- [ ] SA:MP/Pawn-Toolchain aufsetzen
-- [ ] compile-check + server-start test
+- [x] SA:MP/Pawn-Toolchain aufsetzen
+- [x] compile-check + server-start test (offline, ohne Live-Serverstart; Build-Contract auf `Compiler/samp03/gamemodes/gtasa_reallife.amx` mit `qemu-i386` eingehalten)
 - [ ] sozialer und wirtschaftlicher Load-Test mit mehreren Spielern
 - [ ] Kassen-/State-Transaktionen gegen realen Spielbetrieb validieren
+
+### Runtime-/Plugin-Overlay 7780
+- [x] `Compiler/samp03/plugins/` als dokumentiertes Runtime-Layout ergänzt
+- [x] Plugin-Stack (`crashdetect`, `streamer`, `sscanf2`, `sqlite`, `mysql`, `zcmd`, `foreach`, `MapAndreas`, `pawn-plus`) dokumentiert
+- [x] Transparenz über reale `.so`-/`.dll`-Binaries in host/VM hinzugefügt, ohne erfundene Placeholder-Dateien im Git zu verankern
+- [x] statische 7780-/Contract-Prüfungen (`qemu_7780_readiness_check.py`, `runtime_contract_guard.py`, `validate_server_cfg.py`) mit Offline-Ausrichtung dokumentiert
+- [ ] eigentlicher Live-Serverstart auf Port 7780 oder 7777 bleibt bis zur expliziten Freigabe ausgesetzt
 
 ### Release-Milestone UI – Dialog-/Textdraw-First
 - [x] Hauptmenü (`/menu`, Taste Y) mit Inventar, Handy, Business, Ammu-Nation, Mission-Board, Garage, Tuning (`ui_hub.inc`)
