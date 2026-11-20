@@ -240,6 +240,7 @@ Die relevanten Sicherheits- und Runtime-Regeln lauten:
 - `/projectlead`, `/setstate` und `/spawnvehicle` laufen über `AdminSystem_HandleCommand()` und nutzen die vorhandenen State-/Spawn-/Vehicle-Guards statt unkontrollierten direktem Schreiben in globale Arrays.
 - `StateSpawnSystem_Apply()` bleibt der single entry point für State- und Spawn-Applikation; der Kamerarücksetzpfad läuft über `CameraSystem_Reset()` beziehungsweise `SetCameraBehindPlayer()` und verhindert so eine Rekursion in Tutorial-/State-Schleifen.
 - Fahrzeugspawns gehen über `VehicleSystem_SpawnAdminVehicle()` und respektieren die Slot-/Limit-Checks des Fahrzeugsystems statt rohe Slot-Array-Schreibzugriffe im Admin-Context zu erlauben.
+- Die Laufzeit-Hotpath-Guardrails wurden ergänzt: `TextWars_Tick()` prüft vor jedem Refresh aktivierte Gangfights und sichtbare Player-Widgets und beendet den Tick früh, sobald keine echte Aktivität mehr vorliegt. Damit bleiben die UI- und Faction-Hotpaths robust unter der qemu-i386-Umgebung mit begrenzten Ressourcen.
 
 Diese Regeln sind bewusst zusammen mit dem vordefinierten Core-Contract in der Architektur verankert, damit spätere Module denselben Single-Source-of-Truth- und Hardening-Pfad verwenden.
 

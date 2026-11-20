@@ -75,6 +75,7 @@ Das Projekt als modularen, erweiterbaren GTA:SA-Reallife-Gamemode mit 3-Staaten-
 - [x] Fahrzeug-Spawnen über `VehicleSystem_SpawnAdminVehicle()` integriert; Slot-/Limit-Checks verbleiben im Vehiclesystem und vermeiden direkte rohe Array-Schreibpfade.
 - [x] Admin-/Projektleiter-Befehle `/projectlead`, `/setstate`, `/spawnvehicle` in `AdminSystem_HandleCommand()` ergänzt und auf gültige `strmid`/sscanf-Befehlsanalyse mit klaren Fehlermeldungen stabilisiert.
 - [x] Aufbau und Dokumentation des Admin-/Projektleiter-Workflows im Code und Architektur-Report berücksichtigt; bestehende Abschnitte bleiben unverändert und die Erweiterung wird als neuer Release-Block ergänzt.
+- [x] Zusätzliche Schleifen-/Leistungs-Guardrails eingebaut: `TextWars_Tick()` prüft vor jedem Refresh nun aktivierte Gangfights und sichtbare Player-Widgets und springt bei Inaktivität früh mit `return 1;` aus, um Long-callback-Execution unter der qemu-i386-Umgebung zu vermeiden.
 
 ### Release-Milestone UI – Dialog-/Textdraw-First
 - [x] Hauptmenü (`/menu`, Taste Y) mit Inventar, Handy, Business, Ammu-Nation, Mission-Board, Garage, Tuning (`ui_hub.inc`)
