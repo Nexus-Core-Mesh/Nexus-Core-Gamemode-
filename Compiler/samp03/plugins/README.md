@@ -33,6 +33,12 @@ Für den reproduzierbaren Build-/Runtime-Contract des Projekts gilt:
 - Wenn reale Plugin-Binaries in der Umgebung verfügbar sind, werden sie in der Ziel-VM oder dem Host-Ordner sauber installiert und dokumentiert.
 - Wenn keine verlässlichen Binär-Downloads/-Artefakte vorliegen, bleibt dieser Ordner als leeres, dokumentiertes Runtime-Layout bestehen, ohne falsche Annahmen über die Laufzeitumgebung zu erzeugen.
 
+## Aktueller Stand in dieser Umgebung (2026-11-20)
+
+Für die hier ausgeführte Prüfung waren GitHub-/Release-Endpunkte und direkte Downloadpfade für die empfohlenen SA:MP-Plugins zwar erreichbar, aber die verlässlichen 32-Bit-Linux-`*.so`-Artefakte für den vollständigen Stack (`crashdetect`, `streamer`, `sscanf2`, `sqlite`, `mysql`, `zcmd`, `foreach`, `MapAndreas`, `pawn-plus`) konnten in dieser Umgebung nicht reproduzierbar und sicher als projektberechtigte Binärdateien verifiziert werden. Einzelne Endpunkte lieferten 404, HTML-Seiten, Leerseiten oder keine belastbaren Release-Assets mit 32-Bit/Ubuntu-Ziel-ABI.
+
+Das bedeutet exakt: Es liegen derzeit keine echten, verifizierten Plugin-`*.so`-Dateien im Repository vor, und keine Platzhalter-/Fake-Binaries wurden erzeugt. Die korrekte Ergänzung erfolgt auf der Ziel-VM oder auf dem produktiven Ubuntu-Host, sofern die passenden 32-Bit-Linux-Binaries dort vertrauenswürdig bereitgestellt werden. Der Projekt-Contract bleibt weiterhin auf `port 7780`, `gamemode0 gtasa_reallife 1` und `Compiler/samp03/gamemodes/gtasa_reallife.amx` fixiert.
+
 ## Verknüpfung zum Projekt
 
 Der Plugin-Stack ergänzt die Offline-Checks und den 7780-Contract, aber er ersetzt nicht den Single-Target-Build und die Konfigurationsprüfungen:
