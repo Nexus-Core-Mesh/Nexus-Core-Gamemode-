@@ -21,6 +21,9 @@ Dieses Verzeichnis enthält Python 3 basierte Hilfswerkzeuge zur Fehleranalyse, 
 - `code_line_extractor.py` – gezielte Zeilensuche und Nummerierung in `gamemodes/gamemode.pwn` und `gamemodes/modules/` mit optionalem JSON/YSON-Export
 - `log_guided_autocorrect.py` – manueller, log-basierter Autokorrektor im Dry-Run-Default mit Sicherungs-Backup und `--apply`-Pfad
 - `debug_trace_collector.py` – kompakter Offline-Diagnose-Export aus Logs, SQLite-, Dini- und Build-Artefakten ohne Serverstart
+- `state_rehydration_guard.py` – statische Prüfung auf gültige `state_id`/`home_state`-Aktualisierung, 0-Schutz und `INSERT OR IGNORE`-Muster
+- `runtime_contract_guard.py` – Audit der 7780-Single-Target-Contract-Regeln und Verhinderung von `7777`-Drift in Konfigurations- und Build-Dateien
+- `ui_hud_cleanup_audit.py` – prüft Camera-/TextDraw-/HUD-Cleanup-Muster wie `SetCameraBehindPlayer()`, `TogglePlayerControllable`, `INVALID_TEXT_DRAW` und lesbare Destroy-Pfade
 
 ## Beispiele
 

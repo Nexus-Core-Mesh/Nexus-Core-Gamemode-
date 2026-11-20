@@ -762,7 +762,7 @@ plugins crashdetect streamer sscanf2 sqlite mysql zcmd
 # Server details
 hostname GTA:SA Reallife Modular
 maxplayers 100
-port 7777
+port 7780
 query 1
 lanmode 0
 rcon_password changeme
@@ -778,7 +778,7 @@ Das ist die Basis. Für einen echten V-Server musst du das an deine Infrastruktu
 
 - `hostname` auf deinen Servernamen setzen
 - `rcon_password` ändern
-- `port` je nach Bedarf auf 7777 oder separat setzen
+- `port` auf den aktiven Host-Port der lokalen 7780-Umgebung setzen
 - `gamemode0 gtasa_reallife 1` muss auf den tatsächlich kompilierten Modus passen
 - Plugins je nach Serverumgebung aktivieren oder entfernen
 
@@ -794,8 +794,8 @@ Diese Datei verwendet eine allgemeine Deployment-Konfiguration:
 
 hostname "GTA:SA Reallife Modular"
 maxplayers 100
-port 7777
-gamemode0 gtasa_reallife
+port 7780
+gamemode0 gtasa_reallife 1
 plugins crashdetect streamer sscanf2 sqlite mysql zcmd
 filterscripts
 rcon_password "changeme"

@@ -205,14 +205,14 @@ Ergebnis:
 3:gamemode0 gtasa_reallife 1
 6:plugins crashdetect streamer sscanf2 sqlite mysql zcmd
 9:hostname GTA:SA Reallife Modular
-11:port 7777
+11:port 7780
 ```
 
 Status: Bestanden
 
 - `gamemode0 gtasa_reallife 1` ist korrekt gesetzt
 - Plugins-Reihenfolge: `crashdetect streamer sscanf2 sqlite mysql zcmd`
-- Port ist auf `7777` gesetzt
+- Port ist auf `7780` gesetzt und bleibt der aktive Projekt-Contract für diese Repo-Version
 
 ### 5.2 SQLite-Datenbankpfad
 
@@ -286,17 +286,17 @@ Ausgeführt:
 Ergebnis:
 
 ```text
-[debug] Project root: /workspaces/Nexus-Core-Gamemode-/copilot-worktrees/Nexus-Core-Gamemode-/jubilant-dollop
+[debug] Project root: /workspaces/Nexus-Core-Gamemode-/copilot-worktrees/Nexus-Core-Gamemode-/laughing-winner
 [debug] SA:MP process is NOT running
 [debug] AMX existence check
--rw-r--r-- 1 root root 2787140 Nov 18 11:20 /workspaces/Nexus-Core-Gamemode-/copilot-worktrees/Nexus-Core-Gamemode-/jubilant-dollop/Compiler/samp03/gamemodes/gtasa_reallife.amx
+-rw-r--r-- 1 root root 2787140 Nov 18 11:20 /workspaces/Nexus-Core-Gamemode-/copilot-worktrees/Nexus-Core-Gamemode-/laughing-winner/Compiler/samp03/gamemodes/gtasa_reallife.amx
 [debug] Server config
 3:gamemode0 gtasa_reallife 1
 6:plugins crashdetect streamer sscanf2 sqlite mysql zcmd
-11:port 7777
+11:port 7780
 [debug] Database path
--rw-r--r-- 1 root root 155648 Nov 18 10:38 /workspaces/Nexus-Core-Gamemode-/copilot-worktrees/Nexus-Core-Gamemode-/jubilant-dollop/data/db/gtasa_reallife.db
-[debug] No server log at /workspaces/Nexus-Core-Gamemode-/copilot-worktrees/Nexus-Core-Gamemode-/jubilant-dollop/Compiler/samp03/server_log.txt yet
+-rw-r--r-- 1 root root 155648 Nov 18 10:38 /workspaces/Nexus-Core-Gamemode-/copilot-worktrees/Nexus-Core-Gamemode-/laughing-winner/data/db/gtasa_reallife.db
+[debug] No server log at /workspaces/Nexus-Core-Gamemode-/copilot-worktrees/Nexus-Core-Gamemode-/laughing-winner/Compiler/samp03/server_log.txt yet
 ```
 
 Status: Bestanden für Konfigurations- und Artefakt-Prüfung, aber nicht für tatsächlichen Live-Start in dieser Umgebung.

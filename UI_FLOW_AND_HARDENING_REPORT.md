@@ -2,7 +2,7 @@
 
 ## Scope and constraints
 
-This pass stayed in the gamemode source tree (`gamemodes/gamemode.pwn` and `gamemodes/modules/...`) and did not change the separate production runtime on port 7777. The sandbox build target remained the 7780 tree under `Compiler/samp03`, using the local Pawn toolchain and the project build script.
+This pass stayed in the gamemode source tree (`gamemodes/gamemode.pwn` and `gamemodes/modules/...`) and did not change a separate production runtime on port 7777. The sandbox build target remained the 7780 tree under `Compiler/samp03`, using the local Pawn toolchain and the project build script. The repository-level contract is explicitly 7780-only for this source tree, and port 7777 is treated as out-of-scope for the active project runtime contract.
 
 The objective was to keep the hardening fixes already proven useful in place while continuing the menu-first onboarding and UI flow, instead of attempting a risky full rewrite. The underlying diagnosis was not a single bug: it was a chain reaction involving emulation cost on qemu-i386, timing in connect/spawn callbacks, state overwrites, brittle parsing, and overlapping TextDraw/HUD elements.
 

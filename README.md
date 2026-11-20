@@ -337,7 +337,7 @@ Damit bleibt das Projekt als modularer, erweiterbarer Ausgangspunkt für ein rea
 
 ## Abschluss
 
-Die Projektbasis ist jetzt als konsistenter modularer RP-Framework-Stand dokumentiert und für den aktuellen Build-/Architektur-Abschnitt verifiziert. Die Dokumentation ist breit genug für echtes Reallife-Gameplay, stabil genug für produktionsnahe Architekturreflexionen und modular genug, um künftig einzelne Komponenten ohne kompletten Rewrite zu erweitern. Eine formelle Live-Release-Freigabe bleibt jedoch explizit offen, bis der echte Ubuntu-VM-Produktionslauf mit Kompilierung, Dini-Persistenz, Autosync, Panel-Validierung und Server-Daemonen bestanden ist.
+Die Projektbasis ist jetzt als konsistenter modularer RP-Framework-Stand dokumentiert und für den aktuellen Build-/Architektur-Abschnitt verifiziert. Die Dokumentation ist breit genug für echtes Reallife-Gameplay, stabil genug für produktionsnahe Architekturreflexionen und modular genug, um künftig einzelne Komponenten ohne kompletten Rewrite zu erweitern. Eine formelle Live-Release-Freigabe bleibt jedoch explizit offen, bis der echte Ubuntu-VM-Produktionslauf mit Kompilierung, Dini-Persistenz, Autosync, Panel-Validierung und Server-Daemonen bestanden ist. Der im Repository gültige Runtime-Contract bleibt der 7780-Tree unter `Compiler/samp03/`, nicht Port 7777.
 
 ---
 

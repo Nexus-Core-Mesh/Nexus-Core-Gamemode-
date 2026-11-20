@@ -133,6 +133,9 @@ Zusätzlich zu den bestehenden Analyse-Helfern unter `tools/` wurden weitere sch
 - `tools/economy_and_state_ledger_check.py`: prüft Geld-, Cash-, Bank-, Home-State-, Safe- und Fahrzeug-/Ledger-Daten in SQLite und Dini-Dateien auf Null-/Negativwerte und Zustandsabweichungen.
 - `tools/dialog_and_camera_reset_check.py`: prüft Dialog-IDs, Reset-/Abbruchpfade, Camera-/Toggle-Gaurds und UI-Disengage-Pfade.
 - `tools/qemu_7780_readiness_check.py`: prüft statisch die 7780-Readiness (Single-Target AMX, `gamemode0 gtasa_reallife 1`, Port 7780, kein Port 7777) ohne Serverstart.
+- `tools/state_rehydration_guard.py`: erkennt gültige `state_id`/`home_state`-Sicherungen, 0-Schutzmuster und das Beibehalten von `INSERT OR IGNORE`-Guardrails im Source-Level.
+- `tools/runtime_contract_guard.py`: prüft die Single-Target-AMX- und 7780-Contract-Regeln gegen Konfigurations-/Build-/Dokumentationsdrift und verhindert aktive `7777`-Verweise oder Alias-Reflexe.
+- `tools/ui_hud_cleanup_audit.py`: erfasst Camera-/TextDraw-/HUD-Cleanup- und Reset-Muster für `SetCameraBehindPlayer()`, `TogglePlayerControllable`, `INVALID_TEXT_DRAW` und Destroy-Pfade.
 
 Diese Werkzeuge sind bewusst auf 1,5 GB RAM / 2 CPU-Kerne und den Offline-Pfad unter `Compiler/samp03/` zugeschnitten; sie dienen ausschließlich der Quell- und Zustandsüberwachung, nicht als Live-Server-Test.
 
