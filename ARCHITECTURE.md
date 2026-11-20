@@ -785,7 +785,18 @@ Die Laufzeit ist bewusst auf ein begrenztes Ressourcenszenario ausgelegt:
 
 Die Kriterien gelten als Architektur-Anforderung, nicht als Option. Sie sind Teil der Stabilität der kompletten Laufzeitumgebung unter QEMU/32-Bit-Pawn.
 
-### 7.6 Release-Status
+### 7.6 Offline-Tooling und Code-Audits
+
+Um die Laufzeitarchitektur mit Architektur- und Persistenz-Sicherheit zu verifizieren, ohne einen Live-Server zu starten, wurden zusätzliche Python-Tools als schlanke Offline-Checks eingeführt:
+
+- `tools/db_and_state_inspector.py`: prüft die SQLite-Konsistenz und die Dini-/scriptfiles-Struktur, ohne Daten zu ändern.
+- `tools/audit_modules_and_guards.py`: kontrolliert Include-/Lifecycle-Reihenfolge, Guards, Camera-Reset, TextDraw-/State-Checks und Punkte der qemu-i386-Ressourcensicherung.
+- `tools/textdraw_and_zone_mapper.py`: listet TextDraws, Widget-Zonen und eventuelle Gebiet-/Radius-Definitionen übersichtlich auf.
+- `tools/projectlead_api_check.py`: identifiziert API-Mismatches bei Projektleiter-/RCON-/Spawn-/Fahrzeug-/Gangfight-Pfaden frühzeitig.
+
+Diese Skripte ergänzen die bestehende `tools/`-Sammlung und sollen den Verlauf zwischen Build, Persistenz und systemweiterem Quellcheck dokumentieren, ohne den Laufzeitbetrieb zu provozieren.
+
+### 7.7 Release-Status
 
 Die Codebasis ist als source-validiert und architektonisch konsistent einzuordnen, aber die final reale Freigabe bleibt weiterhin ein Live-Release-Gate auf der Ubuntu-VM. Eine reine Compile-Sicherheit genügt nicht, um den Server als produktiv freigegeben zu betrachten. Entscheidend sind tatsächlicher Serverstart, echte Log-Prüfung und Client-/State-/DB-Verifikation im realen Laufzeitkontext.
 

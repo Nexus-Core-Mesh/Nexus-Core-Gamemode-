@@ -118,6 +118,19 @@ Die Architektur bleibt bewusst modular. Jedes neue System wird in einem passende
 
 ---
 
+## Offline-Tooling- und Audit-Status (ergänzt)
+
+Zusätzlich zu den bestehenden Analyse-Helfern unter `tools/` wurden vier schlanke Python-Tooling-Module ergänzt, die ohne Serverstart, ohne Live-Test und ohne externe Abhängigkeiten arbeiten:
+
+- `tools/db_and_state_inspector.py`: prüft SQLite-State- und Dini-Persistenzdaten schreibgeschützt und kann Vorher-/Nachher-Snapshots erzeugen.
+- `tools/audit_modules_and_guards.py`: prüft Include-/Lifecycle-Reihenfolge, Guard-Muster, `Core_IsValidState()`, Camera-/HUD-Reset und Tick-/Loop-Guards.
+- `tools/textdraw_and_zone_mapper.py`: listet TextDraws, PlayerTextDraws, Zonen- und HUD-Layout-Elemente in einer klaren Übersicht auf.
+- `tools/projectlead_api_check.py`: gleicht Projektleiter-, Admin-, Spawn-, Fahrzeug-, Gangfight- und Zonen-API-Aufrufe über den Sourcetree ab.
+
+Diese Werkzeuge sind bewusst auf 1,5 GB RAM / 2 CPU-Kerne und den Offline-Pfad unter `Compiler/samp03/` zugeschnitten; sie dienen ausschließlich der Quell- und Zustandsüberwachung, nicht als Live-Server-Test.
+
+---
+
 ## Finaler Projektstand (ergänzt)
 
 Der aktuelle Repository-Stand ist technisch auf den Single-Target-Contract und die Laufzeit-Architektur des Gamemodes ausgerichtet. Im Mittelpunkt steht weiterhin die generische, aber harte Erwartung: nur `Compiler/samp03/gamemodes/gtasa_reallife.amx` ist das gültige Runtime-Ziel, und der Build muss mit der lokalen 32-Bit-Pawn-Toolchain über `qemu-i386` erfolgen.
