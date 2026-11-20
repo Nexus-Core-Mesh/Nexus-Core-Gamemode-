@@ -471,10 +471,23 @@ public OnPlayerSpawn(playerid)
     new bool:hasCompletedOnboarding = (gTutorialStage[playerid] >= TUTORIAL_STAGE_FINISH);
     new bool:hasValidState = Core_IsValidState(stateid) && Core_IsValidState(homeState);
 
-    if (LoginSystem_IsActive(playerid) && !hasCompletedOnboarding && !hasValidState)
+    if (LoginSystem_IsActive(playerid) && (!hasCompletedOnboarding || !hasValidState))
     {
-        TutorialSystem_Start(playerid);
-        CameraSystem_PlayStateScene(playerid, LoginSystem_GetHomeState(playerid));
+        if (!hasValidState)
+        {
+            CameraSystem_Reset(playerid);
+            StateSpawnSystem_Apply(playerid, Core_GetValidStateOrDefault(stateid, homeState));
+        }
+        else if (!hasCompletedOnboarding)
+        {
+            TutorialSystem_Start(playerid);
+            CameraSystem_PlayStateScene(playerid, homeState);
+        }
+        else
+        {
+            CameraSystem_Reset(playerid);
+            StateSpawnSystem_Apply(playerid, homeState);
+        }
         RoleplayUI_ShowDashboard(playerid);
         PhoneSystem_OnPlayerConnect(playerid);
         PrisonSystem_OnPlayerConnect(playerid);
@@ -482,10 +495,9 @@ public OnPlayerSpawn(playerid)
     else if (LoginSystem_IsActive(playerid))
     {
         CameraSystem_Reset(playerid);
-        StateSpawnSystem_Apply(playerid, Core_GetValidStateOrDefault(stateid, homeState));
+        StateSpawnSystem_Apply(playerid, homeState);
         RoleplayUI_ShowDashboard(playerid);
-        PhoneSystem_OnPlayerConnect(playerid);
-        PrisonSystem_OnPlayerConnect(playerid);
+        return 1;
     }
     return 1;
 }

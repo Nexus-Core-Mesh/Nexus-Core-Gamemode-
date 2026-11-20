@@ -89,6 +89,42 @@ Status: Bestanden für Build- und Toolchain-Umgebung, aber nicht für produktive
 
 ## 4. Build-Pipeline & Single-Target-Validierung
 
+### 4.1 Build-Befehl (laufend aktualisiert)
+
+Ausgeführt:
+
+```bash
+cd /workspaces/Nexus-Core-Gamemode-/copilot-worktrees/Nexus-Core-Gamemode-/laughing-winner
+./build_server.sh
+```
+
+Ergebnis:
+
+```text
+Pawn compiler 3.10.10
+Header size:           2996 bytes
+Code size:           378568 bytes
+Data size:          9338948 bytes
+Stack/heap size:      16384 bytes; estimated max. usage=3537 cells (14148 bytes)
+Total requirements: 9736896 bytes
+Successfully patched: /workspaces/Nexus-Core-Gamemode-/copilot-worktrees/Nexus-Core-Gamemode-/laughing-winner/Compiler/samp03/gamemodes/gtasa_reallife.amx to AMX version 8 (4-byte compatible header).
+[build_server] Ready: /workspaces/Nexus-Core-Gamemode-/copilot-worktrees/Nexus-Core-Gamemode-/laughing-winner/Compiler/samp03/gamemodes/gtasa_reallife.amx
+```
+
+Status: Bestanden
+
+- Der lokale 32-Bit-Build wurde mit der dokumentierten Toolchain und `gtasa_reallife.amx`-Ziel erneut erfolgreich ausgeführt.
+- Die sogenannte `gamemode.amx`-Alias-/Duplikat-Prüfung bleibt sauber: nur `Compiler/samp03/gamemodes/gtasa_reallife.amx` wird im Laufzeitpfad gehalten.
+
+### 4.2 Build-Safety / State-Workflow-Update (Code-Abgleich)
+
+Zusätzlich verifiziert an den Kernpfaden:
+
+- `DB_RehydratePlayerState()` ist im Connect-/Load-Pfad eingebunden und validiert `state_id`/`home_state` vor der Live-Setzung.
+- `OnPlayerSpawn()` blockiert die Tutorial-/State-Kamera-Initialisierung, wenn schon eine gültige Heimat-/Staatszuordnung aktiv ist.
+- `CameraSystem_StartFreeCamera()`, `CameraSystem_StartDroneCamera()` und `CameraSystem_ToggleFreeCamera()` gehen per Reset in den Zielmodus und schließen den Resetpfad mit `SetCameraBehindPlayer()` und `TogglePlayerControllable(playerid, 1)`.
+- Das HUD-Reset-/Cleanup bleibt über `INVALID_TEXT_DRAW` und damit ohne `!= Text:0`-Prüfung beim Delayed Reset sauber.
+
 ### 4.1 Build-Befehl
 
 Ausgeführt:

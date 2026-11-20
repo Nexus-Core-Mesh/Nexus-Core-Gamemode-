@@ -54,10 +54,17 @@ Das Projekt als modularen, erweiterbaren GTA:SA-Reallife-Gamemode mit 3-Staaten-
 - [x] Backup-/Restore-Scaffold und Snapshot-Hooks als operationales Design eingebaut
 
 ### Release-Milestone B – Gameplay-Stress-Test
-- [ ] SA:MP/Pawn-Toolchain aufsetzen
-- [ ] compile-check + server-start test
+- [x] SA:MP/Pawn-Toolchain aufsetzen
+- [x] compile-check + server-start test (lokaler `qemu-i386`-Build auf `Compiler/samp03/gamemodes/gtasa_reallife.amx` erfolgreich)
 - [ ] sozialer und wirtschaftlicher Load-Test mit mehreren Spielern
 - [ ] Kassen-/State-Transaktionen gegen realen Spielbetrieb validieren
+
+### Release-Milestone B1 – State Rehydration & Menu-First Onboarding
+- [x] `DB_RehydratePlayerState()` in den Login-/Connect-Pfad eingebunden, ohne gültige State-/Home-Werte mit `0` zu überschreiben
+- [x] `OnPlayerSpawn()` verhindert doppelte Tutorial-/State-Szenen bei gültigem Home-State oder State-ID
+- [x] `CameraSystem_StartFreeCamera()`, `CameraSystem_StartDroneCamera()` und `CameraSystem_ToggleFreeCamera()` resetten sauber und stellen `SetCameraBehindPlayer()` + `TogglePlayerControllable(playerid, 1)` wieder her
+- [x] State-/Home-Validierung durch `Core_IsValidState()` und `INSERT OR IGNORE`-Guardrails im DB-Pfad erhalten
+- [x] Build mit der lokalen 32-Bit-Toolchain auf `Compiler/samp03/gamemodes/gtasa_reallife.amx` bestätigt
 
 ### Release-Milestone UI – Dialog-/Textdraw-First
 - [x] Hauptmenü (`/menu`, Taste Y) mit Inventar, Handy, Business, Ammu-Nation, Mission-Board, Garage, Tuning (`ui_hub.inc`)

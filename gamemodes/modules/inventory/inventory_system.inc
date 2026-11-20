@@ -432,15 +432,59 @@ stock InventorySystem_TransferItem(playerid, targetplayerid, itemid, quantity, m
     {
         return false;
     }
+    if (itemid <= INVENTORY_ITEM_NONE || quantity <= 0)
+    {
+        return false;
+    }
     if (!Inventory_HasItem(playerid, itemid, quantity))
     {
         return false;
     }
+    if (!Core_ValidatePlayerSlot(targetplayerid))
+    {
+        return false;
+    }
+
+    new bool:isStackable = false;
+    new maxStack = INVENTORY_MAX_STACK_DEFAULT;
+    new itemName[32];
+    if (!Inventory_GetItemData(itemid, itemName, sizeof(itemName), isStackable, maxStack))
+    {
+        return false;
+    }
+    if (!Core_ValidateItemStack(itemid, quantity, maxStack, isStackable))
+    {
+        return false;
+    }
+
+    new sourceSlots[MAX_INVENTORY_SLOTS];
+    new sourceCount = 0;
+    for (new i = 0; i < MAX_INVENTORY_SLOTS; i++)
+    {
+        if (gInventoryItem[playerid][i] == itemid && gInventoryItemQty[playerid][i] > 0)
+        {
+            sourceSlots[sourceCount] = i;
+            sourceCount++;
+        }
+    }
+    if (sourceCount <= 0)
+    {
+        return false;
+    }
+
+    new originalTargetWeight = gInventoryWeight[targetplayerid];
     if (!Inventory_Add(targetplayerid, itemid, quantity, metadata))
     {
         return false;
     }
-    return Inventory_Remove(playerid, itemid, quantity);
+
+    if (!Inventory_Remove(playerid, itemid, quantity))
+    {
+        gInventoryWeight[targetplayerid] = originalTargetWeight;
+        return false;
+    }
+
+    return true;
 }
 
 stock InventorySystem_GetWeight(playerid)

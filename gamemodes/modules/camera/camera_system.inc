@@ -73,6 +73,7 @@ stock CameraSystem_StartFreeCamera(playerid)
         return;
     }
 
+    CameraSystem_Reset(playerid);
     new Float:x, Float:y, Float:z;
     GetPlayerPos(playerid, x, y, z);
     CameraSystem_SetMode(playerid, CAMERA_MODE_FREE, x + 8.0, y + 8.0, z + 8.0, x + 10.0, y + 10.0, z + 2.0);
@@ -86,6 +87,7 @@ stock CameraSystem_StartDroneCamera(playerid)
         return;
     }
 
+    CameraSystem_Reset(playerid);
     new Float:x, Float:y, Float:z;
     GetPlayerPos(playerid, x, y, z);
     CameraSystem_SetMode(playerid, CAMERA_MODE_DRONE, x + 25.0, y + 25.0, z + 30.0, x, y, z + 2.0);
@@ -122,6 +124,8 @@ stock CameraSystem_ToggleFreeCamera(playerid)
     if (gCameraMode[playerid] == CAMERA_MODE_FREE && gCameraActive[playerid])
     {
         CameraSystem_Reset(playerid);
+        SetCameraBehindPlayer(playerid);
+        TogglePlayerControllable(playerid, true);
         SendClientMessage(playerid, 0x00D9FFFF, "[CAMERA] Freie Kamera beendet.");
         return;
     }

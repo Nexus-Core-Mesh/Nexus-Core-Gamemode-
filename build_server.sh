@@ -5,8 +5,7 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 
 ROOT_DIR="$(pwd)"
 SERVER_DIR="$ROOT_DIR/Compiler/samp03"
-TARGET_AMX="$SERVER_DIR/gamemodes/gamemode.amx"
-LEGACY_ALIAS="$SERVER_DIR/gamemodes/gtasa_reallife.amx"
+TARGET_AMX="$SERVER_DIR/gamemodes/gtasa_reallife.amx"
 SOURCE_PWN="$ROOT_DIR/gamemodes/gamemode.pwn"
 PAWNCC_BIN="$ROOT_DIR/Compiler/pawncc/pawncc"
 PATCHER="$ROOT_DIR/tools/patch_legacy_amx_version.py"
@@ -28,23 +27,24 @@ if [ ! -f "$PATCHER" ]; then
   exit 1
 fi
 
-rm -f "$TARGET_AMX" "$LEGACY_ALIAS"
+find "$SERVER_DIR/gamemodes" -maxdepth 1 -type f -name '*.amx' -delete
+rm -f "$ROOT_DIR/gamemode.amx" "$SERVER_DIR/gamemodes/gamemode.amx"
 
 export SA_SERVER_ROOT="$SERVER_DIR"
 export SQLITE_DB_PATH="$ROOT_DIR/data/db/gtasa_reallife.db"
 export LD_LIBRARY_PATH="$ROOT_DIR/Compiler/pawncc${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 
-qemu-i386 "$PAWNCC_BIN" \
+LD_LIBRARY_PATH="$ROOT_DIR/Compiler/pawncc${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" qemu-i386 "$PAWNCC_BIN" \
   -o"$TARGET_AMX" \
   "$SOURCE_PWN" \
-  -i"$ROOT_DIR/includes" \
+  -iincludes \
   -i"$SERVER_DIR/include" \
   -d3
 
 python3 "$PATCHER" "$TARGET_AMX"
-cp -f "$TARGET_AMX" "$LEGACY_ALIAS"
+find "$SERVER_DIR/gamemodes" -maxdepth 1 -type f -name '*.amx' ! -name 'gtasa_reallife.amx' -delete
 
-if [ ! -s "$TARGET_AMX" ] || [ ! -s "$LEGACY_ALIAS" ]; then
+if [ ! -s "$TARGET_AMX" ]; then
   echo "[build_server] ERROR: AMX build missing or empty after compile" >&2
   exit 1
 fi

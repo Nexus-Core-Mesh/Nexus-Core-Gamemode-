@@ -64,6 +64,18 @@ stock StateLedgerSystem_Transfer(stateid, amount, const reason[], const actor[])
     {
         return false;
     }
+    if (amount == 0)
+    {
+        return true;
+    }
+
+    new beforeBalance = StateSystem_GetBankCash(stateid);
+    new nextBalance = beforeBalance + amount;
+    if (nextBalance < 0)
+    {
+        return false;
+    }
+
     if (!StateSystem_ApplyTreasuryDelta(stateid, amount))
     {
         return false;
@@ -79,7 +91,13 @@ stock StateLedgerSystem_Transfer(stateid, amount, const reason[], const actor[])
         ledgerType = STATE_LEDGER_TYPE_ADMIN;
     }
 
-    return StateLedgerSystem_LogTx(stateid, ledgerType, amount, actor, reason);
+    if (!StateLedgerSystem_LogTx(stateid, ledgerType, amount, actor, reason))
+    {
+        StateSystem_SetTreasuryBalance(stateid, beforeBalance);
+        return false;
+    }
+
+    return true;
 }
 
 stock int:StateLedgerSystem_GetEntryCount(stateid)

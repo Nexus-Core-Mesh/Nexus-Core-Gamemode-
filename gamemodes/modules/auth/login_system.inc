@@ -135,12 +135,10 @@ stock LoginSystem_ShowRegisterScreen(playerid)
 
     new const loginTitle[] = "GTA:SA Reallife";
     new const loginRegister[] = "REGISTRIERUNG";
-    new const loginHome[] = "Bitte w~hle deine Heimatstadt:";
+    new const loginHome[] = "Bitte waehle deine Heimatstadt im Menue:";
     new const loginCities[] = "LS - Los Santos   SF - San Fierro   LV - Las Venturas";
-    new const loginCmds[] = "Befehle:";
-    new const loginCommandHelp[] = "/register <Name> <Passwort> /city <LS|SF|LV>";
-    new const loginTutorial[] = "Nach der Registrierung startet das Tutorial.";
-    new const loginLink[] = "https://example.com/reallife";
+    new const loginFlow[] = "Das Passwort bleibt die einzige freie Texteingabe.";
+    new const loginTutorial[] = "Nach der Stadtwahl startet das Tutorial automatisch.";
 
     gLoginTD[playerid][0] = UiDialog_TextDrawCreate(320.0, 40.0, loginTitle);
     TextDrawAlignment(gLoginTD[playerid][0], 2);
@@ -163,27 +161,17 @@ stock LoginSystem_ShowRegisterScreen(playerid)
     TextDrawLetterSize(gLoginTD[playerid][3], 0.28, 1.0);
     TextDrawColor(gLoginTD[playerid][3], 0x55FF55FF);
 
-    gLoginTD[playerid][4] = UiDialog_TextDrawCreate(320.0, 170.0, loginCmds);
+    gLoginTD[playerid][4] = UiDialog_TextDrawCreate(320.0, 170.0, loginFlow);
     TextDrawAlignment(gLoginTD[playerid][4], 2);
-    TextDrawLetterSize(gLoginTD[playerid][4], 0.28, 1.0);
-    TextDrawColor(gLoginTD[playerid][4], 0xFFFFFFFF);
+    TextDrawLetterSize(gLoginTD[playerid][4], 0.25, 1.0);
+    TextDrawColor(gLoginTD[playerid][4], 0xFFCC66FF);
 
-    gLoginTD[playerid][5] = UiDialog_TextDrawCreate(320.0, 190.0, loginCommandHelp);
+    gLoginTD[playerid][5] = UiDialog_TextDrawCreate(320.0, 195.0, loginTutorial);
     TextDrawAlignment(gLoginTD[playerid][5], 2);
-    TextDrawLetterSize(gLoginTD[playerid][5], 0.25, 1.0);
-    TextDrawColor(gLoginTD[playerid][5], 0xFFCC66FF);
+    TextDrawLetterSize(gLoginTD[playerid][5], 0.24, 0.9);
+    TextDrawColor(gLoginTD[playerid][5], 0xBBBBBBFF);
 
-    gLoginTD[playerid][6] = UiDialog_TextDrawCreate(320.0, 212.0, loginTutorial);
-    TextDrawAlignment(gLoginTD[playerid][6], 2);
-    TextDrawLetterSize(gLoginTD[playerid][6], 0.24, 0.9);
-    TextDrawColor(gLoginTD[playerid][6], 0xBBBBBBFF);
-
-    gLoginTD[playerid][7] = UiDialog_TextDrawCreate(320.0, 245.0, loginLink);
-    TextDrawAlignment(gLoginTD[playerid][7], 2);
-    TextDrawLetterSize(gLoginTD[playerid][7], 0.2, 0.8);
-    TextDrawColor(gLoginTD[playerid][7], 0x8CC6FFFF);
-
-    for (new i = 0; i < 8; i++)
+    for (new i = 0; i < 6; i++)
     {
         if (gLoginTD[playerid][i] != Text:0)
         {

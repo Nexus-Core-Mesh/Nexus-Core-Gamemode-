@@ -11,10 +11,10 @@ The objective was to keep the hardening fixes already proven useful in place whi
 The project was rebuilt using the repository's script:
 
 - Command: `./build_server.sh`
-- Target output: `Compiler/samp03/gamemodes/gamemode.amx`
-- Legacy alias: `Compiler/samp03/gamemodes/gtasa_reallife.amx`
+- Target output: `Compiler/samp03/gamemodes/gtasa_reallife.amx`
+- No legacy alias or duplicate AMX output is retained
 
-Result: the Pawn build completed successfully. The compiler reported no fatal syntax errors, and the AMX files were generated and patched successfully. This confirms the current gamemode source tree is in a compileable state.
+Result: the Pawn build completed successfully. The compiler reported no fatal syntax errors, and the AMX file was generated and patched successfully. This confirms the current gamemode source tree is in a compileable state.
 
 Important caveat: compile success is necessary, but it does not replace real 7780 runtime validation. The live server, server log, SQLite state, and scriptfile checks remain outstanding in the actual runtime environment.
 
@@ -102,13 +102,22 @@ The general flow in the source is now structured around the following sequence:
    - Existing register/login screens are displayed using textdraw-based UI and are routed toward the tutorial/gameflow.
    - The password remains the free-text input; the rest of the selection process remains in button/dialog/menu forms where possible.
 4. Continue into tutorial / camera
-   - `LoginSystem_CompleteLogin` and `LoginSystem_CompleteReg` hide the intro screens and start the tutorial flow.
-   - `CameraSystem_PlayStateScene` is used to frame the next scene after login/register completion.
+   - `LoginSystem_AdvanceToStateSelection` and `TutorialSystem_Next` hide intro screens, keep the flow menu-first, and transition into state selection.
+   - `CameraSystem_PlayStateScene` is used to frame the city preview and `CameraSystem_Reset` is called before and after state spawn setup to avoid double-triggering onboarding on spawn.
 5. Spawn and state flow
    - The gamemode still routes `/city`, `/spawn`, and related spawn commands through state-aware spawn logic.
-   - `StateSystem_SpawnPlayerForState` and related logic are still the anchors for per-state spawning and replay-safe placement.
+   - `StateSpawnSystem_Apply` and `StateSystem_OnPlayerSpawn` anchor per-state spawning and replay-safe placement.
 
-This is not yet a fully live-verified end-to-end onboarding sequence in the real environment, but the structure in the source is aligned with the intended menu-first flow and is a meaningful step toward it.
+This pass specifically hardened the reconnect and respawn edge cases: valid `state_id`/`home_state` values are no longer clobbered by invalid `0` defaults, and the `OnPlayerSpawn` gate now prevents tutorial/camera re-entry when a valid state is already active.
+
+## Finalized state and camera guard rails
+
+The current source implements the persistence and reset guard rails explicitly requested for this pass:
+
+- `DB_RehydratePlayerState()` is integrated into the state-load path and preserves `INSERT OR IGNORE` behavior while validating both `state_id` and `home_state` before mutating the live player profile.
+- `OnPlayerSpawn()` only triggers the tutorial/camera path when onboarding is incomplete or the state is invalid; otherwise it resets the camera and applies the fixed spawn once.
+- `CameraSystem_StartFreeCamera()`, `CameraSystem_StartDroneCamera()`, and `CameraSystem_ToggleFreeCamera()` all reset through `CameraSystem_Reset(playerid)` before entering the mode and ensure the player is controllable again when leaving the camera mode.
+- `RoleplayUI_Hide()` and related dashboard resets continue to use `INVALID_TEXT_DRAW` cleanup instead of brittle zero-value comparisons, keeping the HUD layout clean on reconnect/reset and state transitions.
 
 ## Maintained hardening and stability fixes
 
