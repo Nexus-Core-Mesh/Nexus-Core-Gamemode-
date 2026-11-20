@@ -229,6 +229,20 @@ Im aktuellen Stand wurden die früheren Runtime-Risiken nicht bloß dokumentiert
 
 Diese Vereinbarungen sind absichtlich kein „Wiederverschieben“ apt-ähnlicher Änderungen, sondern eine direkte Sicherheitsschicht für den Connect-/Spawn-/HUD-Flow.
 
+### 2.5 Admin-/Projektleiter-Workflow und runtime contract
+
+Im laufenden Spielbetrieb wurde der Administrations- und Projektleiter-Export bewusst als separater, nicht-öffentlich sichtbarer Zugriff ergänzt. Die Kernidee ist: normale Spieler-Hilfen und Standardmenüs bleiben unverändert, während autorisierte Admins und Projektleiter im System über eine identische Core-Prüfung und einen zentralen State-/Spawn-Flow Zugang erhalten.
+
+Die relevanten Sicherheits- und Runtime-Regeln lauten:
+
+- `Core_IsProjectLeader()` setzt den Projektleiter-Status ausschließlich über das zentrale `gPlayerData`-Profil und erlaubt keine zweite parallele Statusquelle.
+- `AdminSystem_IsProjectLeader()` prüft zusätzlich den globalen Owner-/Admin-Pfad und hält den Zugriff sauber separiert von normalen Spieler-Menüs.
+- `/projectlead`, `/setstate` und `/spawnvehicle` laufen über `AdminSystem_HandleCommand()` und nutzen die vorhandenen State-/Spawn-/Vehicle-Guards statt unkontrollierten direktem Schreiben in globale Arrays.
+- `StateSpawnSystem_Apply()` bleibt der single entry point für State- und Spawn-Applikation; der Kamerarücksetzpfad läuft über `CameraSystem_Reset()` beziehungsweise `SetCameraBehindPlayer()` und verhindert so eine Rekursion in Tutorial-/State-Schleifen.
+- Fahrzeugspawns gehen über `VehicleSystem_SpawnAdminVehicle()` und respektieren die Slot-/Limit-Checks des Fahrzeugsystems statt rohe Slot-Array-Schreibzugriffe im Admin-Context zu erlauben.
+
+Diese Regeln sind bewusst zusammen mit dem vordefinierten Core-Contract in der Architektur verankert, damit spätere Module denselben Single-Source-of-Truth- und Hardening-Pfad verwenden.
+
 ### 2.5 Live-Server-Root und runtime contract
 
 `Compiler/samp03/` ist das aktive SA:MP-Laufzeit-Root. In diesem Ordner liegt

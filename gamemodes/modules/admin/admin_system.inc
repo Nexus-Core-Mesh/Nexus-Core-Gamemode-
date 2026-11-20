@@ -41,6 +41,15 @@ stock AdminSystem_OnPlayerDisconnect(playerid, reason)
     Core_SetPlayerAdminState(playerid, -1);
 }
 
+stock AdminSystem_IsProjectLeader(playerid)
+{
+    if (playerid < 0 || playerid >= MAX_PLAYERS)
+    {
+        return false;
+    }
+    return Core_IsProjectLeader(playerid) || StateAdminSystem_IsGlobalOwner(playerid) || AdminSystem_IsOwner(playerid);
+}
+
 stock AdminSystem_IsOwner(playerid)
 {
     if (playerid < 0 || playerid >= MAX_PLAYERS)
@@ -137,12 +146,24 @@ stock AdminSystem_HandleCommand(playerid, const cmdtext[])
 
     if (strcmp(cmd, "/admin", true) == 0 || strcmp(cmd, "/mod", true) == 0)
     {
-        if (AdminSystem_IsModerator(playerid))
+        if (AdminSystem_IsModerator(playerid) || AdminSystem_IsProjectLeader(playerid))
         {
-            UiDialog_Show(playerid, DIALOG_UI_ADMIN_MENU, DIALOG_STYLE_LIST, "Admin-Menü", "Konfiguration\nGangwar\nStaatsstatus\nBerechtigungen", "Öffnen", "Schließen");
+            UiDialog_Show(playerid, DIALOG_UI_ADMIN_MENU, DIALOG_STYLE_LIST, "Admin-Menü", "Konfiguration\nGangwar\nStaatsstatus\nBerechtigungen\nState-Spawns\nFahrzeug-Spawnen\nHaus verwalten\nBusiness verwalten", "Öffnen", "Schließen");
             return true;
         }
         SendClientMessage(playerid, 0xFF0000AA, "[ADMIN] Kein Adminzugang.");
+        return true;
+    }
+
+    if (strcmp(cmd, "/projectlead", true) == 0 || strcmp(cmd, "/projectleader", true) == 0)
+    {
+        if (AdminSystem_IsProjectLeader(playerid) || AdminSystem_IsOwner(playerid))
+        {
+            Core_SetPlayerProjectLeader(playerid, 1);
+            SendClientMessage(playerid, 0x00FF00AA, "[PROJECT] Projektleiter-Zugang aktiviert.");
+            return true;
+        }
+        SendClientMessage(playerid, 0xFF0000AA, "[PROJECT] Zugriff verweigert: Projektleiter-/Admin-Recht fehlt.");
         return true;
     }
 
@@ -154,7 +175,7 @@ stock AdminSystem_HandleCommand(playerid, const cmdtext[])
 
     if (strcmp(cmd, "/config", true) == 0)
     {
-        if (AdminSystem_IsModerator(playerid))
+        if (AdminSystem_IsModerator(playerid) || AdminSystem_IsProjectLeader(playerid))
         {
             AdminConfigSystem_ShowMenu(playerid);
             return true;
@@ -165,12 +186,71 @@ stock AdminSystem_HandleCommand(playerid, const cmdtext[])
 
     if (strcmp(cmd, "/togglewar", true) == 0)
     {
-        if (AdminSystem_IsModerator(playerid))
+        if (AdminSystem_IsModerator(playerid) || AdminSystem_IsProjectLeader(playerid))
         {
             GangWarSystem_Toggle();
             SendClientMessage(playerid, 0x00FF00AA, "[GANGWAR] Status gewechselt.");
             return true;
         }
+        return true;
+    }
+
+    if (strcmp(cmd, "/setstate", true) == 0)
+    {
+        if (!AdminSystem_IsProjectLeader(playerid) && !AdminSystem_IsOwner(playerid))
+        {
+            SendClientMessage(playerid, 0xFF0000AA, "[ADMIN] Keine Berechtigung für State-Setzeingriffe.");
+            return true;
+        }
+
+        new params[32];
+        new stateid;
+        if (sscanf(cmdtext, "s[32]d", params, stateid) != 0)
+        {
+            SendClientMessage(playerid, 0xFFCC00AA, "[ADMIN] Nutzung: /setstate [0=LS|1=SF|2=LV]");
+            return true;
+        }
+
+        if (!Core_IsValidState(stateid))
+        {
+            SendClientMessage(playerid, 0xFF0000AA, "[ADMIN] Ungültiger State.");
+            return true;
+        }
+
+        Core_SetPlayerState(playerid, stateid);
+        Core_SetPlayerHomeState(playerid, stateid);
+        StateSpawnSystem_Apply(playerid, stateid);
+        SendClientMessage(playerid, 0x00FF00AA, "[ADMIN] State gesetzt und gespawnt.");
+        return true;
+    }
+
+    if (strcmp(cmd, "/spawnvehicle", true) == 0)
+    {
+        if (!AdminSystem_IsProjectLeader(playerid) && !AdminSystem_IsOwner(playerid))
+        {
+            SendClientMessage(playerid, 0xFF0000AA, "[ADMIN] Keine Berechtigung für Fahrzeug-Spawns.");
+            return true;
+        }
+
+        new params[32];
+        new modelid;
+        if (sscanf(cmdtext, "s[32]d", params, modelid) != 0 || modelid <= 0)
+        {
+            SendClientMessage(playerid, 0xFFCC00AA, "[ADMIN] Nutzung: /spawnvehicle [modelid]");
+            return true;
+        }
+
+        new Float:x, Float:y, Float:z;
+        GetPlayerPos(playerid, x, y, z);
+        new vehicleid = VehicleSystem_SpawnAdminVehicle(modelid, x + 2.0, y + 2.0, z + 1.5, playerid);
+        if (vehicleid == INVALID_VEHICLE_ID)
+        {
+            SendClientMessage(playerid, 0xFF0000AA, "[ADMIN] Fahrzeug konnte nicht gespawnt werden oder das Slot-Limit wurde erreicht.");
+            return true;
+        }
+
+        PutPlayerInVehicle(playerid, vehicleid, 0);
+        SendClientMessage(playerid, 0x00FF00AA, "[ADMIN] Fahrzeug gespawnt.");
         return true;
     }
 

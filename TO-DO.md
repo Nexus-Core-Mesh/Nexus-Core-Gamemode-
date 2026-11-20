@@ -69,6 +69,13 @@ Das Projekt als modularen, erweiterbaren GTA:SA-Reallife-Gamemode mit 3-Staaten-
 - [x] Übergang `Connect -> Auto-Detect Login/Register -> Tutorial -> Heimatstaat (LS/SF/LV) -> StateSpawnSystem_Apply() -> CameraSystem_Reset() -> fester Spawnpunkt` als menu-first flow stabilisiert; die Zustände werden nicht bei Respawn/Reconnect erneut durch Chatbefehle ausgelöst.
 - [x] Single-Target-Build-Pfad auf `Compiler/samp03/gamemodes/gtasa_reallife.amx` konsolidiert; alte `gamemode.amx`-Duplikate und Legacy-Aliase werden im Build und im Serverordner bereinigt.
 
+### Release-Milestone B2 – Admin / Projektleiter-System
+- [x] Projektleiter-/Owner-Zugang als versteckter Spezialzugang in `core.inc` und `admin_system.inc` ergänzt; `Core_IsProjectLeader()` und `AdminSystem_IsProjectLeader()` sichern Zugriff ohne normale Spieler-Hilfen.
+- [x] State-Setzen, Teleport und Spawnen über `StateSpawnSystem_Apply()`/`CameraSystem_Reset()` eingebaut; `Core_SetPlayerState()` und `Core_SetPlayerHomeState()` bleiben auf gültige State-IDs beschränkt.
+- [x] Fahrzeug-Spawnen über `VehicleSystem_SpawnAdminVehicle()` integriert; Slot-/Limit-Checks verbleiben im Vehiclesystem und vermeiden direkte rohe Array-Schreibpfade.
+- [x] Admin-/Projektleiter-Befehle `/projectlead`, `/setstate`, `/spawnvehicle` in `AdminSystem_HandleCommand()` ergänzt und auf gültige `strmid`/sscanf-Befehlsanalyse mit klaren Fehlermeldungen stabilisiert.
+- [x] Aufbau und Dokumentation des Admin-/Projektleiter-Workflows im Code und Architektur-Report berücksichtigt; bestehende Abschnitte bleiben unverändert und die Erweiterung wird als neuer Release-Block ergänzt.
+
 ### Release-Milestone UI – Dialog-/Textdraw-First
 - [x] Hauptmenü (`/menu`, Taste Y) mit Inventar, Handy, Business, Ammu-Nation, Mission-Board, Garage, Tuning (`ui_hub.inc`)
 - [x] Job-Zentrum (`job_center.inc`) mit Annahme, Checkpoint-Aufgaben, XP/Lohn/Staatskasse/Inventar-Kopplung

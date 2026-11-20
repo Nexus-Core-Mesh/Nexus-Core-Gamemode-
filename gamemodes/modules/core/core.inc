@@ -65,7 +65,14 @@ const E_PLAYER_JAIL_TIME = 10;
 const E_PLAYER_LAW_ROLE = 11;
 const E_PLAYER_EMERGENCY_ROLE = 12;
 const E_PLAYER_EMERGENCY_STATE = 13;
-const E_PLAYER_PROFILE_COUNT = 14;
+const E_PLAYER_PROJECT_LEADER = 14;
+const E_PLAYER_PROFILE_COUNT = 15;
+
+#define ADMIN_RANK_SUPPORT 1
+#define ADMIN_RANK_MODERATOR 2
+#define ADMIN_RANK_STATE_ADMIN 3
+#define ADMIN_RANK_STATE_LEADER 4
+#define ADMIN_RANK_OWNER 5
 
 new gPlayerData[MAX_PLAYERS][E_PLAYER_PROFILE_COUNT];
 new gPlayerBank[MAX_PLAYERS];
@@ -96,6 +103,7 @@ stock Core_ResetPlayerData(playerid)
     gPlayerCash[playerid] = 2500;
     gPlayerData[playerid][E_PLAYER_ADMIN_LEVEL] = 0;
     gPlayerData[playerid][E_PLAYER_ADMIN_STATE] = -1;
+    gPlayerData[playerid][E_PLAYER_PROJECT_LEADER] = 0;
     gPlayerData[playerid][E_PLAYER_WANTED] = 0;
     gPlayerData[playerid][E_PLAYER_JAIL_ACTIVE] = 0;
     gPlayerData[playerid][E_PLAYER_JAIL_TIME] = 0;
@@ -195,6 +203,33 @@ stock int:Core_GetPlayerAdminLevel(playerid)
         return int:0;
     }
     return int:gPlayerData[playerid][E_PLAYER_ADMIN_LEVEL];
+}
+
+stock int:Core_GetPlayerProjectLeader(playerid)
+{
+    if (!Core_IsValidPlayerId(playerid))
+    {
+        return int:0;
+    }
+    return int:gPlayerData[playerid][E_PLAYER_PROJECT_LEADER];
+}
+
+stock Core_SetPlayerProjectLeader(playerid, enabled)
+{
+    if (!Core_IsValidPlayerId(playerid))
+    {
+        return;
+    }
+    gPlayerData[playerid][E_PLAYER_PROJECT_LEADER] = (enabled ? 1 : 0);
+}
+
+stock bool:Core_IsProjectLeader(playerid)
+{
+    if (!Core_IsValidPlayerId(playerid))
+    {
+        return false;
+    }
+    return gPlayerData[playerid][E_PLAYER_PROJECT_LEADER] == 1 || Core_GetPlayerAdminLevel(playerid) >= ADMIN_RANK_OWNER;
 }
 
 stock int:Core_GetPlayerAdminState(playerid)
