@@ -40,9 +40,9 @@
 #include "modules/housing/house_storage_system.inc"
 #include "modules/jobs/jobs_core.inc"
 #include "modules/jobs/state_jobs.inc"
+#include "modules/tutorial/tutorial_system.inc"
 #include "modules/auth/login_system.inc"
 #include "modules/camera/camera_system.inc"
-#include "modules/tutorial/tutorial_system.inc"
 #include "modules/government/government_system.inc"
 #include "modules/housing/house_system.inc"
 #include "modules/business/business_system.inc"
@@ -471,34 +471,33 @@ public OnPlayerSpawn(playerid)
     new bool:hasCompletedOnboarding = (gTutorialStage[playerid] >= TUTORIAL_STAGE_FINISH);
     new bool:hasValidState = Core_IsValidState(stateid) && Core_IsValidState(homeState);
 
-    if (LoginSystem_IsActive(playerid) && (!hasCompletedOnboarding || !hasValidState))
+    if (!LoginSystem_IsActive(playerid))
     {
-        if (!hasValidState)
-        {
-            CameraSystem_Reset(playerid);
-            StateSpawnSystem_Apply(playerid, Core_GetValidStateOrDefault(stateid, homeState));
-        }
-        else if (!hasCompletedOnboarding)
-        {
-            CameraSystem_Reset(playerid);
-            StateSpawnSystem_Apply(playerid, homeState);
-        }
-        else
-        {
-            CameraSystem_Reset(playerid);
-            StateSpawnSystem_Apply(playerid, homeState);
-        }
+        return 1;
+    }
+
+    if (!hasValidState)
+    {
+        stateid = Core_GetValidStateOrDefault(stateid, homeState);
+        homeState = Core_GetValidStateOrDefault(homeState, stateid);
+        Core_SetPlayerState(playerid, stateid);
+        Core_SetPlayerHomeState(playerid, homeState);
+        DB_SavePlayerState(playerid, stateid);
+    }
+
+    if (!hasCompletedOnboarding)
+    {
+        CameraSystem_Reset(playerid);
+        StateSpawnSystem_Apply(playerid, Core_GetValidStateOrDefault(homeState, stateid));
         RoleplayUI_ShowDashboard(playerid);
         PhoneSystem_OnPlayerConnect(playerid);
         PrisonSystem_OnPlayerConnect(playerid);
-    }
-    else if (LoginSystem_IsActive(playerid))
-    {
-        CameraSystem_Reset(playerid);
-        StateSpawnSystem_Apply(playerid, homeState);
-        RoleplayUI_ShowDashboard(playerid);
         return 1;
     }
+
+    CameraSystem_Reset(playerid);
+    StateSpawnSystem_Apply(playerid, Core_GetValidStateOrDefault(homeState, stateid));
+    RoleplayUI_ShowDashboard(playerid);
     return 1;
 }
 

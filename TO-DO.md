@@ -66,6 +66,8 @@ Das Projekt als modularen, erweiterbaren GTA:SA-Reallife-Gamemode mit 3-Staaten-
 - [x] State-/Home-Validierung durch `Core_IsValidState()` und `INSERT OR IGNORE`-Guardrails im DB-Pfad erhalten
 - [x] Build mit der lokalen 32-Bit-Toolchain auf `Compiler/samp03/gamemodes/gtasa_reallife.amx` bestätigt
 - [x] Direkte Hur-bis-Gameplay-Hotfixe aus diesem Lauf ergänzt: `DB_RehydratePlayerState()` bleibt validierend, `OnPlayerSpawn()` erkennt vorhandenen `home_state`/`state_id` und springt nicht erneut in Tutorial-/State-Szene, `CameraSystem_ExitCameraMode()` kapselt Reset- und Control-Return sauber, `UiHub_ShowMain()` / `UiHub_ShowQuickActionMenu()` führen Camera-Reset/Exit über die Menüpfade aus.
+- [x] Übergang `Connect -> Auto-Detect Login/Register -> Tutorial -> Heimatstaat (LS/SF/LV) -> StateSpawnSystem_Apply() -> CameraSystem_Reset() -> fester Spawnpunkt` als menu-first flow stabilisiert; die Zustände werden nicht bei Respawn/Reconnect erneut durch Chatbefehle ausgelöst.
+- [x] Single-Target-Build-Pfad auf `Compiler/samp03/gamemodes/gtasa_reallife.amx` konsolidiert; alte `gamemode.amx`-Duplikate und Legacy-Aliase werden im Build und im Serverordner bereinigt.
 
 ### Release-Milestone UI – Dialog-/Textdraw-First
 - [x] Hauptmenü (`/menu`, Taste Y) mit Inventar, Handy, Business, Ammu-Nation, Mission-Board, Garage, Tuning (`ui_hub.inc`)

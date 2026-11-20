@@ -11,6 +11,8 @@ PAWNCC_BIN="$ROOT_DIR/Compiler/pawncc/pawncc"
 PATCHER="$ROOT_DIR/tools/patch_legacy_amx_version.py"
 
 mkdir -p "$SERVER_DIR/gamemodes" "$SERVER_DIR/data/db" "$ROOT_DIR/data/db" "$SERVER_DIR/plugins"
+mkdir -p "$SERVER_DIR/scriptfiles/players" "$SERVER_DIR/scriptfiles/houses" "$SERVER_DIR/scriptfiles/safes" "$SERVER_DIR/scriptfiles/vehicles" "$SERVER_DIR/scriptfiles/ubb" "$SERVER_DIR/scriptfiles/backups" "$SERVER_DIR/scriptfiles/state/ls" "$SERVER_DIR/scriptfiles/state/sf" "$SERVER_DIR/scriptfiles/state/lv"
+chmod 755 "$SERVER_DIR/scriptfiles" "$SERVER_DIR/scriptfiles/players" "$SERVER_DIR/scriptfiles/houses" "$SERVER_DIR/scriptfiles/safes" "$SERVER_DIR/scriptfiles/vehicles" "$SERVER_DIR/scriptfiles/ubb" "$SERVER_DIR/scriptfiles/backups" "$SERVER_DIR/scriptfiles/state" "$SERVER_DIR/scriptfiles/state/ls" "$SERVER_DIR/scriptfiles/state/sf" "$SERVER_DIR/scriptfiles/state/lv" "$ROOT_DIR/data/db" "$SERVER_DIR/data/db"
 
 if [ ! -f "$PAWNCC_BIN" ]; then
   echo "[build_server] ERROR: local Pawn compiler not found at $PAWNCC_BIN" >&2

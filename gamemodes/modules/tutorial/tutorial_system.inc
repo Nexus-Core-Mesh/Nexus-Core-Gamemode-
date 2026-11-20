@@ -19,6 +19,16 @@ stock TutorialSystem_Initialize()
 
 stock TutorialSystem_Start(playerid)
 {
+    if (!Core_IsValidPlayerId(playerid))
+    {
+        return;
+    }
+
+    if (gTutorialStage[playerid] >= TUTORIAL_STAGE_FINISH && Core_IsValidState(Core_GetPlayerHomeState(playerid)))
+    {
+        return;
+    }
+
     gTutorialStage[playerid] = TUTORIAL_STAGE_INTRO;
     TutorialSystem_ShowStage(playerid, gTutorialStage[playerid]);
     SendClientMessage(playerid, 0xFFCC00AA, "[TUTORIAL] Willkommen im GTA:SA Reallife. Folge dem kurzen Einstieg.");

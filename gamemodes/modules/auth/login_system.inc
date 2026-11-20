@@ -59,7 +59,10 @@ stock LoginSystem_AdvanceToStateSelection(playerid)
 
     gLoginState[playerid] = LOGIN_STATE_ACTIVE;
     CameraSystem_Reset(playerid);
-    TutorialSystem_Start(playerid);
+    if (!Core_IsValidState(Core_GetPlayerHomeState(playerid)))
+    {
+        TutorialSystem_Start(playerid);
+    }
     UiHub_ShowStatePick(playerid);
 }
 
@@ -244,14 +247,24 @@ stock LoginSystem_CompleteLogin(playerid)
     LoginSystem_HideLoginScreen(playerid);
     LoginSystem_HideRegisterScreen(playerid);
     gLoginState[playerid] = LOGIN_STATE_ACTIVE;
+
+    new homeState = Core_GetValidStateOrDefault(Core_GetPlayerHomeState(playerid), Core_GetPlayerState(playerid));
+    if (!Core_IsValidState(homeState))
+    {
+        homeState = STATE_LOS_SANTOS;
+    }
+    gPlayerHomeState[playerid] = homeState;
+    Core_SetPlayerHomeState(playerid, homeState);
+    Core_SetPlayerState(playerid, homeState);
+    DB_SavePlayerState(playerid, homeState);
+
     TogglePlayerControllable(playerid, true);
     SendClientMessage(playerid, 0x00FF00AA, "[LOGIN] Login erfolgreich. Das Tutorial startet nun.");
-    if (gPlayerHomeState[playerid] == 0)
+    CameraSystem_PlayStateScene(playerid, homeState);
+    if (!Core_IsValidState(Core_GetPlayerHomeState(playerid)) || gTutorialStage[playerid] < TUTORIAL_STAGE_FINISH)
     {
-        gPlayerHomeState[playerid] = STATE_LOS_SANTOS;
+        TutorialSystem_Start(playerid);
     }
-    CameraSystem_PlayStateScene(playerid, gPlayerHomeState[playerid]);
-    TutorialSystem_Start(playerid);
 }
 
 stock LoginSystem_CompleteReg(playerid)
@@ -259,14 +272,24 @@ stock LoginSystem_CompleteReg(playerid)
     LoginSystem_HideRegisterScreen(playerid);
     LoginSystem_HideLoginScreen(playerid);
     gLoginState[playerid] = LOGIN_STATE_ACTIVE;
+
+    new homeState = Core_GetValidStateOrDefault(Core_GetPlayerHomeState(playerid), Core_GetPlayerState(playerid));
+    if (!Core_IsValidState(homeState))
+    {
+        homeState = STATE_LOS_SANTOS;
+    }
+    gPlayerHomeState[playerid] = homeState;
+    Core_SetPlayerHomeState(playerid, homeState);
+    Core_SetPlayerState(playerid, homeState);
+    DB_SavePlayerState(playerid, homeState);
+
     TogglePlayerControllable(playerid, true);
     SendClientMessage(playerid, 0x00FF00AA, "[LOGIN] Registrierung erfolgreich. Das Tutorial startet nun.");
-    if (gPlayerHomeState[playerid] == 0)
+    CameraSystem_PlayStateScene(playerid, homeState);
+    if (!Core_IsValidState(Core_GetPlayerHomeState(playerid)) || gTutorialStage[playerid] < TUTORIAL_STAGE_FINISH)
     {
-        gPlayerHomeState[playerid] = STATE_LOS_SANTOS;
+        TutorialSystem_Start(playerid);
     }
-    CameraSystem_PlayStateScene(playerid, gPlayerHomeState[playerid]);
-    TutorialSystem_Start(playerid);
 }
 
 #endif
