@@ -25,6 +25,8 @@ Die Kernidee ist bewusst: keine monolithische `gamemode.pwn`-Logik, sondern ein 
 
 Das Projekt hat einen vollständigen modularen RP-Framework-Stand erreicht und ist als robuste Basis für reale SA:MP-Entwicklung dokumentiert. Wenn ein `c++`-Spiegel im Repository vorhanden ist, dient er als strukturtreuer Projektspiegel für Audit, Überblick und Tooling; er ist kein Laufzeitbestandteil des SA:MP-Servers. Die wichtigsten Systembereiche sind bereits als eigenständige Module angelegt und an die Haupt-Architektur angehängt. Der aktuelle Härtungsstand bezieht sich jedoch auf den aktuellen Code-/Build-Stand und die Architektur-Validierung; ein echter Live-Server-Start auf Ubuntu-VM bleibt noch als separate Produktionsprüfung auszuführen.
 
+Zusätzlich wurden im Offline-/Audit-Pfad mehrere manuelle `python3`-Werkzeuge ergänzt, die ausschließlich auf CLI-Aufruf und ohne Serverstart funktionieren. Diese Hilfsprogramme sind bewusst schlank und standardbibliotheksbasiert: `log_code_bridge.py`, `code_line_extractor.py`, `log_guided_autocorrect.py` und `debug_trace_collector.py` dienen zur Zuordnung von Log-Ereignissen zu Quellcode, Zeilen-/NL-Extrakten, sicheren Dry-Run-Korrekturen und kompakten Diagnose-Exports.
+
 ### Umgesetzte Kernmodule
 
 - `core/` – zentrale Spielerdaten, State-Logik, Admin-Status, Validierung, Bank-/Cash-Bridge
@@ -209,6 +211,15 @@ Empfohlener Stack:
 ## Live-Betrieb auf Ubuntu-VM: Übergabepunkte und harte Regeln
 
 Die reale Produktionsvalidierung muss auf der Ubuntu-VM erfolgen, nicht im Container. Dort stehen die echten Laufzeitbestandteile zur Verfügung: `pawncc`, `qemu-i386`, `samp.service` / `omp-server.service`, `Compiler/samp03/scriptfiles/` und `control-panel/server.js`.
+
+### Manueller Offline-Workflow der Tools
+
+Die neuen `tools/*.py`-Helfer sind bewusst auf keinen Hintergrundbetrieb oder Daemon-Start ausgelegt. Sie dienen ausschließlich der manuellen Analyse im Kontext des Repo-Standes und bleiben dabei strikt offline:
+
+- `tools/log_code_bridge.py` liest Logdateien aus `Compiler/samp03/server_log.txt`, `samp7780_bg.log` oder einem übergebenen Pfad, prüft relevante Muster und exportiert strukturierte JSON/YSON-Brücken.
+- `tools/code_line_extractor.py` liest gezielte Codezeilen/Zeilenbereiche mit Zeilennummern (`nl`-Stil) aus `gamemodes/gamemode.pwn` und `gamemodes/modules/` und kann optional JSON/YSON-Exports schreiben.
+- `tools/log_guided_autocorrect.py` arbeitet standardmäßig im `--dry-run`-Modus und zeigt Vorschau/Diff, bevor mit `--apply` echte Backups und Korrekturen geschrieben werden.
+- `tools/debug_trace_collector.py` sammelt kompakten Diagnose-Auszug aus Logs, `tools/*.py`-Ausgaben, SQLite-Dateien (read-only) und `Compiler/samp03/`-Artefakten ohne Serverstart.
 
 ### Kritische Übergangspunkte
 

@@ -213,10 +213,21 @@ Im Build-Workflow werden these Includes über `-iincludes` und `-iCompiler/samp0
 Auf 64-Bit-Hosts muss dieser Compiler über `qemu-i386` ausgeführt werden, da es sich um ein 32-Bit-Binary handelt. Genau deshalb gibt es die Logik:
 
 ```bash
-qemu-i386 Compiler/pawncc/pawncc ...
+LD_LIBRARY_PATH="$PWD/Compiler/pawncc${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" qemu-i386 Compiler/pawncc/pawncc -o"$PWD/Compiler/samp03/gamemodes/gtasa_reallife.amx" gamemodes/gamemode.pwn -iincludes -iCompiler/samp03/include -d3
 ```
 
-Damit bleibt die Toolchain konkret und unabhängig von externen Installationen.
+Damit bleibt die Toolchain konkret und unabhängig von externen Installationen. Der echte Single-Target-Build pflegt nur diese eine AMX-Ausgabe; keine Duplikate unter `Compiler/samp03/gamemodes/` oder im Projektroot bleiben stehen.
+
+### 2.5 Offline-Tooling und manuelle Diagnose-Pfade
+
+Das Repository enthält zusätzlich schlanke, standardbibliotheksbasierte Python-Helfer unter `tools/`, die ohne Live-Serverstart und ohne Hintergrundprozess arbeiten. Sie sind gezielt für die Offline-Analyse konzipiert und decken die wichtigsten auditierbaren Bereiche ab:
+
+- `log_code_bridge.py` – Logs -> Source-Zuordnung mit vereinfachter JSON/YSON-Bridge
+- `code_line_extractor.py` – Zeilen-/Match-Extraktion mit `nl`-ähnlicher Nummerierung
+- `log_guided_autocorrect.py` – sichere Vorschau-/Diff-Analyse mit `--dry-run` und Backup bei `--apply`
+- `debug_trace_collector.py` – kompakte Diagnose aus Logs, SQLite-State, scriptfiles und Build-Artefakten
+
+Diese Werkzeuge nutzen nur die Standardbibliothek, sind manuell per CLI aufrufbar und bleiben bewusst außerhalb eines autostartenden oder daemonisierten Betriebs.
 
 ### 2.5 Laufzeit- und Kantenfall-Guardrails
 

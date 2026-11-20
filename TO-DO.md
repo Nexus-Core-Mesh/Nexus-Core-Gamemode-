@@ -83,7 +83,10 @@ Das Projekt als modularen, erweiterbaren GTA:SA-Reallife-Gamemode mit 3-Staaten-
 - [x] Text-Wars-Widget (`text_wars.inc`, Taste N) für Gangwar, Gangfight und Territorien
 - [x] Staats-Leitstand (`state_control_ui.inc`) für Steuern, Treasury, Policy, Budget
 - [x] Lifecycle-Contract mit `Core_MarkModuleReady` und Stufen AUTH_READY/WORLD_READY
-- [ ] Compile-Check: Repo nutzt Pseudo-Pawn (`void`/`bool`/`int` Rückgabetypen) und ist mit pawncc noch nicht kompilierbar
+- [x] Single-Target-Build auf `Compiler/samp03/gamemodes/gtasa_reallife.amx` mit lokaler `qemu-i386` Pawn-Toolchain und Exit-Code `0` bestätigt
+- [x] Offline-Tooling unter `tools/` ergänzt: log bridge, line extractor, autocorrect, debug collector
+- [x] Dokumentations-/Audit-Pfade für 4-Zonen-HUD, Gangfight-Zonen, Projektleiter-/RCON-Steuerung und `7780`-Laufzeitpfad ergänzt
+- [ ] echte Live-Validierung im Ubuntu-VM mit Serverstart, Logs, `gtasa_reallife.db` und Client-Flow bleibt bewusst offen bis zur expliziten Freigabe
 
 ### Release-Milestone C – RP-Expansion
 - [ ] Mission-Board mit verknüpfter Staatspolitik erweitern

@@ -16,6 +16,10 @@ Dieses Verzeichnis enthält Python 3 basierte Hilfswerkzeuge zur Fehleranalyse, 
 - `economy_and_state_ledger_check.py` – Read-only-Kontrolle von Geld-/State-/Ledger-/Dini-Abweichungen
 - `dialog_and_camera_reset_check.py` – statische Prüfung von Dialog-IDs, Reset-Pfaden und Camera-Guards
 - `qemu_7780_readiness_check.py` – 7780-Readiness-Prüfung ohne Start des Servers
+- `log_code_bridge.py` – loggetriggerte Zuordnung von auffälligen Einträgen zu relevanten Quellcodezeilen mit `nl`-ähnlichem Output und JSON/YSON-Export
+- `code_line_extractor.py` – gezielte Zeilensuche und Nummerierung in `gamemodes/gamemode.pwn` und `gamemodes/modules/` mit optionalem JSON/YSON-Export
+- `log_guided_autocorrect.py` – manueller, log-basierter Autokorrektor im Dry-Run-Default mit Sicherungs-Backup und `--apply`-Pfad
+- `debug_trace_collector.py` – kompakter Offline-Diagnose-Export aus Logs, SQLite-, Dini- und Build-Artefakten ohne Serverstart
 
 ## Beispiele
 
