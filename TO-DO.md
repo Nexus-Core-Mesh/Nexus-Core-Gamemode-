@@ -44,6 +44,11 @@ Das Projekt als modularen, erweiterbaren GTA:SA-Reallife-Gamemode mit 3-Staaten-
 - [x] Web-Dashboard mit SQLite-Anbindung
 - [x] Overview-/Summary-/State- und Admin-APIs
 - [x] Projektstatus und Web-Bridge dokumentiert
+- [x] Offline-Setup-/Start-Manager für `control-panel/` unter `tools/control_panel_manager.py` ergänzt
+- [x] Deploy-Pfad `scripts/deploy_server.sh` startet das Panel nur als optionalen Zusatz-Worker, ohne den Gamemode-Deploy zu blockieren
+- [x] Dini-first vs. SQLite-Read-Only-Konsistenz als Teil der Dokumentation ergänzt
+- [x] Repo-gebundene Offline-TUI-/Autofix-Integration ergänzt: `tools/nexus_hub_tui.py`, `tools/nexus_tools_tui.py`, `tools/nexus_autofix.py`, `tools/samp_tui.py` sowie die Root-Wrapper `nexus_hub_tui.py`, `nexus_tools_tui.py`, `nexus_autofix.py`, `samp_tui.py`
+- [x] Repo-gebundene Pfadauflösung ohne feste `/home`-Argumente, `7780`-Live-Abhängigkeiten oder Server-Start in den TUI/Autofix-Workflows
 
 ## Nächste releaseorientierte Aufgaben
 
@@ -62,6 +67,9 @@ Das Projekt als modularen, erweiterbaren GTA:SA-Reallife-Gamemode mit 3-Staaten-
 ### Release-Milestone B1 – State Rehydration & Menu-First Onboarding
 
 - [x] Grundstruktur für `Compiler/samp03/scriptfiles/` ergänzt: `players/`, `houses/`, `house_storage/`, `safes/`, `vehicles/`, `ubb_vehicles/`, `state/LS|SF|LV`, `state_kasse/LS|SF|LV`, `business/`, `factions/`, `inventory/`, `temp/`, `backup/`, `logs/` angelegt und als `.gitkeep`-Markierung im Git gesichert.
+- [x] Valid-state-Reset-Schutz verstärkt: Disconnect-/Login-Pfade dürfen existente `state_id`/`home_state`-Werte nicht durch `0`-Resets zerstören; sie normalisieren auf gültige Standardwerte statt zu invalidieren.
+- [x] Angrenzende Rehydrate-/Connect-/Disconnect-/Spawn-Pfade in `core.inc`, `auth/login_system.inc` und `state/state_system.inc` mit gültigem Fallback gegen Null-Resets abgesichert; kein Bereich überschreibt noch gültige Werte mit 0.
+- [x] Offline-State-Guard erweitert, damit direkte `gPlayerHomeState[] = 0` bzw. `gPlayerData[...] [E_PLAYER_HOME_STATE] = 0`-Patterns mit einem statischen Audit auffallen.
 - [x] Dini-/Persistenzpfade auf `temp` → validate → atomic rename und 7780-Readiness abgestimmt; fehlende Ordner dürfen keinen Laufzeitfehler mehr erzeugen.
 - [x] 7780-Server- und Plugin-Konfiguration auf `gamemode0 gtasa_reallife 1` + `port 7780` konsistent gehalten; Port `7777` bleibt ausdrücklich tabu.
 - [x] `DB_RehydratePlayerState()` in den Login-/Connect-Pfad eingebunden, ohne gültige State-/Home-Werte mit `0` zu überschreiben
@@ -173,4 +181,15 @@ Der aktuelle Repository-Stand ist technisch auf den Single-Target-Contract und d
 ### Abschluss
 
 Der Projekt-Tracker bleibt daher in einem klaren Zustand: technische Stabilität, single-target Build-Validität, Dini-/SQLite-Persistenzsicherung und Lifecycle-Konsistenz sind vollständig dokumentiert und im Code verankert. Die nächste Freigabe erfolgt nur durch echte Live-Validierung auf der Ubuntu-VM und nicht durch reine Compile-Sicherheit allein.
+
+---
+
+## Additive Härtungsnotiz – Verhalten im Quellbaum
+
+Diese Eintragung ergänzt die vorhandenen Milestones ohne einen bestehenden Abschnitt zu löschen.
+
+- Reale Code-Blocker im Quellbaum behandelt: `GetServerTime()` wurde gegen das in dieser Pawn-Umgebung gültige `gettime()`-Contract ersetzt; dadurch wurden echte Buildfehler in `core.inc` und `premium_system.inc` beseitigt.
+- Reale DB-API-Lücke behoben: `DB_GetPlayerHomeState()` ergänzt, damit State-/Home-State-Rehydrate- und Connect-Pfade die Core-Quelle erneut korrekt lesen können.
+- Offlinestrategie bestätigt: `bash scripts/build_gamemode.sh` und die statischen Guards `(py_compile`, `bash -n`, `node --check`, Tool-Guard-Skripte) liefen erfolgreich durch.
+- Der Fortgang bleibt immer noch nicht als Live-Server-Start auf Port 7780 interpretiert; das bleibt ein separates Freigabe-Gate außerhalb der Code-Validierung.
 

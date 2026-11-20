@@ -87,10 +87,75 @@ stock MissionSystem_CompleteMission(playerid)
         return;
     }
 
-    new reward = gMissionReward[gPlayerMission[playerid]];
-    printf("[MISSION] Spieler %d hat Mission %d abgeschlossen und %d$ erhalten.", playerid, gPlayerMission[playerid], reward);
+    new missionid = gPlayerMission[playerid];
+    new reward = gMissionReward[missionid];
+    new stateid = gMissionState[missionid];
+
+    if (!Core_IsValidState(stateid))
+    {
+        stateid = Core_GetValidStateOrDefault(StateSystem_GetPlayerState(playerid), STATE_LOS_SANTOS);
+    }
+
+    if (reward > 0)
+    {
+        if (!Core_ChangePlayerBank(playerid, reward))
+        {
+            SendClientMessage(playerid, 0xFF6666AA, "[MISSION] Die Auszahlung konnte nicht verarbeitet werden.");
+            return;
+        }
+        StateSystem_ApplyTreasuryDelta(stateid, reward / 10);
+    }
+
+    printf("[MISSION] Spieler %d hat Mission %d abgeschlossen und %d$ erhalten.", playerid, missionid, reward);
+    gMissionActive[missionid] = 1;
     gPlayerMission[playerid] = -1;
     SendClientMessage(playerid, 0x00FF00AA, "[MISSION] Mission abgeschlossen.");
+}
+
+stock MissionSystem_GetActiveMissionCount()
+{
+    new count = 0;
+    for (new i = 0; i < MAX_MISSIONS; i++)
+    {
+        if (gMissionActive[i] == 1)
+        {
+            count++;
+        }
+    }
+    return count;
+}
+
+stock MissionSystem_IsMissionActive(missionid)
+{
+    return missionid >= 0 && missionid < MAX_MISSIONS && gMissionActive[missionid] == 1;
+}
+
+stock MissionSystem_GetMissionState(missionid)
+{
+    if (missionid < 0 || missionid >= MAX_MISSIONS)
+    {
+        return STATE_LOS_SANTOS;
+    }
+    return gMissionState[missionid];
+}
+
+stock MissionSystem_GetMissionReward(missionid)
+{
+    if (missionid < 0 || missionid >= MAX_MISSIONS)
+    {
+        return 0;
+    }
+    return gMissionReward[missionid];
+}
+
+stock MissionSystem_GetMissionName(missionid, output[], len)
+{
+    if (missionid < 0 || missionid >= MAX_MISSIONS)
+    {
+        format(output, len, "Keine Mission");
+        return;
+    }
+    format(output, len, "%s", gMissionName[missionid]);
 }
 
 stock MissionSystem_ShowMissionList(playerid)

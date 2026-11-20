@@ -54,7 +54,7 @@ stock DynamicJobSystem_AssignJob(playerid, jobid, stateid)
     }
     if (!Core_IsValidState(stateid))
     {
-        return false;
+        stateid = gDynamicJobState[jobid];
     }
 
     if (gDynamicJobState[jobid] != stateid)

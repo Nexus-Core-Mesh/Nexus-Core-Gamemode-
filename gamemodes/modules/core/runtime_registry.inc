@@ -31,6 +31,8 @@ forward JobCenter_OnPlayerConnect(playerid);
 forward TextWars_OnPlayerConnect(playerid);
 forward StateControl_OnPlayerConnect(playerid);
 forward UiHub_OnPlayerConnect(playerid);
+forward PremiumSystem_OnPlayerConnect(playerid);
+forward PremiumSystem_OnPlayerDisconnect(playerid, reason);
 forward JobsCore_OnPlayerDisconnect(playerid);
 forward JobCenter_OnPlayerDisconnect(playerid);
 forward TextWars_OnPlayerDisconnect(playerid);
@@ -163,6 +165,7 @@ stock Core_RunPlayerConnectHooks(playerid)
     TextWars_OnPlayerConnect(playerid);
     StateControl_OnPlayerConnect(playerid);
     UiHub_OnPlayerConnect(playerid);
+    PremiumSystem_OnPlayerConnect(playerid);
 }
 
 stock Core_RunPlayerDisconnectHooks(playerid, reason)
@@ -173,6 +176,7 @@ stock Core_RunPlayerDisconnectHooks(playerid, reason)
     LoginSystem_OnPlayerDisconnect(playerid, reason);
     AdminSystem_OnPlayerDisconnect(playerid, reason);
     StateSystem_OnPlayerDisconnect(playerid, reason);
+    PremiumSystem_OnPlayerDisconnect(playerid, reason);
     Core_OnPlayerDisconnect(playerid, reason);
 }
 
@@ -207,6 +211,7 @@ stock Core_RegisterDefaultRuntimeModules()
     Core_RegisterConnectHook("TextWars_OnPlayerConnect");
     Core_RegisterConnectHook("StateControl_OnPlayerConnect");
     Core_RegisterConnectHook("UiHub_OnPlayerConnect");
+    Core_RegisterConnectHook("PremiumSystem_OnPlayerConnect");
 
     Core_RegisterDisconnectHook("TextWars_OnPlayerDisconnect");
     Core_RegisterDisconnectHook("JobCenter_OnPlayerDisconnect");
@@ -214,6 +219,7 @@ stock Core_RegisterDefaultRuntimeModules()
     Core_RegisterDisconnectHook("LoginSystem_OnPlayerDisconnect");
     Core_RegisterDisconnectHook("AdminSystem_OnPlayerDisconnect");
     Core_RegisterDisconnectHook("StateSystem_OnPlayerDisconnect");
+    Core_RegisterDisconnectHook("PremiumSystem_OnPlayerDisconnect");
     Core_RegisterDisconnectHook("Core_OnPlayerDisconnect");
 
     return true;

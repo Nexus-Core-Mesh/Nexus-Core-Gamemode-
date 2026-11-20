@@ -45,6 +45,16 @@ export SA_SERVER_ROOT="$SERVER_DIR"
 export SQLITE_DB_PATH="$DB_PATH"
 export LD_LIBRARY_PATH="$SERVER_DIR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}:/usr/lib32:/usr/lib/i386-linux-gnu"
 
+PANEL_MANAGER="$ROOT_DIR/tools/control_panel_manager.py"
+if [ -f "$PANEL_MANAGER" ]; then
+  echo "[deploy] Starting control panel manager in offline-safe mode"
+  if python3 "$PANEL_MANAGER" ensure >/dev/null 2>&1; then
+    python3 "$PANEL_MANAGER" start >/dev/null 2>&1 || echo "[deploy] WARNING: control panel did not start cleanly; continuing without blocking the server" >&2
+  else
+    echo "[deploy] WARNING: control panel dependencies or Node.js are unavailable; continuing without blocking the server" >&2
+  fi
+fi
+
 echo "[deploy] Starting SA:MP server from $SERVER_DIR"
 cd "$SERVER_DIR"
 exec env LD_LIBRARY_PATH="$LD_LIBRARY_PATH" ./samp03svr

@@ -58,9 +58,38 @@ stock StateLedgerSystem_LogTx(stateid, type, amount, const actor[], const contex
     return true;
 }
 
-stock StateLedgerSystem_Transfer(stateid, amount, const reason[], const actor[])
+stock StateLedgerSystem_ValidateTransfer(stateid, amount)
 {
     if (!Core_IsValidState(stateid))
+    {
+        return false;
+    }
+
+    if (amount == 0)
+    {
+        return true;
+    }
+
+    new safeState = Core_GetValidStateOrDefault(stateid, STATE_LOS_SANTOS);
+    if (!Core_IsValidState(safeState))
+    {
+        return false;
+    }
+
+    new beforeBalance = StateSystem_GetBankCash(safeState);
+    new nextBalance = beforeBalance + amount;
+    if (nextBalance < 0)
+    {
+        return false;
+    }
+
+    return true;
+}
+
+stock StateLedgerSystem_ApplyValidatedTransfer(stateid, amount, const reason[], const actor[], ledgerType)
+{
+    new safeState = Core_GetValidStateOrDefault(stateid, STATE_LOS_SANTOS);
+    if (!Core_IsValidState(safeState) || !StateLedgerSystem_ValidateTransfer(safeState, amount))
     {
         return false;
     }
@@ -69,14 +98,37 @@ stock StateLedgerSystem_Transfer(stateid, amount, const reason[], const actor[])
         return true;
     }
 
-    new beforeBalance = StateSystem_GetBankCash(stateid);
+    new beforeBalance = StateSystem_GetBankCash(safeState);
     new nextBalance = beforeBalance + amount;
     if (nextBalance < 0)
     {
         return false;
     }
 
-    if (!StateSystem_ApplyTreasuryDelta(stateid, amount))
+    if (!StateSystem_ApplyTreasuryDelta(safeState, amount))
+    {
+        return false;
+    }
+
+    new finalLedgerType = ledgerType;
+    if (finalLedgerType < STATE_LEDGER_TYPE_TAX || finalLedgerType > STATE_LEDGER_TYPE_ADMIN)
+    {
+        finalLedgerType = (amount > 0) ? STATE_LEDGER_TYPE_BIZ : STATE_LEDGER_TYPE_ADMIN;
+    }
+
+    if (!StateLedgerSystem_LogTx(safeState, finalLedgerType, amount, actor, reason))
+    {
+        StateSystem_SetTreasuryBalance(safeState, beforeBalance);
+        return false;
+    }
+
+    return true;
+}
+
+stock StateLedgerSystem_Transfer(stateid, amount, const reason[], const actor[])
+{
+    new safeState = Core_GetValidStateOrDefault(stateid, STATE_LOS_SANTOS);
+    if (!Core_IsValidState(safeState))
     {
         return false;
     }
@@ -91,13 +143,7 @@ stock StateLedgerSystem_Transfer(stateid, amount, const reason[], const actor[])
         ledgerType = STATE_LEDGER_TYPE_ADMIN;
     }
 
-    if (!StateLedgerSystem_LogTx(stateid, ledgerType, amount, actor, reason))
-    {
-        StateSystem_SetTreasuryBalance(stateid, beforeBalance);
-        return false;
-    }
-
-    return true;
+    return StateLedgerSystem_ApplyValidatedTransfer(safeState, amount, reason, actor, ledgerType);
 }
 
 stock int:StateLedgerSystem_GetEntryCount(stateid)

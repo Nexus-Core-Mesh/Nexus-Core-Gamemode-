@@ -1,6 +1,6 @@
-#include "../includes/dini.inc"
 #include <a_samp>
 #include <sscanf2>
+#include "../includes/dini.inc"
 
 #pragma warning disable 200
 #pragma warning disable 201
@@ -63,6 +63,7 @@
 #include "modules/vehicles/garage_system.inc"
 #include "modules/emergency/emergency_system.inc"
 #include "modules/events/state_event_system.inc"
+#include "modules/events/season_system.inc"
 #include "modules/social/social_system.inc"
 #include "modules/drugs/drug_system.inc"
 #include "modules/missions/mission_system.inc"
@@ -103,6 +104,7 @@
 #include "modules/factions/text_wars.inc"
 #include "modules/ui/state_control_ui.inc"
 #include "modules/ui/ui_hub.inc"
+#include "modules/premium/premium_system.inc"
 
 #define SERVER_NAME "GTA:SA Reallife Modular"
 
@@ -119,15 +121,22 @@ public OnGameModeInit()
     Core_RegisterModuleContract("admin");
     Core_RegisterModuleContract("security");
     Core_RegisterModuleContract("auth");
+    Core_RegisterModuleContract("camera");
+    Core_RegisterModuleContract("tutorial");
     Core_RegisterModuleContract("economy");
     Core_RegisterModuleContract("jobs");
     Core_RegisterModuleContract("housing");
+    Core_RegisterModuleContract("business");
+    Core_RegisterModuleContract("inventory");
     Core_RegisterModuleContract("vehicles");
     Core_RegisterModuleContract("factions");
     Core_RegisterModuleContract("government");
     Core_RegisterModuleContract("world");
     Core_RegisterModuleContract("social");
+    Core_RegisterModuleContract("events");
+    Core_RegisterModuleContract("season");
     Core_RegisterModuleContract("web");
+    Core_RegisterModuleContract("premium");
     Core_RegisterModuleContract("ui", CORE_LIFECYCLE_RUNTIME_READY);
 
     Core_RegisterDefaultRuntimeModules();
@@ -203,6 +212,7 @@ public OnGameModeInit()
     FishingSystem_Initialize();
     CasinoSystem_Initialize();
     StateEventSystem_Initialize();
+    SeasonSystem_Initialize();
     DrugSystem_Initialize();
     MissionSystem_Initialize();
     CityHallSystem_Initialize();

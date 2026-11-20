@@ -26,6 +26,7 @@ stock EventSystem_Initialize()
         gEventState[i] = -1;
         gEventPrizePool[i] = 0;
     }
+    Core_MarkModuleReady("events");
     print("[EVENT] Event-System initialisiert");
 }
 

@@ -66,7 +66,10 @@ const E_PLAYER_LAW_ROLE = 11;
 const E_PLAYER_EMERGENCY_ROLE = 12;
 const E_PLAYER_EMERGENCY_STATE = 13;
 const E_PLAYER_PROJECT_LEADER = 14;
-const E_PLAYER_PROFILE_COUNT = 15;
+const E_PLAYER_PREMIUM_TIER = 15;
+const E_PLAYER_PREMIUM_EXPIRES = 16;
+const E_PLAYER_PREMIUM_PERMANENT = 17;
+const E_PLAYER_PROFILE_COUNT = 18;
 
 #define ADMIN_RANK_SUPPORT 1
 #define ADMIN_RANK_MODERATOR 2
@@ -107,6 +110,9 @@ stock Core_ResetPlayerData(playerid)
     gPlayerData[playerid][E_PLAYER_WANTED] = 0;
     gPlayerData[playerid][E_PLAYER_JAIL_ACTIVE] = 0;
     gPlayerData[playerid][E_PLAYER_JAIL_TIME] = 0;
+    gPlayerData[playerid][E_PLAYER_PREMIUM_TIER] = 0;
+    gPlayerData[playerid][E_PLAYER_PREMIUM_EXPIRES] = 0;
+    gPlayerData[playerid][E_PLAYER_PREMIUM_PERMANENT] = 0;
 }
 
 stock Core_IsValidState(stateid)
@@ -239,6 +245,152 @@ stock int:Core_GetPlayerAdminState(playerid)
         return int:-1;
     }
     return int:gPlayerData[playerid][E_PLAYER_ADMIN_STATE];
+}
+
+#define PREMIUM_TIER_NONE 0
+#define PREMIUM_TIER_30_DAYS 1
+#define PREMIUM_TIER_90_DAYS 2
+#define PREMIUM_TIER_300_DAYS 3
+#define PREMIUM_TIER_PERMANENT 4
+
+stock Core_GetPlayerPremiumTier(playerid)
+{
+    if (!Core_IsValidPlayerId(playerid))
+    {
+        return PREMIUM_TIER_NONE;
+    }
+    return gPlayerData[playerid][E_PLAYER_PREMIUM_TIER];
+}
+
+stock Core_SetPlayerPremiumTier(playerid, tier)
+{
+    if (!Core_IsValidPlayerId(playerid))
+    {
+        return;
+    }
+    if (tier < PREMIUM_TIER_NONE || tier > PREMIUM_TIER_PERMANENT)
+    {
+        tier = PREMIUM_TIER_NONE;
+    }
+    gPlayerData[playerid][E_PLAYER_PREMIUM_TIER] = tier;
+}
+
+stock Core_GetPlayerPremiumExpiry(playerid)
+{
+    if (!Core_IsValidPlayerId(playerid))
+    {
+        return 0;
+    }
+    return gPlayerData[playerid][E_PLAYER_PREMIUM_EXPIRES];
+}
+
+stock Core_SetPlayerPremiumExpiry(playerid, expiresAt)
+{
+    if (!Core_IsValidPlayerId(playerid))
+    {
+        return;
+    }
+    gPlayerData[playerid][E_PLAYER_PREMIUM_EXPIRES] = expiresAt;
+}
+
+stock bool:Core_HasPermanentPremium(playerid)
+{
+    if (!Core_IsValidPlayerId(playerid))
+    {
+        return false;
+    }
+    return gPlayerData[playerid][E_PLAYER_PREMIUM_PERMANENT] == 1;
+}
+
+stock Core_SetPermanentPremium(playerid, bool:permanent)
+{
+    if (!Core_IsValidPlayerId(playerid))
+    {
+        return;
+    }
+    gPlayerData[playerid][E_PLAYER_PREMIUM_PERMANENT] = permanent ? 1 : 0;
+    if (permanent)
+    {
+        gPlayerData[playerid][E_PLAYER_PREMIUM_TIER] = PREMIUM_TIER_PERMANENT;
+        gPlayerData[playerid][E_PLAYER_PREMIUM_EXPIRES] = 0;
+    }
+}
+
+stock bool:Core_IsPremiumActive(playerid)
+{
+    if (!Core_IsValidPlayerId(playerid))
+    {
+        return false;
+    }
+    if (Core_HasPermanentPremium(playerid))
+    {
+        return true;
+    }
+
+    new tier = Core_GetPlayerPremiumTier(playerid);
+    new expiry = Core_GetPlayerPremiumExpiry(playerid);
+    if (tier == PREMIUM_TIER_NONE)
+    {
+        return false;
+    }
+    if (expiry <= 0)
+    {
+        return false;
+    }
+    return gettime() < expiry;
+}
+
+stock Core_ActivatePremium(playerid, tier, expiresAt)
+{
+    if (!Core_IsValidPlayerId(playerid))
+    {
+        return false;
+    }
+    if (tier < PREMIUM_TIER_NONE || tier > PREMIUM_TIER_PERMANENT)
+    {
+        return false;
+    }
+
+    if (tier == PREMIUM_TIER_PERMANENT)
+    {
+        Core_SetPermanentPremium(playerid, true);
+        return true;
+    }
+
+    Core_SetPlayerPremiumTier(playerid, tier);
+    Core_SetPlayerPremiumExpiry(playerid, expiresAt);
+    Core_SetPermanentPremium(playerid, false);
+    return true;
+}
+
+stock Core_ExtendPremium(playerid, tier, days)
+{
+    if (!Core_IsValidPlayerId(playerid))
+    {
+        return false;
+    }
+    if (days <= 0)
+    {
+        return false;
+    }
+
+    if (tier == PREMIUM_TIER_PERMANENT)
+    {
+        Core_SetPermanentPremium(playerid, true);
+        return true;
+    }
+
+    new now = gettime();
+    new exp = Core_GetPlayerPremiumExpiry(playerid);
+    if (exp <= now)
+    {
+        exp = now;
+    }
+    new secs = days * 86400;
+    Core_SetPlayerPremiumTier(playerid, tier);
+    Core_SetPlayerPremiumExpiry(playerid, exp + secs);
+    Core_SetPermanentPremium(playerid, false);
+    return true;
 }
 
 stock Core_SetPlayerState(playerid, stateid)
@@ -447,8 +599,19 @@ stock Core_OnPlayerDisconnect(playerid, reason)
         return;
     }
 
-    gPlayerData[playerid][E_PLAYER_STATE] = STATE_LOS_SANTOS;
-    gPlayerData[playerid][E_PLAYER_HOME_STATE] = STATE_LOS_SANTOS;
+    new stateid = Core_GetValidStateOrDefault(gPlayerData[playerid][E_PLAYER_STATE], STATE_LOS_SANTOS);
+    new homeState = Core_GetValidStateOrDefault(gPlayerData[playerid][E_PLAYER_HOME_STATE], stateid);
+    if (!Core_IsValidState(stateid))
+    {
+        stateid = STATE_LOS_SANTOS;
+    }
+    if (!Core_IsValidState(homeState))
+    {
+        homeState = stateid;
+    }
+
+    gPlayerData[playerid][E_PLAYER_STATE] = stateid;
+    gPlayerData[playerid][E_PLAYER_HOME_STATE] = homeState;
     gPlayerData[playerid][E_PLAYER_ADMIN_LEVEL] = 0;
     gPlayerData[playerid][E_PLAYER_ADMIN_STATE] = -1;
     gPlayerData[playerid][E_PLAYER_WANTED] = 0;

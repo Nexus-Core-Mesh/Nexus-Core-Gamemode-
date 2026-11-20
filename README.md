@@ -21,6 +21,34 @@ Die Kernidee ist bewusst: keine monolithische `gamemode.pwn`-Logik, sondern ein 
 - Web-/Dashboard-Integration als separates Kontrollpanel mit SQLite-Read-Only-Lesezugriff
 - `c++`-Mirror (optional / falls vorhanden): strukturtreuer Projektspiegel als C++-sichtbare Projektebene für Audit, Überblick und Tooling
 
+### Control-Panel-Setup und gemeinsamer Start
+
+Das Projekt enthält zusätzlich ein separates, Node.js-basiertes Control Panel unter `control-panel/`. Der Startpfad ist bewusst nicht an den Live-SAMP-Server gebunden: Das Panel kann im Quellbaum ohne 7780-Serverzugriff vorbereitet und gestartet werden, solange `node`/`npm` auf dem Zielsystem verfügbar sind. Der durchgängige Quell- und Deploy-Pfad ist:
+
+```bash
+python3 tools/control_panel_manager.py ensure
+python3 tools/control_panel_manager.py start
+./scripts/deploy_server.sh
+```
+
+Zusätzlich sind vier Offline-TUI-/Autofix-Skripte im Projektbaum eingebettet und repo-gebunden erreichbar:
+
+```bash
+python3 nexus_hub_tui.py
+python3 nexus_tools_tui.py
+python3 nexus_autofix.py
+python3 samp_tui.py
+```
+
+Diese Skripte laden den jeweiligen Implementierungsteil aus `tools/` und nutzen keine feste `/home/...`-Pfadangabe oder Live-7780-Anbindung. Sie bleiben damit kompatibel mit dem Source-First-Workflow, auch wenn keine lokale SAMP-Laufzeit oder Port 7780 aktiv ist.
+
+Wichtige Regeln:
+
+- `control-panel/server.js` liest nur lesend aus `data/db/gtasa_reallife.db` und ist keine primäre Schreibquelle.
+- Der Gamemode selbst bleibt Dini-first über `Compiler/samp03/scriptfiles/`; dadurch bleibt die SQLite-Sicht nur dann korrekt, wenn Dini- und SQLite-Pfade synchronisiert wurden.
+- Ein fehlendes `node`/`npm` oder eine unvollständige `npm install` blockiert das Panel nicht mehr den Gamemode-Start, sondern erzeugt nur eine Warnung und lässt den Server-Deploy weiterlaufen.
+- Der Server-Deploy bleibt auf einen einzelnen Build-Target ausgerichtet: `Compiler/samp03/gamemodes/gtasa_reallife.amx`.
+
 ## Aktueller Entwicklungsstand
 
 Das Projekt hat einen vollständigen modularen RP-Framework-Stand erreicht und ist als robuste Basis für reale SA:MP-Entwicklung dokumentiert. Wenn ein `c++`-Spiegel im Repository vorhanden ist, dient er als strukturtreuer Projektspiegel für Audit, Überblick und Tooling; er ist kein Laufzeitbestandteil des SA:MP-Servers. Die wichtigsten Systembereiche sind bereits als eigenständige Module angelegt und an die Haupt-Architektur angehängt. Der aktuelle Härtungsstand bezieht sich jedoch auf den aktuellen Code-/Build-Stand und die Architektur-Validierung; ein echter Live-Server-Start auf Ubuntu-VM bleibt noch als separate Produktionsprüfung auszuführen.
@@ -48,11 +76,38 @@ Zusätzlich wurden im Offline-/Audit-Pfad mehrere manuelle `python3`-Werkzeuge e
 - `social/` – Rolle, Beziehungen, RP-Kommandos und sozialer Flow
 - `web/` – externe Web-Bridge und Dashboard-Integration
 
+### Additiv ergänzte Systemausbau-Module
+
+- `jobs/dynamic_job_system.inc` – dynamische Jobs je Staat mit state-gebundener Zuweisung, Aktiv-Status und Job-Bridge zu `JobsCore_*`.
+- `missions/mission_system.inc` – staatlich gebundene Missionen mit Ablauf, Auszahlungslogik, aktiver Mission-Liste und validierter Belohnungsfluss in Bank-/Treasury-Pfade.
+- `events/season_system.inc` – Jahreszeiten, staatliche Wirtschaftspulse, Job-/Wirtschafts-Modifier und Belohnungskriterien ohne parallele State-Shadow-Quelle.
+- `business/business_system.inc` – Business-Registrierung, Einnahmen, Owner-Payouts und State-zugewiesene Treasury-Transfers mit validem State-Fallback.
+- `law/law_system.inc` und `crime/crime_system.inc` – Wanted-Status, Verbrechens-Wärme, Polizei-/Staats-Interaktion und Textdraw-Tracking für Polizei-/Crime-UI.
+- `jobs/jobs_core.inc` – zentrale Aufgaben-/Lohn-Pipeline mit staatlicher Kassenfinanzierung und steuerbarer Verteilung.
+- `premium/premium_system.inc` – Premium-/VIP-System mit Laufzeiten 30/90/300 Tage sowie Permanent, validem Ablauf-Check, zentraler Core-Integration und Dini-first/Persistence-Bridge ohne parallele State-Shadow-Quelle.
+
 ## Produktionsrelevante Stabilitätsbasis
 
 Die letzte Erweiterungsphase war bewusst auf echte Produktionsrelevanz ausgerichtet. Dabei wurden die kritischen Übergabepunkte zwischen Kernmodulen, DB-Abstraktion, Inventar, Haussafes und Fahrzeugsystemen systematisch überarbeitet.
 
+### Zusätzlicher Schutz für State-/Home-State-Transfers
+
+Seit dem letzten Lauf wurden die angrenzenden Übergänge in `core.inc`, `login_system.inc`, `state_system.inc` und `db_interface.inc` zusätzlich auf den stabilen Pfad `Core_GetValidStateOrDefault()` + `DB_ValidateStateTransfer()` verdrahtet. Dadurch werden zwar gültige `state_id`/`home_state`-Werte nicht mehr mit `0` verworfen, aber sichere Fallbacks bleiben weiterhin auf `LS`/`SF`/`LV`-Zahlen validiert.
+
+Die Transfer- und Rehydrate-Pfade bleiben jetzt in der Reihenfolge:
+- Kontrolle validen States über `Core_GetValidStateOrDefault()`
+- sichere Normalisierung in `DB_SetPlayerState()` / `DB_SavePlayerState()`
+- DB-Write mit `INSERT OR IGNORE` als akkumulierender Schutz, statt eines direkten `0`-Overrides
+- optionales `StateLedgerSystem_Transfer()` mit `StateLedgerSystem_ValidateTransfer()`
+
+Damit bleiben die kritischen Pfade für Login/Disconnect/Spawn/Rehydrate, State-Transfers und Treasury-Aktualisierung konsistent und ohne parallelen Schatten-Status.
+
 ### Korrigierte Kernprinzipien
+
+0. Valid-state-Guards bleiben harte Architekturregeln.
+   - `login_system.inc` und andere Disconnect-/Reset-Pfade dürfen gültige `state_id`/`home_state`-Werte nicht mehr mit `0` zurücksetzen.
+   - Bei Disconnect wird ein gültiger Standardwert `LS` wiederhergestellt, statt den Spielerdaten einen invaliden Null-Reset zu hinterlassen.
+   - Zusätzliche Schutzpfade in `core.inc` und `state_system.inc` verankern denselben Standard bei Connect/Disconnect/Spawn/Rehydrate, damit kein Bereich einen noch gültigen Zustand durch einen Strang 0 verwirft.
 
 1. Hook-Reihenfolge ist deterministisch.
    - `OnPlayerConnect()` ruft jetzt zentral die Modullader in einer klaren Reihenfolge auf.
@@ -384,3 +439,16 @@ Der Code ist auf den aktuellen Standards des Projekts stabil und konsistent, abe
 ### Kurzfazit
 
 Damit ist das Repository in einen sauberen, dokumentierten und architektonisch verständlichen Zwischenstand gebracht worden: Build-Kontrakt erfüllt, Hardening-Muster erhalten, Persistenzstrategie vorgezeichnet und der Proof-Point für die nächsten Live-Checks eindeutig definiert. Die endgültige Produktionsfreigabe bleibt weiterhin an den echten Live-Test gebunden.
+
+---
+
+## Additive Verifikationsnotiz – Q4 Source-Härtung
+
+Diese Notiz ergänzt die bisherigen Dokumentationsabschnitte ohne sie zu überschreiben.
+
+- Reale Build-Blocker direkt im Quellbaum bereinigt: fehlende `GetServerTime()`-Aufrufe wurden auf das in der Pawn-Toolchain verfügbare `gettime()`-Contract zurückgeführt; dadurch entfielen echte Compile-Fehler unter `qemu-i386`.
+- Fehlende DB-Schnittstelle behoben: `DB_GetPlayerHomeState()` wurde in `gamemodes/modules/db/db_interface.inc` ergänzt, damit `state_system.inc` und die Connect-/Rehydrate-Pfade gegen gültige `home_state`-Werte wieder konsistent laufen.
+- Premium-Persistenz bleibt Dini-first: `premium_system.inc` nutzt weiterhin den scriptfiles-/Dini-Pfad und validiert Ablauf-/Tierzustände ohne parallelen Shadow-State.
+- Build-Check wieder grün: `bash scripts/build_gamemode.sh` lief erfolgreich durch und erzeugte `Compiler/samp03/gamemodes/gtasa_reallife.amx` ohne Live-Serverstart.
+- Offline-Checks liefen durch: Python-Compile, Shell-Syntax, JS-Check (falls verfügbar) und die statischen Guard-Skripte blieben ohne Fehler.
+- Offener Status bleibt bewusst unverändert: echte Live-Validierung auf Port 7780 muss weiterhin auf der realen Ubuntu-VM erfolgen; sie wurde hier nicht unterstellt.

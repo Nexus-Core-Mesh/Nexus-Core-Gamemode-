@@ -462,3 +462,15 @@ Die optimale Architektur lautet daher:
 Das Season-System ist ein essenzieller Bestandteil für einen langfristig lebendigen GTA:SA-Reallife-Gamemode. Es schafft nicht nur „bessere Optik“, sondern echtes RP- und Progressionsgefühl. Wenn es sauber im Core-, State-, Economy- und Job-Layer integriert wird, verstärkt es die Spielwelt ohne sie zu destabilisieren. Gerade in einem modularen Gamemode ist die Season ein idealer Brückenknoten zwischen Weltgefühl, wirtschaftlicher Logik und langfristiger Motivation.
 
 Es ist die Art von System, das den Server von einer reinen Spielumgebung zu einer echten, sich entwickelnden Welt macht.
+
+## Umsetzung 2026-11-20 (additiv)
+
+Die folgende Ausbaustufe wurde direkt im Quellbaum ergänzt und ist bewusst als additiver, quellbasiert umsetzbarer Schritt gehalten:
+
+- neues Modul `gamemodes/modules/events/season_system.inc`
+- zentrale saisonale API mit `SeasonSystem_Initialize()`, `SeasonSystem_AdvanceSeason()`, `SeasonSystem_GetCurrentSeason()`, `SeasonSystem_GetEconomyMultiplier()` und `SeasonSystem_GetJobModifier()`
+- Integration der Saison in die Lifecycle-/Initialisierungsreihenfolge über `gamemodes/gamemode.pwn`
+- Lifecycle-Contract für `events`/`season` ergänzt, ohne parallele Schatten-States oder live-Server-Abhängigkeit einzuführen
+- die Saison bleibt an bestehende Core-/State-/Economy-/Job-/UI-Logik angebunden und wird als reine Source-of-Truth-Implementierung behandelt, nicht als 7780-Live-Funktion
+
+Diese Ergänzung dokumentiert den aktuellen Stand des Moduls und hält die ältere Roadmap im Dokument unverändert; sie erweitert sie lediglich um den umgesetzten Codepfad und die konsequente Quellbaum-Umsetzung ohne bestehende Abschnitte zu überschreiben.

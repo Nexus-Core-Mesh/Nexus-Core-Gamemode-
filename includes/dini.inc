@@ -7,6 +7,46 @@
     #define INVALID_FILE_HANDLE (File:0)
 #endif
 
+stock trim(string[])
+{
+    new len = strlen(string);
+    new start = 0;
+    while (start < len)
+    {
+        if (string[start] == ' ' || string[start] == '\t' || string[start] == '\r' || string[start] == '\n')
+        {
+            start++;
+            continue;
+        }
+        break;
+    }
+
+    if (start > 0)
+    {
+        new i;
+        for (i = 0; i < len - start; i++)
+        {
+            string[i] = string[i + start];
+        }
+        string[i] = '\0';
+        len -= start;
+    }
+
+    new end = len - 1;
+    while (end >= 0)
+    {
+        if (string[end] == ' ' || string[end] == '\t' || string[end] == '\r' || string[end] == '\n')
+        {
+            string[end] = '\0';
+            end--;
+            continue;
+        }
+        break;
+    }
+
+    return 1;
+}
+
 stock dini_Create(const filename[])
 {
     new file[128];

@@ -56,16 +56,17 @@ stock BusinessSystem_CreateBusiness(bizid, stateid, type, value, ownerid, const 
     {
         return false;
     }
-    if (!Core_IsValidState(stateid))
+    new safeState = Core_GetValidStateOrDefault(stateid, STATE_LOS_SANTOS);
+    if (!Core_IsValidState(safeState))
     {
         return false;
     }
 
-    gBizState[bizid] = stateid;
+    gBizState[bizid] = safeState;
     gBizOwner[bizid] = ownerid;
-    gBizType[bizid] = type;
-    gBizValue[bizid] = value;
-    gBizIncome[bizid] = value / 25;
+    gBizType[bizid] = (type > 0) ? type : BUSINESS_TYPE_SHOP;
+    gBizValue[bizid] = (value > 0) ? value : 150000;
+    gBizIncome[bizid] = gBizValue[bizid] / 25;
     gBizTaxRate[bizid] = 10;
     gBizActive[bizid] = 1;
     format(gBizName[bizid], 32, "%s", name);
@@ -111,9 +112,67 @@ stock BusinessSystem_BuyBusiness(playerid, bizid)
     }
 
     gBizOwner[bizid] = playerid;
-    StateSystem_ApplyTreasuryDelta(gBizState[bizid], gBizValue[bizid] / 10);
+    StateLedgerSystem_Transfer(gBizState[bizid], gBizValue[bizid] / 10, "business_purchase", "business_system");
     SendClientMessage(playerid, 0x00FF00AA, "[BIZ] Geschäft erfolgreich erworben.");
     return true;
+}
+
+stock BusinessSystem_SetTaxRate(bizid, rate)
+{
+    if (bizid < 0 || bizid >= MAX_BUSINESSES)
+    {
+        return false;
+    }
+    if (rate < 0 || rate > 25)
+    {
+        return false;
+    }
+
+    gBizTaxRate[bizid] = rate;
+    return true;
+}
+
+stock int:BusinessSystem_GetTaxRate(bizid)
+{
+    if (bizid < 0 || bizid >= MAX_BUSINESSES)
+    {
+        return 0;
+    }
+    return gBizTaxRate[bizid];
+}
+
+stock bool:BusinessSystem_IsBusinessActive(bizid)
+{
+    if (bizid < 0 || bizid >= MAX_BUSINESSES)
+    {
+        return false;
+    }
+    return gBizActive[bizid] == 1;
+}
+
+stock BusinessSystem_ApplyEconomyPulse(bizid, amount, const reason[])
+{
+    if (bizid < 0 || bizid >= MAX_BUSINESSES)
+    {
+        return false;
+    }
+    if (!Core_IsValidState(gBizState[bizid]))
+    {
+        return false;
+    }
+    if (amount == 0)
+    {
+        return true;
+    }
+
+    new total = gBizIncome[bizid] + amount;
+    if (total < 0)
+    {
+        return false;
+    }
+
+    gBizIncome[bizid] = total;
+    return StateLedgerSystem_Transfer(gBizState[bizid], amount / 2, reason, "business_system");
 }
 
 stock BusinessSystem_CollectIncome(bizid)
@@ -126,10 +185,37 @@ stock BusinessSystem_CollectIncome(bizid)
     {
         return false;
     }
+    if (!Core_IsValidState(gBizState[bizid]))
+    {
+        return false;
+    }
 
-    gBizIncome[bizid] = max(0, gBizIncome[bizid]);
-    StateSystem_ApplyTreasuryDelta(gBizState[bizid], gBizIncome[bizid] / 4);
-    return true;
+    new income = gBizIncome[bizid];
+    if (income < 0)
+    {
+        income = 0;
+    }
+
+    gBizIncome[bizid] = income;
+    return StateSystem_ApplyTreasuryDelta(gBizState[bizid], max(0, income / 4));
+}
+
+stock BusinessSystem_GetIncome(bizid)
+{
+    if (bizid < 0 || bizid >= MAX_BUSINESSES)
+    {
+        return 0;
+    }
+    return gBizIncome[bizid];
+}
+
+stock BusinessSystem_GetBusinessState(bizid)
+{
+    if (bizid < 0 || bizid >= MAX_BUSINESSES)
+    {
+        return STATE_LOS_SANTOS;
+    }
+    return Core_GetValidStateOrDefault(gBizState[bizid], STATE_LOS_SANTOS);
 }
 
 // Zahlt das aufgelaufene Einkommen abzüglich Staatsanteil auf das Bankkonto des Besitzers aus.

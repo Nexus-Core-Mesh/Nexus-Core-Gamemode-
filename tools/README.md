@@ -60,6 +60,24 @@ python3 tools/autorun.py --root . --server-bin ./samp03svr --log ./logs/server.l
 - vor dem Live-Deploy die Konfigurationsprüfung laufen lassen
 - bei Fehlern zuerst `analyze_logs.py` und dann gezielt `log_tail.py` nutzen
 
+## Repo-gebundene TUI-/Autofix-Integration
+
+Zusätzlich zu den bestehenden CLI-Audits wurden vier repo-gebundene, offline-fähige Hilfsprogramme in den Projektbaum integriert. Sie funktionieren ohne Live-Server-Start und ohne direkte Abhängigkeit von `/home`- oder `7780`-Pfaden. Die Scripts sind:
+
+- `tools/nexus_hub_tui.py` – zentraler Offline-Hub mit Status, Watcher-Status und Schnellzugriff auf die vorhandenen Prüfungen
+- `tools/nexus_tools_tui.py` – TUI für die statischen Guard-/Audit-Checks und Control-Panel-Status
+- `tools/nexus_autofix.py` – Offline-Autofix für Platzhalter-/RCON-/Plugin-Fehler in repo-lokalen Konfigurations-/Startpfaden
+- `tools/samp_tui.py` – TUI für 7780-Readiness, `server.cfg`-Prüfung und AMX-Zielkontrolle
+
+Darüber hinaus gibt es Einsteiger-Wrapper auf Repo-Ebene:
+
+- `nexus_hub_tui.py`
+- `nexus_tools_tui.py`
+- `nexus_autofix.py`
+- `samp_tui.py`
+
+Diese Wrapper laden die jeweiligen Tools aus `tools/` und verwenden eine robuste Pfadsuche (`REPO`, `tools/`, `HOME`, `~`-Fallbacks) statt hart codierter Pfade. Sie sollen für spätere TUI-Einbindung und manuellen Offline-Workflow in der Projektwurzel erreichbar bleiben, ohne den Gamemode selbst zu starten.
+
 ## Hinweis
 
 Diese Hilfswerkzeuge sind keine Plattform- oder Hosting-Umstellung. Sie sind bewusst als lokales Debug- und Wartungs-Tooling im Projekt selbst verankert, damit man ohne Wechsel zu externen Plattformen schnell auf Fehler und Konfigurationsprobleme reagieren kann.

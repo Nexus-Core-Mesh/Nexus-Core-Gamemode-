@@ -244,6 +244,7 @@ stock DB_Initialize()
 
     DB_InitializeRuntimeCaches();
     DB_RepairCriticalTables();
+    Core_MarkModuleReady("db");
     print("[DB] Runtime-Caches und Dini-Fallback-Schema initialisiert");
 }
 
@@ -433,7 +434,7 @@ stock DB_SetPlayerState(playerid, stateid)
         return false;
     }
 
-    new homeState = Core_GetPlayerHomeState(playerid);
+    new homeState = Core_GetValidStateOrDefault(Core_GetPlayerHomeState(playerid), normalizedState);
     if (!Core_IsValidState(homeState))
     {
         homeState = normalizedState;
@@ -456,6 +457,47 @@ stock DB_SetPlayerState(playerid, stateid)
 
     format(query, sizeof(query), "INSERT OR IGNORE INTO player_state (player_id, state_id, last_updated) VALUES (%d, %d, datetime('now'))", playerid, normalizedState);
     return DB_Execute(query);
+}
+
+stock DB_ValidateStateTransfer(playerid, stateValue, homeValue)
+{
+    if (!Core_IsValidPlayerId(playerid))
+    {
+        return false;
+    }
+
+    new safeState = Core_GetValidStateOrDefault(stateValue, Core_GetPlayerState(playerid));
+    new safeHome = Core_GetValidStateOrDefault(homeValue, safeState);
+    if (!Core_IsValidState(safeState) || !Core_IsValidState(safeHome))
+    {
+        return false;
+    }
+
+    Core_SetPlayerState(playerid, safeState);
+    Core_SetPlayerHomeState(playerid, safeHome);
+    return true;
+}
+
+stock int:DB_GetPlayerHomeState(playerid)
+{
+    if (playerid < 0 || playerid >= MAX_PLAYERS)
+    {
+        return STATE_LOS_SANTOS;
+    }
+
+    if (gDBPlayerHomeStateCache[playerid] >= STATE_LOS_SANTOS && gDBPlayerHomeStateCache[playerid] < STATE_COUNT)
+    {
+        return gDBPlayerHomeStateCache[playerid];
+    }
+
+    if (gPlayerData[playerid][E_PLAYER_HOME_STATE] >= STATE_LOS_SANTOS && gPlayerData[playerid][E_PLAYER_HOME_STATE] < STATE_COUNT)
+    {
+        gDBPlayerHomeStateCache[playerid] = gPlayerData[playerid][E_PLAYER_HOME_STATE];
+        return gDBPlayerHomeStateCache[playerid];
+    }
+
+    gDBPlayerHomeStateCache[playerid] = Core_GetValidStateOrDefault(gPlayerData[playerid][E_PLAYER_STATE], STATE_LOS_SANTOS);
+    return gDBPlayerHomeStateCache[playerid];
 }
 
 stock int:DB_GetPlayerState(playerid)
@@ -616,9 +658,16 @@ stock DB_SavePlayerState(playerid, stateid)
     {
         homeState = normalizedState;
     }
+    homeState = Core_GetValidStateOrDefault(homeState, normalizedState);
+    if (!Core_IsValidState(homeState))
+    {
+        homeState = normalizedState;
+    }
 
     gDBPlayerStateCache[playerid] = normalizedState;
     gDBPlayerHomeStateCache[playerid] = homeState;
+    Core_SetPlayerState(playerid, normalizedState);
+    Core_SetPlayerHomeState(playerid, homeState);
 
     new query[192];
     format(query, sizeof(query), "UPDATE players SET state_id = %d, home_state = %d WHERE id = %d;", normalizedState, homeState, playerid);

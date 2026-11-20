@@ -42,7 +42,28 @@ npm install
 npm start
 ```
 
+Oder über das projektweite Offline-Tool:
+
+```bash
+python3 tools/control_panel_manager.py ensure
+python3 tools/control_panel_manager.py start
+```
+
 Danach ist das Dashboard unter `http://localhost:3001/` erreichbar.
+
+## Projektweite Integration
+
+Das Panel ist bewusst ein optionales Betriebsmodul, nicht der primäre Spielzustand. Die zentrale Produktionsquelle bleibt der SA:MP-Gamemode mit Dini-first-Saves unter `Compiler/samp03/scriptfiles/`, während die Dashboard-Sicht lesend auf `data/db/gtasa_reallife.db` basiert.
+
+Wenn das Panel auf dem Zielsystem nicht erreichbar ist, sollte der Server-Deploy nicht an dieser Abhängigkeit hängen. Der Projekt-Workflow ist daher:
+
+```bash
+python3 tools/control_panel_manager.py ensure
+python3 tools/control_panel_manager.py start
+./scripts/deploy_server.sh
+```
+
+Unter dieser Logik ist das Panel ein kontrollierter Zusatz-Worker: wenn `node`/`npm` oder die Datenbank fehlen, wird nur eine Warnung ausgegeben, die Serverinitialisierung läuft aber weiter, solange der eigentliche Gamemode-Build valid ist.
 
 ## API-Endpunkte
 

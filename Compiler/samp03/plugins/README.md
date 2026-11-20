@@ -66,3 +66,13 @@ Der Plugin-Stack ergänzt die Offline-Checks und den 7780-Contract, aber er erse
 - `tools/validate_server_cfg.py`
 
 Diese Prüfungen dienen als statische Sicherheits- und Konsistenzlayer ohne Live-Serverstart.
+
+
+## Additiv ergänzter Stand 2026-11-20
+
+- Quellbaum- und Offline-Validierung wurden direkt im Projektbaum ausgeführt, ohne Live-Server-/7780-Zugriff.
+- `gamemodes/gamemode.pwn` und `gamemodes/modules/events/season_system.inc` wurden mit einer Source-Integration des Season-Systems erweitert und als Laufzeit-/State-Kern im Projekt-Contract verankert.
+- `Compiler/samp03/scriptfiles/` wurde auf die vollständige Dini-first-Struktur mit den state- und state_kasse-Ordnern konsistent ergänzt, inklusive `.gitkeep`-Marker und `temp -> validate -> rename`-Pfadlogik.
+- `control-panel/server.js` und `control-panel/public/app.js` wurden um eine Season-/State-API und entsprechende UI-Darstellung erweitert, mit deutlich markiertem Read-Only-/Dini-first-Statement.
+- Offline-Checks unter `tools/` wurden für die Single-Target-Contract-Richtlinien und die scriptfiles-/State-Integrität validiert.
+- Verifizierte Plugin-Binaries im Projekt verbleiben auf dem nachweisbaren 32-Bit-Linux-Stack (`crashdetect.so`, `streamer.so`, `sscanf.so`, `mysql.so`); die restlichen Stack-Plugins bleiben offen, da keine verifizierbaren 32-Bit-ELF-Artefakte reproduzierbar bestätigt wurden.
