@@ -207,6 +207,20 @@ Im Build-Workflow werden these Includes über `-iincludes` und `-iCompiler/samp0
 
 `Compiler/` ist die lokale Build-Umgebung. Sie ist bewusst physisch im Projekt enthalten, damit das Projekt reproduzierbar gebaut werden kann. Die beiden kritischen Bestandteile sind:
 
+Die Laufzeitstruktur unter `Compiler/samp03/scriptfiles/` ist ebenfalls Teil dieser Umgebung und wurde komplett auf die Dini-first-Save-/Load-Architektur ausgerichtet. Die kritischen Laufzeitordner wurden ergänzend angelegt, damit `temp` → prüfen → atomisch rename für Spieler-, House-, Safe-, Vehicle- und State-Daten nicht unvermittelt an fehlenden Ordnern scheitert:
+
+- `players/`
+- `houses/`
+- `house_storage/`
+- `safes/`
+- `vehicles/`
+- `ubb_vehicles/`
+- `state/LS/`, `state/SF/`, `state/LV/`
+- `state_kasse/LS/`, `state_kasse/SF/`, `state_kasse/LV/`
+- `business/`, `factions/`, `inventory/`, `temp/`, `backup/`, `logs/`
+
+Dadurch bleibt der Laufpfad für den 7780-Contract konsistent und frei von stummen Ordnerfehlern bei Offline-Checks oder späterem Host-Deploy.
+
 - `Compiler/pawncc/pawncc` – der lokale 32-Bit-Pawn-Compiler
 - `Compiler/samp03/` – der Laufzeitordner des tatsächlichen Servers
 

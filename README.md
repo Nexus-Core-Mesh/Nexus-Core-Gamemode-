@@ -78,6 +78,27 @@ Die letzte Erweiterungsphase war bewusst auf echte Produktionsrelevanz ausgerich
 6. Für kritische Systeme gibt es Guard-Checks gegen ungültige Werte.
    - Arrayslots, Item-Quantitäten und Fahrzeug-/Safe-Operationen prüfen explizit Grenzen und Zustände.
 
+## Scriptfiles-/Dini-Laufzeitstruktur und 7780-Ordner
+
+Neben den modularen Source-Dateien wurde die physische Laufzeitstruktur unter `Compiler/samp03/scriptfiles/` vollständig ergänzt, damit der Dini-first-Write-Pfad nicht an fehlenden Verzeichnissen scheitert. Die aktuelle Struktur umfasst die kritischen Speicherpfade für Spieler, Häuser, House-Storage, Safes, Fahrzeuge, UBB-Fahrzeuge, Staatskassen, Business-, Faction- und Inventardaten sowie temporäre und Backup-Dateien:
+
+- `Compiler/samp03/scriptfiles/players/`
+- `Compiler/samp03/scriptfiles/houses/`
+- `Compiler/samp03/scriptfiles/house_storage/`
+- `Compiler/samp03/scriptfiles/safes/`
+- `Compiler/samp03/scriptfiles/vehicles/`
+- `Compiler/samp03/scriptfiles/ubb_vehicles/`
+- `Compiler/samp03/scriptfiles/state/LS/`, `state/SF/`, `state/LV/`
+- `Compiler/samp03/scriptfiles/state_kasse/LS/`, `state_kasse/SF/`, `state_kasse/LV/`
+- `Compiler/samp03/scriptfiles/business/`
+- `Compiler/samp03/scriptfiles/factions/`
+- `Compiler/samp03/scriptfiles/inventory/`
+- `Compiler/samp03/scriptfiles/temp/`
+- `Compiler/samp03/scriptfiles/backup/`
+- `Compiler/samp03/scriptfiles/logs/`
+
+Die Verzeichnisse wurden als echte Ordner mit `.gitkeep`-Markern im Git angelegt, damit leere Laufzeitordner auch auf dem Repository-Branch persistent bleiben, ohne dass `__pycache__/` oder `*.pyc` eingecheckt werden.
+
 ## 3-Staaten-Architektur
 
 Die wirtschaftliche und politische Logik ist auf drei Bundesstaaten verteilt:

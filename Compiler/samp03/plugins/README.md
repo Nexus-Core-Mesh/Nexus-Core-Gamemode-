@@ -27,6 +27,10 @@ Diese Dateien wurden vor dem Ablegen als ELF-32-Bit-Shared-Objects verifiziert u
 
 ## Linux-/qemu-i386-Umgebung
 
+Die Laufzeitstruktur bleibt strikt auf den 7780-Contract ausgerichtet: `gamemode0 gtasa_reallife 1` und `port 7780` sind die gültigen Werte; kein `7777`-Eintrag darf im Serverkonfig-/Runtime-Pfad aktiv sein. Der Plugin-Ordner dient nicht als Live-Start, sondern als statische Laufzeit-/Doc-Collection für den QEMU-i386-/Linux-32-Bit-Host. Die im Repository vorhandenen `.so`-Dateien wurden verifiziert und sind als reale ELF-32-Bit-Binaries markiert; keine Platzhalter, 404-HTML-Seiten oder Fake-Mechaniken wurden als Plugin-Dateien gespeichert.
+
+Die physische Dini-/Persistenzstruktur unter `Compiler/samp03/scriptfiles/` wurde ebenfalls ergänzt. Dadurch bleiben Laufzeitpfade wie `players`, `houses`, `safes`, `vehicles`, `ubb_vehicles`, `state/LS`, `state/SF`, `state/LV`, `state_kasse/*` und `temp` trotz offline-Validierung immer vorhanden und bereit für das sichere `temp -> validate -> rename`-Schema.
+
 Für den reproduzierbaren Build-/Runtime-Contract des Projekts gilt:
 
 - Das aktive Runtime-Target bleibt `Compiler/samp03/gamemodes/gtasa_reallife.amx`.
