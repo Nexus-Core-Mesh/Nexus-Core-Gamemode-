@@ -112,29 +112,43 @@ stock GarageSystem_HandleCommand(playerid, const cmdtext[])
     if (cmdtext[0] != '/')
         return false;
 
-    new cmd[32], idx;
-    idx = sscanf(cmdtext, "s[32]", cmd);
-    if (idx == 0)
-        return false;
+    new cmd[32];
+    new cmdPos = 0;
+    while (cmdtext[cmdPos] != '\0' && cmdtext[cmdPos] != ' ' && cmdtext[cmdPos] != '\t' && cmdtext[cmdPos] != '\r' && cmdtext[cmdPos] != '\n')
+    {
+        if (cmdPos + 1 >= sizeof(cmd))
+        {
+            break;
+        }
+        cmd[cmdPos] = cmdtext[cmdPos];
+        cmdPos++;
+    }
+    cmd[cmdPos] = '\0';
 
     if (strcmp(cmd, "/garage", true) == 0)
     {
-        GarageSystem_ShowGarageList(playerid);
+        if (UiHub_Ready(playerid))
+        {
+            UiHub_ShowGarages(playerid);
+        }
         return true;
     }
 
     if (strcmp(cmd, "/spawngarage", true) == 0)
     {
-        new garageid;
-        if (sscanf(cmdtext, "s[32]d", cmd, garageid) != 0)
+        if (UiHub_Ready(playerid))
         {
-            garageid = StateSystem_GetPlayerState(playerid);
+            new garageid = 0;
+            if (gGarageCount > 0)
+            {
+                garageid = StateSystem_GetPlayerState(playerid);
+                if (garageid < 0 || garageid >= gGarageCount)
+                {
+                    garageid = 0;
+                }
+            }
+            GarageSystem_SpawnVehicle(playerid, garageid);
         }
-        if (garageid < 0 || garageid >= gGarageCount)
-        {
-            garageid = 0;
-        }
-        GarageSystem_SpawnVehicle(playerid, garageid);
         return true;
     }
 

@@ -26,6 +26,16 @@ stock TutorialSystem_Start(playerid)
 
 stock TutorialSystem_ShowStage(playerid, stage)
 {
+    if (playerid < 0 || playerid >= MAX_PLAYERS)
+    {
+        return;
+    }
+
+    if (stage < TUTORIAL_STAGE_NONE || stage > TUTORIAL_STAGE_FINISH)
+    {
+        stage = TUTORIAL_STAGE_NONE;
+    }
+
     TutorialSystem_HideStage(playerid);
 
     if (stage == TUTORIAL_STAGE_INTRO)
@@ -128,6 +138,20 @@ stock TutorialSystem_Next(playerid)
         gTutorialStage[playerid] = TUTORIAL_STAGE_FINISH;
     }
     TutorialSystem_ShowStage(playerid, gTutorialStage[playerid]);
+
+    if (gTutorialStage[playerid] == TUTORIAL_STAGE_FINISH)
+    {
+        new stateid = Core_GetPlayerHomeState(playerid);
+        if (!Core_IsValidState(stateid))
+        {
+            stateid = Core_GetValidStateOrDefault(Core_GetPlayerState(playerid), STATE_LOS_SANTOS);
+            Core_SetPlayerHomeState(playerid, stateid);
+        }
+
+        CameraSystem_Reset(playerid);
+        CameraSystem_PlayStateScene(playerid, stateid);
+        UiHub_ShowStatePick(playerid);
+    }
 }
 
 stock int:TutorialSystem_GetCurrentStage(playerid)

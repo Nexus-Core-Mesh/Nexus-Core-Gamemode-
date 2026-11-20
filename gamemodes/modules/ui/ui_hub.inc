@@ -67,8 +67,131 @@ stock UiHub_ShowMain(playerid)
     }
 
     new const title[] = "Nexus Core | Hauptmenü";
-    new const menu[] = "Inventar\nHandy\nBusiness\nAmmu-Nation\nMission-Board\nGarage\nFahrzeug-Tuning\nJob-Zentrum\nText-Wars\nStaats-Leitstand\nSpieler-Dashboard";
+    new const menu[] = "Stadt & Spawn\nInventar\nHandy\nBusiness\nAmmu-Nation\nMission-Board\nGarage\nFahrzeug-Menü\nFahrzeug-Status\nFahrzeug-Tuning\nJob-Menü\nJob-Zentrum\nText-Wars\nStaats-Leitstand\nSpieler-Dashboard\nSchnellzugriff\nKamera: Frei\nKamera: Drohne\nKamera: Reset";
     UiDialog_Show(playerid, DIALOG_UI_MAIN, DIALOG_STYLE_LIST, title, menu, UI_DIALOG_BUTTON_OK, UI_DIALOG_BUTTON_CLOSE);
+}
+
+stock UiHub_ShowQuickActionMenu(playerid)
+{
+    if (!UiHub_Ready(playerid))
+    {
+        return;
+    }
+
+    new const title[] = "Schnellzugriff";
+    new const menu[] = "Stadt & Spawn\nStaatsinfo\nDienstleistungen\nFinanzen\nStatus & Wanted\nWirtschaft\nShops\nJobs\nFahrzeug-Menü\nStats\nFreie Kamera\nDrohnen-Kamera\nKamera aus";
+    UiDialog_Show(playerid, DIALOG_UI_STATE_MENU, DIALOG_STYLE_LIST, title, menu, UI_DIALOG_BUTTON_OK, UI_DIALOG_BUTTON_BACK);
+}
+
+stock UiHub_ShowAuthMenu(playerid)
+{
+    if (!LoginSystem_IsActive(playerid))
+    {
+        LoginSystem_AutoResolveFlow(playerid);
+        return;
+    }
+
+    new const title[] = "Account";
+    new const menu[] = "Login\nRegistrierung\nPasswort nur\nStadt wählen\nTutorial erneut";
+    UiDialog_Show(playerid, DIALOG_UI_AUTH_MAIN, DIALOG_STYLE_LIST, title, menu, UI_DIALOG_BUTTON_OK, UI_DIALOG_BUTTON_BACK);
+}
+
+stock UiHub_ShowPasswordInput(playerid)
+{
+    UiDialog_Show(playerid, DIALOG_UI_AUTH_PASSWORD, DIALOG_STYLE_INPUT, "Passwort", "Bitte Passwort eingeben:", "Weiter", "Zurück");
+}
+
+stock UiHub_ShowStatePick(playerid)
+{
+    if (!UiHub_Ready(playerid))
+    {
+        return;
+    }
+
+    new stateList[128];
+    format(stateList, sizeof(stateList), "Los Santos\nSan Fierro\nLas Venturas");
+    UiDialog_Show(playerid, DIALOG_UI_STATE_PICK, DIALOG_STYLE_LIST, "Stadt & Spawn", stateList, UI_DIALOG_BUTTON_OK, UI_DIALOG_BUTTON_BACK);
+}
+
+stock UiHub_ShowVehicleMenu(playerid)
+{
+    if (!UiHub_Ready(playerid))
+    {
+        return;
+    }
+
+    new info[256];
+    format(info, sizeof(info), "Status\nGaragen\nTuning\nNahe Fahrzeuge\nSpritpreise\nFahrzeug-Weggeben");
+    UiDialog_Show(playerid, DIALOG_UI_VEHICLE_MENU, DIALOG_STYLE_LIST, "Fahrzeuge", info, UI_DIALOG_BUTTON_OK, UI_DIALOG_BUTTON_BACK);
+}
+
+stock UiHub_ShowVehicleStatus(playerid)
+{
+    if (!UiHub_Ready(playerid))
+    {
+        return;
+    }
+
+    new vehicleid = GetPlayerVehicleID(playerid);
+    if (vehicleid == 0)
+    {
+        UiHub_ShowText(playerid, "Fahrzeug-Status", "Du sitzt derzeit in keinem Fahrzeug.\nWähle im Fahrzeug-Menü eine Aktion oder nutze /garage.");
+        return;
+    }
+
+    new stateName[24];
+    new ownerName[MAX_PLAYER_NAME];
+    new info[256];
+
+    new stateid = VehicleSystem_GetState(vehicleid);
+    if (!Core_IsValidState(stateid))
+    {
+        format(stateName, sizeof(stateName), "Unbekannt");
+    }
+    else
+    {
+        StateSystem_GetStateName(stateid, stateName, sizeof(stateName));
+    }
+
+    new ownerid = VehicleSystem_GetOwner(vehicleid);
+    if (ownerid < 0 || ownerid >= MAX_PLAYERS || !IsPlayerConnected(ownerid))
+    {
+        format(ownerName, sizeof(ownerName), "Stadt");
+    }
+    else
+    {
+        GetPlayerName(ownerid, ownerName, sizeof(ownerName));
+    }
+
+    format(info, sizeof(info), "Fahrzeug-ID: %d\nModell: %d\nStaat: %s\nBesitzer: %s\nPreis: $%d\nTank: %d%%\nStatus: %s",
+        vehicleid,
+        GetVehicleModel(vehicleid),
+        stateName,
+        ownerName,
+        VehicleSystem_GetPrice(vehicleid),
+        gVehicleFuel[vehicleid],
+        (GetPlayerState(playerid) == PLAYER_STATE_DRIVER) ? ("Fahrzeug aktiv") : ("Nicht im Fahrerbereich"));
+
+    UiDialog_Show(playerid, DIALOG_UI_VEHICLE_STATUS, DIALOG_STYLE_MSGBOX, "Fahrzeug-Status", info, UI_DIALOG_BUTTON_OK, UI_DIALOG_BUTTON_CLOSE);
+}
+
+stock UiHub_ShowJobMenu(playerid)
+{
+    if (!UiHub_Ready(playerid))
+    {
+        return;
+    }
+
+    new jobName[32];
+    new jobTypeName[32];
+    new currentJob = JobsCore_GetPlayerJob(playerid);
+    new currentJobId = JobsCore_GetPlayerJobId(playerid);
+    DynamicJobSystem_GetJobName(currentJobId, jobName, sizeof(jobName));
+    JobsCore_GetJobTypeName(currentJob, jobTypeName, sizeof(jobTypeName));
+
+    new info[256];
+    format(info, sizeof(info), "Aktueller Job: %s\nTyp: %s\nJobs ansehen\nAuftrag starten\nAuftrag abbrechen\nJob kündigen", jobName, jobTypeName);
+    UiDialog_Show(playerid, DIALOG_UI_JOB_MENU, DIALOG_STYLE_LIST, "Job-Menü", info, UI_DIALOG_BUTTON_OK, UI_DIALOG_BUTTON_BACK);
 }
 
 stock UiHub_ShowText(playerid, const title[], const text[])
@@ -499,18 +622,55 @@ stock UiHub_OnDialogResponse(playerid, dialogid, response, listitem, const input
             }
             switch (listitem)
             {
-                case 0: UiHub_ShowInventory(playerid);
-                case 1: UiHub_ShowPhone(playerid);
-                case 2: UiHub_ShowBusinessList(playerid);
-                case 3: UiHub_ShowAmmu(playerid);
-                case 4: UiHub_ShowMissions(playerid);
-                case 5: UiHub_ShowGarages(playerid);
-                case 6: UiHub_ShowTuning(playerid);
-                case 7: JobCenter_ShowMain(playerid);
-                case 8: TextWars_ShowMain(playerid);
-                case 9: StateControl_ShowMain(playerid);
-                case 10: RoleplayUI_ShowDashboard(playerid);
+                case 0:
+                {
+                    UiHub_ShowStatePick(playerid);
+                }
+                case 1: UiHub_ShowInventory(playerid);
+                case 2: UiHub_ShowPhone(playerid);
+                case 3: UiHub_ShowBusinessList(playerid);
+                case 4: UiHub_ShowAmmu(playerid);
+                case 5: UiHub_ShowMissions(playerid);
+                case 6: UiHub_ShowGarages(playerid);
+                case 7: UiHub_ShowVehicleMenu(playerid);
+                case 8: UiHub_ShowVehicleStatus(playerid);
+                case 9: UiHub_ShowTuning(playerid);
+                case 10: UiHub_ShowJobMenu(playerid);
+                case 11: JobCenter_ShowMain(playerid);
+                case 12: TextWars_ShowMain(playerid);
+                case 13: StateControl_ShowMain(playerid);
+                case 14: RoleplayUI_ShowDashboard(playerid);
+                case 15: UiHub_ShowQuickActionMenu(playerid);
+                case 16: CameraSystem_StartFreeCamera(playerid);
+                case 17: CameraSystem_StartDroneCamera(playerid);
+                case 18: CameraSystem_Reset(playerid);
             }
+        }
+        case DIALOG_UI_STATE_PICK:
+        {
+            if (!response)
+            {
+                UiHub_ShowMain(playerid);
+                return true;
+            }
+
+            if (listitem < 0 || listitem >= STATE_COUNT)
+            {
+                return true;
+            }
+
+            if (!Core_IsValidState(listitem) || !StateSystem_IsValidState(listitem))
+            {
+                return true;
+            }
+
+            Core_SetPlayerState(playerid, listitem);
+            Core_SetPlayerHomeState(playerid, listitem);
+            DB_SetPlayerState(playerid, listitem);
+            DB_SavePlayerState(playerid, listitem);
+            CameraSystem_Reset(playerid);
+            StateSpawnSystem_Apply(playerid, listitem);
+            SendClientMessage(playerid, 0x00FF99AA, "[UI] Stadt und Spawn aktualisiert.");
         }
         case DIALOG_UI_INV_LIST:
         {
@@ -773,6 +933,149 @@ stock UiHub_OnDialogResponse(playerid, dialogid, response, listitem, const input
             }
             UiHub_BuyTuning(playerid, gUiSelected[playerid]);
         }
+        case DIALOG_UI_VEHICLE_STATUS:
+        {
+            if (response)
+            {
+                UiHub_ShowMain(playerid);
+            }
+        }
+        case DIALOG_UI_VEHICLE_MENU:
+        {
+            if (!response)
+            {
+                UiHub_ShowMain(playerid);
+                return true;
+            }
+            switch (listitem)
+            {
+                case 0: UiHub_ShowVehicleStatus(playerid);
+                case 1: UiHub_ShowGarages(playerid);
+                case 2: UiHub_ShowTuning(playerid);
+                case 3: UiHub_ShowVehicleStatus(playerid);
+                case 4:
+                {
+                    SendClientMessage(playerid, 0x00FF99AA, "[VEH] Fahrzeugaktionen über den Garagen- und Tuning-Flow laufen. Nutze das Fahrzeug-Menü für Status, Garage und Tuning.");
+                    UiHub_ShowVehicleMenu(playerid);
+                }
+                case 5:
+                {
+                    SendClientMessage(playerid, 0x00FF99AA, "[VEH] Spritpreise und Fahrzeugstatus sind im Status-Dialog verfügbar.");
+                    UiHub_ShowVehicleStatus(playerid);
+                }
+            }
+        }
+        case DIALOG_UI_JOB_MENU:
+        {
+            if (!response)
+            {
+                UiHub_ShowMain(playerid);
+                return true;
+            }
+            switch (listitem)
+            {
+                case 0: JobCenter_ShowMain(playerid);
+                case 1: JobCenter_StartTask(playerid);
+                case 2: JobCenter_CancelTask(playerid);
+                case 3: JobCenter_ShowStatus(playerid);
+                case 4:
+                {
+                    UiDialog_Show(playerid, DIALOG_JOB_QUIT, DIALOG_STYLE_MSGBOX, "Job kündigen", "Willst du deinen aktuellen Job wirklich kündigen?", "Kündigen", "Abbrechen");
+                }
+            }
+        }
+        case DIALOG_UI_STATE_MENU:
+        {
+            if (!response)
+            {
+                UiHub_ShowMain(playerid);
+                return true;
+            }
+            switch (listitem)
+            {
+                case 0: UiHub_ShowStatePick(playerid);
+                case 1: GovernmentSystem_ShowStateInfo(playerid, StateSystem_GetPlayerState(playerid));
+                case 2: StateServices_Show(playerid);
+                case 3: StateBudgetSystem_ShowOverview(playerid, StateSystem_GetPlayerState(playerid));
+                case 4: LawSystem_ShowWanted(playerid);
+                case 5: CityEconomy_ShowOverview(playerid);
+                case 6: ShopSystem_ShowStateShops(playerid, StateSystem_GetPlayerState(playerid));
+                case 7: UiHub_ShowJobMenu(playerid);
+                case 8: UiHub_ShowVehicleMenu(playerid);
+                case 9: ProgressionSystem_ShowStats(playerid);
+                case 10: CameraSystem_StartFreeCamera(playerid);
+                case 11: CameraSystem_StartDroneCamera(playerid);
+                case 12: CameraSystem_Reset(playerid);
+            }
+        }
+        case DIALOG_UI_AUTH_MAIN:
+        {
+            if (!response)
+            {
+                UiHub_ShowAuthMenu(playerid);
+                return true;
+            }
+            switch (listitem)
+            {
+                case 0:
+                {
+                    gLoginState[playerid] = LOGIN_STATE_LOGIN;
+                    UiHub_ShowPasswordInput(playerid);
+                }
+                case 1:
+                {
+                    gLoginState[playerid] = LOGIN_STATE_REGISTER;
+                    UiHub_ShowPasswordInput(playerid);
+                }
+                case 2:
+                {
+                    gLoginState[playerid] = LOGIN_STATE_LOGIN;
+                    UiHub_ShowPasswordInput(playerid);
+                }
+                case 3:
+                {
+                    UiHub_ShowStatePick(playerid);
+                }
+                case 4:
+                {
+                    CameraSystem_Reset(playerid);
+                    TutorialSystem_Start(playerid);
+                }
+            }
+        }
+        case DIALOG_UI_AUTH_PASSWORD:
+        {
+            if (!response)
+            {
+                UiHub_ShowAuthMenu(playerid);
+                return true;
+            }
+            if (strlen(inputtext) <= 0)
+            {
+                SendClientMessage(playerid, 0xFF6666AA, "[AUTH] Passwort darf nicht leer sein.");
+                UiHub_ShowPasswordInput(playerid);
+                return true;
+            }
+            if (!UiDialog_IsSafeText(inputtext))
+            {
+                SendClientMessage(playerid, 0xFF6666AA, "[AUTH] Passwort enthält ungültige Zeichen.");
+                UiHub_ShowPasswordInput(playerid);
+                return true;
+            }
+
+            if (gLoginState[playerid] == LOGIN_STATE_REGISTER)
+            {
+                new defaultHome = Core_GetValidStateOrDefault(gPlayerHomeState[playerid], STATE_LOS_SANTOS);
+                gPlayerHomeState[playerid] = defaultHome;
+                Core_SetPlayerHomeState(playerid, defaultHome);
+                Core_SetPlayerState(playerid, defaultHome);
+                DB_SavePlayerState(playerid, defaultHome);
+                LoginSystem_SetPlayerHomeState(playerid, defaultHome);
+                return true;
+            }
+
+            LoginSystem_CompleteLogin(playerid);
+        }
     }
     return true;
 }
@@ -787,6 +1090,22 @@ stock UiHub_HandleCommand(playerid, const cmdtext[])
     if (strcmp(cmdtext, "/menu", true) == 0 || strcmp(cmdtext, "/m", true) == 0)
     {
         UiHub_ShowMain(playerid);
+        return true;
+    }
+    if (strcmp(cmdtext, "/spawn", true) == 0)
+    {
+        if (UiHub_Ready(playerid))
+        {
+            new stateid = StateSystem_GetPlayerState(playerid);
+            if (Core_IsValidState(stateid))
+            {
+                StateSpawnSystem_Apply(playerid, stateid);
+            }
+            else
+            {
+                LoginSystem_SetPlayerHomeState(playerid, STATE_LOS_SANTOS);
+            }
+        }
         return true;
     }
     if (strcmp(cmdtext, "/inv", true) == 0 || strcmp(cmdtext, "/inventory", true) == 0)
@@ -846,7 +1165,15 @@ stock UiHub_HandleCommand(playerid, const cmdtext[])
     {
         if (UiHub_Ready(playerid))
         {
-            JobCenter_ShowMain(playerid);
+            UiHub_ShowJobMenu(playerid);
+        }
+        return true;
+    }
+    if (strcmp(cmdtext, "/vehicle", true) == 0 || strcmp(cmdtext, "/veh", true) == 0)
+    {
+        if (UiHub_Ready(playerid))
+        {
+            UiHub_ShowVehicleMenu(playerid);
         }
         return true;
     }
@@ -854,7 +1181,15 @@ stock UiHub_HandleCommand(playerid, const cmdtext[])
     {
         if (UiHub_Ready(playerid))
         {
-            StateControl_ShowMain(playerid);
+            UiHub_ShowQuickActionMenu(playerid);
+        }
+        return true;
+    }
+    if (strcmp(cmdtext, "/quick", true) == 0 || strcmp(cmdtext, "/hub", true) == 0)
+    {
+        if (UiHub_Ready(playerid))
+        {
+            UiHub_ShowQuickActionMenu(playerid);
         }
         return true;
     }

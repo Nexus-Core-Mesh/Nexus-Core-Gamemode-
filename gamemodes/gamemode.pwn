@@ -465,10 +465,24 @@ public OnPlayerCommandText(playerid, cmdtext[])
 public OnPlayerSpawn(playerid)
 {
     StateSystem_OnPlayerSpawn(playerid);
-    if (LoginSystem_IsActive(playerid))
+
+    new stateid = Core_GetPlayerState(playerid);
+    new homeState = Core_GetPlayerHomeState(playerid);
+    new bool:hasCompletedOnboarding = (gTutorialStage[playerid] >= TUTORIAL_STAGE_FINISH);
+    new bool:hasValidState = Core_IsValidState(stateid) && Core_IsValidState(homeState);
+
+    if (LoginSystem_IsActive(playerid) && !hasCompletedOnboarding && !hasValidState)
     {
         TutorialSystem_Start(playerid);
         CameraSystem_PlayStateScene(playerid, LoginSystem_GetHomeState(playerid));
+        RoleplayUI_ShowDashboard(playerid);
+        PhoneSystem_OnPlayerConnect(playerid);
+        PrisonSystem_OnPlayerConnect(playerid);
+    }
+    else if (LoginSystem_IsActive(playerid))
+    {
+        CameraSystem_Reset(playerid);
+        StateSpawnSystem_Apply(playerid, Core_GetValidStateOrDefault(stateid, homeState));
         RoleplayUI_ShowDashboard(playerid);
         PhoneSystem_OnPlayerConnect(playerid);
         PrisonSystem_OnPlayerConnect(playerid);
