@@ -5,6 +5,7 @@ Dieses Verzeichnis enthält Python 3 basierte Hilfswerkzeuge zur Fehleranalyse, 
 ## Verfügbare Tools
 
 - `log_tail.py` – Live-Verfolgung von Server-/Plugin-Logs
+- `log_watcher.py` – manuelle Log-Beobachtung ohne Hintergrundbetrieb; ideal für `Compiler/samp03/server_log.txt` oder `samp7780_bg.log`
 - `analyze_logs.py` – automatische Analyse von Logdateien nach Fehlern, Warnungen und wiederkehrenden Problemen
 - `validate_server_cfg.py` – prüft `server.cfg` und `sql.cfg` auf typische Konfigurationsfehler
 - `autorun.py` – startet den Server, überwacht Logs und sammelt Fehlerstatus in einer Zusammenfassung
