@@ -57,10 +57,4 @@ if [ -f "$SERVER_DIR/server.cfg" ]; then
   echo "[build_server] Using server config: $SERVER_DIR/server.cfg"
 fi
 
-if command -v screen >/dev/null 2>&1; then
-  echo "[build_server] Launching SA-MP server in a screen session named samp03svr"
-  screen -dmS samp03svr bash -lc "cd '$SERVER_DIR' && export LD_LIBRARY_PATH='.:./plugins:/usr/lib32:/usr/lib/i386-linux-gnu${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}' && exec ./samp03svr"
-else
-  echo "[build_server] screen not installed; run the server manually with:"
-  echo "  cd '$SERVER_DIR' && LD_LIBRARY_PATH='.:./plugins:/usr/lib32:/usr/lib/i386-linux-gnu${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}' ./samp03svr"
-fi
+echo "[build_server] Build complete. No server start was triggered; runtime launch remains separate and manual."
