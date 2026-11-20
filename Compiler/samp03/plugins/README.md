@@ -16,7 +16,14 @@ Der empfohlene SA:MP-Plugin-Stack für den 7780-Contract lautet:
 - `MapAndreas`
 - `pawn-plus`
 
-Diese Plugins sind in der Zielumgebung je nach Host- / VM-Setup und Laufzeitarchitektur zu installieren. Die lokale Repository-Struktur hält bewusst keinen Platzhalter- oder Pseudo-Binary in Git fest, da die echte Plugin-ABI (`.dll` auf Windows, `.so` unter Linux/Ubuntu-VM, ggf. qemu-i386-Emulation) host- und zielabhängig ist.
+Für diese Umgebung wurden die verifizierten Linux-32-Bit-Binaries für den aktuell sicher nachweisbaren Teil des Stacks direkt heruntergeladen und im Projektordner abgelegt:
+
+- `crashdetect.so` – `crashdetect` v4.22 Linux release
+- `streamer.so` – `samp-streamer-plugin` v2.9.6 release
+- `sscanf.so` – `sscanf` v2.13.8 Linux release
+- `mysql.so` – `samp-plugin-mysql` 2.1.1 release
+
+Diese Dateien wurden vor dem Ablegen als ELF-32-Bit-Shared-Objects verifiziert und sind hier im Repository mit eigener `plugins/`-Bestandsliste enthalten. Weitere Plugins aus dem Stack (`sqlite`, `zcmd`, `foreach`, `MapAndreas`, `pawn-plus`) konnten in dieser Umgebung nicht zuverlässig als echte Linux-32-Bit-ABI-Module gefunden bzw. verifiziert werden und sind daher noch als „auf Ziel-VM/Host nachzuziehen“ dokumentiert.
 
 ## Linux-/qemu-i386-Umgebung
 
