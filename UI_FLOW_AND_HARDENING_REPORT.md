@@ -166,3 +166,23 @@ These checks should be run in the actual sandbox runtime, not inferred from a co
 ## Conclusion
 
 The current codebase is in a better state than before: it compiles successfully, the source structure is moving toward a menu-driven onboarding flow, the main hardening fixes remain in place, and the 4-zone HUD direction is more deliberate. However, the final live verification is still outstanding. The correct way to complete the task is to validate the actual runtime behavior on the 7780 sandbox with logs, SQLite state, and client testing before claiming the onboarding flow is fully complete.
+
+---
+
+## Final state summary
+
+The repository has been brought into a more stable source-level state by preserving the critical architectural contract and extending the hardening work rather than undoing it. The runtime target remains fixed to `Compiler/samp03/gamemodes/gtasa_reallife.amx`, the lifecycle binding in `gamemode.pwn` stays intact, and the central state logic remains rooted in `core.inc` instead of being duplicated across modules.
+
+This means the overall project quality is now better aligned with the intended onboarding and survival flow:
+
+- connect flow is menu-first rather than chat-heavy
+- auto-detect login/register mode is kept separate from explicit state selection
+- valid state/home values are protected against zero resets
+- tutorial and state selection re-trigger only when genuinely missing
+- camera resets and HUD cleanup remain consistent across disconnect and state changes
+- expensive loop logic is reduced to protect the qemu-i386 runtime budget
+- Dini-first data writes and SQLite-backed state checks stay conceptually aligned
+
+## Final release note
+
+The project is ready for live verification with the correct Ubuntu-VM runtime environment, but it is not yet considered fully live-released. The source code is currently in a hardened, architecture-aligned, compile-confirmed state, while final live confirmation remains a separate step that must follow explicit runtime approval.

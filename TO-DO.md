@@ -115,3 +115,35 @@ Das Projekt als modularen, erweiterbaren GTA:SA-Reallife-Gamemode mit 3-Staaten-
 ## Hinweis
 
 Die Architektur bleibt bewusst modular. Jedes neue System wird in einem passenden Modul ergänzt und nicht monolithisch in `gamemode.pwn` gebaut. Die Dokumentation bleibt Teil der Entwicklung. Jede System-Erweiterung muss als Release-Rückblick in README/TO-DO verankert sein.
+
+---
+
+## Finaler Projektstand (ergänzt)
+
+Der aktuelle Repository-Stand ist technisch auf den Single-Target-Contract und die Laufzeit-Architektur des Gamemodes ausgerichtet. Im Mittelpunkt steht weiterhin die generische, aber harte Erwartung: nur `Compiler/samp03/gamemodes/gtasa_reallife.amx` ist das gültige Runtime-Ziel, und der Build muss mit der lokalen 32-Bit-Pawn-Toolchain über `qemu-i386` erfolgen.
+
+### Verifiziert im Source-Stand
+
+- Single-Target-Build: `Compiler/samp03/gamemodes/gtasa_reallife.amx` bleibt die einzige gültige Ausgabe.
+- Build-Kommando: `LD_LIBRARY_PATH="$PWD/Compiler/pawncc${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" qemu-i386 Compiler/pawncc/pawncc -o"$PWD/Compiler/samp03/gamemodes/gtasa_reallife.amx" gamemodes/gamemode.pwn -iincludes -iCompiler/samp03/include -d3`
+- Include-/Lifecycle-Contract: `Core -> DB -> State -> Admin -> Auth -> Economy -> Jobs -> Laws -> Housing/Vehicle -> Leisure/Web` und `BOOT -> DB_READY -> STATE_READY -> AUTH_READY -> WORLD_READY -> RUNTIME_READY` bleiben unverändert an der zentralen Stelle in `gamemode.pwn` verankert.
+- `core.inc` bleibt die alleinige Quelle für `state`, `home_state` und Projektleiter-/Admin-Rechte. Keine parallelen Schatten-State-Quellen wurden erneut eingeführt.
+- Die vorhandenen Hardening-Guards bleiben erhalten: `INSERT OR IGNORE`, Null-/0-Schutz bei gültigen `state_id` und `home_state`, sichere `strmid`-Token-Extraktion statt unsicherer `sscanf`-Puffer, `INVALID_TEXT_DRAW` statt unsicherem `Text:0`-Vergleich, entzerrte Hotpaths in `TextWars_Tick` und `UBBVehicleSystem_Connect`.
+
+### Zustandsstatus des Projekts
+
+- UI- und Tutorial-Flow sind auf den menu-first-Workflow mit Auto-Login/Register-Detektion, Home-State-Auswahl LS/SF/LV und einmaligen Spawn-/Tutorial-Pfad fokussiert.
+- Camera/Reset-Guards bleiben auf `SetCameraBehindPlayer()` + `TogglePlayerControllable(playerid, 1)` ausgelegt.
+- Dini-first-Persistenz unter `Compiler/samp03/scriptfiles/` bleibt als primäre Sicherungsstrategie im Fokus; SQLite-Propagation bildet die konsistente Nebenebene für laufende Statusabgleiche.
+- Die אפgepferten Zustände für Häuser, Inventar, Fahrzeuge, Safes und State-Transfers bleiben auf atomare Write-Temp/Validate/Rename-Muster ausgerichtet.
+
+### Offener, aber klar definierter Status
+
+- Kein Server-Start auf Port 7780 oder 7777 wurde durchgeführt, solange keine ausdrückliche Freigabe vorliegt.
+- Live-Validierung bleibt ein separates Release-Gate, das erst nach dem echten Runtime-Test auf der Ubuntu-VM mit Logs, DB-Checks und Client-Flow erfolgen darf.
+- Der aktuelle Stand ist als source-validiert, build-sicher und Architektur-konform anzusehen, aber nicht als Live-Server-freigegeben.
+
+### Abschluss
+
+Der Projekt-Tracker bleibt daher in einem klaren Zustand: technische Stabilität, single-target Build-Validität, Dini-/SQLite-Persistenzsicherung und Lifecycle-Konsistenz sind vollständig dokumentiert und im Code verankert. Die nächste Freigabe erfolgt nur durch echte Live-Validierung auf der Ubuntu-VM und nicht durch reine Compile-Sicherheit allein.
+

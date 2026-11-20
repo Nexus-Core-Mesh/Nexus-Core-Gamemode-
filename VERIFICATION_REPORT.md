@@ -388,3 +388,57 @@ Damit lautet das Ergebnis der Gesamtvalidierung:
 - Build-/Single-Target-Validierung: Bestanden
 - Konfigurations-/DB-Validierung: Bestanden
 - Produktiver Serverstart in dieser Sandbox: Nicht bestätigt
+
+---
+
+## 9. Finaler Verifikationsstand (ergänzt)
+
+Die gesamte Verifikation wurde auf den echten Projektkontext und die harte Architektur-Governance bezogen. Dabei war die entscheidende Frage nicht nur „kompiliert es“, sondern auch „greift das System im Zusammenspiel der Module korrekt zusammen, ohne Default-Werte, halbe Transfers oder doppelte Trigger zu erzeugen.“
+
+### 9.1 Core-Validierung
+
+Die Kernvalidierung war erfolgreich: `core.inc` bleibt die zentrale Quelle für Spielerstatus, Home-State, Admin-/Projektleiterrechte und allgemeine Validierungen. Die Reihenfolge und die Datenquellen wurden nicht mit parallelen Shadow-States belastet. Dadurch bleiben eventuelle spätere State-Wechsel technisch nachvollziehbar und nicht durch inkonsistente Neben- oder Fallback-Varianten verfälscht.
+
+### 9.2 State-/DB-Validierung
+
+Die DB- und State-Schicht blieb in der wesentlichen Form stabil:
+
+- `INSERT OR IGNORE` blieb erhalten und sorgt dafür, dass gültige Werte nicht versehentlich durch einen Default-Insert verloren gehen.
+- `state_id` und `home_state` werden an kritischen Stellen geschützt, sodass `0` keine gültige State-Zuweisung ersetzt.
+- Rehydrationspfade bleiben an `Core_IsValidState()` und die dazugehörigen State-/default-Guards gebunden, damit ein bereits gültiger Home-State oder State nach Reconnect nicht erneut durch einen Startpfad verschoben wird.
+- Der Dini-first-Ansatz bleibt im Dateisystem der primäre Persistenzpfad, während SQLite als sichtbarer Konsistenzpfad für Web-/Admin-Read-Only-Sichten fungiert.
+
+### 9.3 Login-/Tutorial-/Spawn-Validierung
+
+Die Laufzeit- und Lifecycle-Logik wurde im Sinne des geforderten Onboarding-Flows geprüft:
+
+- `Connect -> Auto-Detect/Login/Register -> Tutorial -> StateAuswahl -> StateSpawnSystem_Apply() -> Camera-Reset -> fester Spawnpunkt`
+- Chat-Commands sind nicht der primäre Eintrittspfad.
+- Ein bereits gültiger Home-State oder State verhindert ein erneutes Tutorial-/State-Triggern.
+- Der Spawnpfad wird nach validem Zustand nicht erneut durch Default-/Fallbacks mutiert.
+
+Diese Prüfung ist wichtig, weil genau diese Fehlerkette in realen Server-Umgebungen die größten „visuellen“ und „logischen“ Probleme erzeugt: doppelte Tutorial-Starts, veränderte Home-States, unvollständige Spawns und spürbare UI-Reset-Schleifen.
+
+### 9.4 Camera-/HUD-/UI-Validierung
+
+Die UI- und Camera-Logik blieb in den entscheidenden Punkten konsistent:
+
+- Resetpfade kontrollieren wieder `SetCameraBehindPlayer()` plus `TogglePlayerControllable(playerid, 1)`.
+- `INVALID_TEXT_DRAW` statt unsicherem `Text:0`-Vergleich wird konsequent eingehalten.
+- HUD-/TextDraw-Cleanup lässt die linke untere Zone frei und verhindert Überlagerungen auf kleinem / mobilen Layout.
+- Disconnect-/Reset-Pfade schalten Camera, TextDraws und Controls sauber zurück, sodass kein verhafteter Dialog-/Camera-Zustand hängen bleibt.
+
+### 9.5 Hotpath- und qemu-i386-Validierung
+
+Der Runtime-Betrag wurde ebenfalls auf echte Infrastruktur-Respektierung geprüft:
+
+- `TextWars_Tick` und verwandte Berechnungs-Pfade wurden auf echte Aktivität statt losen Schleifen reduziert.
+- `UBBVehicleSystem_Connect` und andere eng gekoppelten Pfade blieben im Loader-/Setup-Zeitfenster und nicht in Dauerloops aktiv.
+- `sscanf`-Puffer wurden dort, wo sie als ungeschützt galten, durch sichere Token-Extraktion ersetzt.
+- Early-Returns bei Inaktivität bleiben als wirksame Ressourcenschutzmaßnahme im Betrieb erhalten.
+
+### 9.6 Finaler Gesamtstatus
+
+Der aktuelle Repository-Stand ist als implementierungs- und build-sicher zu bewerten, auch wenn die Live-Validierung auf der echten Ubuntu-VM noch aussteht. Die wichtigste Aussage lautet: Die Stabilität wurde dort, wo sie in der Codearchitektur wirklich eine Rolle spielt, nicht ignoriert; sie wurde als strukturelle Entscheidung durch die Nutzung von zentralen Guards, sauberem Lifecycle und konsistenten Reset-Pfaden eingeordnet.
+
+Damit bleibt der definitive Release-Gate unverändert: Der echte SA:MP-/OMP-Live-Test auf der Ubuntu-VM ist nach dem Build noch erforderlich und darf nicht durch source-seitige Analyse ersetzt werden.

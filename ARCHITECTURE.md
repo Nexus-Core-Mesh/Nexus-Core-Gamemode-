@@ -697,3 +697,110 @@ Die wichtigste Betriebsregel lautet einfach und muss immer eingehalten werden:
 - Server mit dem korrekten `LD_LIBRARY_PATH` starten
 
 Damit wird der gewünschte Gamemode zuverlässig geladen und ein veralteter Default-Blueberry-Spawn verhindert.
+
+---
+
+## 7. Finaler Systemstand und Release-Guardrails
+
+Der aktuelle Architektur-Stand ist bewusst auf Stabilität, Wiederholbarkeit und Single-Source-of-Truth ausgelegt. Im Kern bleibt `core.inc` die zentrale Quelle für Spielerstatus, Home-State, Projektleiter-/Admin-Rechte und State-Validierung. Jede andere Stelle, die denselben Datensatz verwaltet, muss als Fallback oder ausgehender Leser fungieren und darf keine eigene, unabhängige Schattensicht etablieren.
+
+### 7.1 Build- und Runtime-Vertrag im Detail
+
+1. Single Target
+   - Die einzige gültige AMX-Ausgabe bleibt `Compiler/samp03/gamemodes/gtasa_reallife.amx`.
+   - Aliase wie `gamemode.amx` und andere Kopien sind in diesem Repository-Kontext nicht Teil des gültigen Builds.
+   - Der `server.cfg`-Eintrag bleibt auf `gamemode0 gtasa_reallife 1` synchronisiert.
+
+2. Toolchain
+   - Der Build läuft immer lokal mit der 32-Bit-Pawn-Toolchain über `qemu-i386`.
+   - Das erforderliche Kommando bleibt unverändert:
+     `LD_LIBRARY_PATH="$PWD/Compiler/pawncc${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" qemu-i386 Compiler/pawncc/pawncc -o"$PWD/Compiler/samp03/gamemodes/gtasa_reallife.amx" gamemodes/gamemode.pwn -iincludes -iCompiler/samp03/include -d3`
+
+3. Lifecycle und Include-Reihenfolge
+   - Include-Reihenfolge im laufenden Code: `Core -> DB -> State -> Admin -> Auth -> Economy -> Jobs -> Laws -> Housing/Vehicle -> Leisure/Web`
+   - Lifecycle-Folge: `BOOT -> DB_READY -> STATE_READY -> AUTH_READY -> WORLD_READY -> RUNTIME_READY`
+   - Diese Reihenfolge ist nicht als weicher Hinweis, sondern als Architekturvertrag zu verstehen.
+
+4. Hardening Guards
+   - `INSERT OR IGNORE` bleibt mit der DB-Sicht kompatibel und verhindert das Überschreiben gültiger Statewerte.
+   - Gültige `state_id` und `home_state` dürfen niemals durch `0` oder Standardwerte zurückgesetzt werden.
+   - `strmid`-basierte Token-Extraktion bleibt der bevorzugte Parsing-Pfad, insbesondere für Passwörter, Befehls-Input und Dialog-Parameter.
+   - `INVALID_TEXT_DRAW` und SetCameraBehindPlayer() bleiben die Muster für sauberes Reset- und Cleanup-Verhalten.
+
+### 7.2 Persistenz- und State-Sicherungsstrategie
+
+Die Persistenzarchitektur basiert auf einem doppelt abgestützten Modell:
+
+- primär: Dini-first-Textdateien unter `Compiler/samp03/scriptfiles/`
+- sekundär: SQLite-Upsert nach `data/db/gtasa_reallife.db` für konsistenze Sicht und Web-/Dashboard-Read-Only-Lesezugriff
+
+Diese Kombination ist für kritische Pfade notwendig, weil Dini-Transaktionen zwar atomar im Dateisystem über Temp/Validate/Rename umgesetzt werden können, SQLite aber für die Operational View und spätere Analyse dienen soll. Die Engine darf nie in den Zustand eines halben Transfers geraten, wenn ein Write abgebrochen wird oder ein Crash passiert.
+
+Wesentliche kritische Transfers bleiben daher auf einen konsistenten Ablauf festgelegt:
+
+- Write-Temp
+- Validate
+- Rename
+- nachfolgende SQLite-Upsert-Anbindung
+
+Das Muster ist explizit für Haus-Safes, Inventar, Fahrzeuge, Player-States und Ledger-Transfers vorgesehen.
+
+### 7.3 UI-, Tutorial- und Spawn-Sicherheit
+
+Der komplette Start-/Onboarding-/Spawn-Lebenszyklus muss in diesem Projekt als eine zusammenhängende Zustandsmaschine verstanden werden:
+
+`Connect -> Auto-Detect/Login/Register -> Tutorial -> State/Home-State-Auswahl -> StateSpawnSystem_Apply() -> Camera-Reset -> fester Spawnpunkt`
+
+Dabei gilt:
+
+- Keine Chat-Command-Verpflichtung für den Einstieg.
+- Keine erneute Triggerung von Tutorial-/State-Szene bei validem `state_id` / gültigem `home_state`.
+- `OnPlayerSpawn()` muss nach erfolgreichem Onboarding die bereits gültigen Werte nicht erneut überschreiben.
+- Beim Disconnect müssen Flags, TextDraws, Kamera- und Dialogzustände sauber zurückgesetzt und der Zustand als vollständig „frei“ gelten.
+
+Wichtig ist, dass die Sicherung nicht nur im Einzelfall, sondern im Gesamtpfad wirkt: Der Login/Spawn/Reset-/Disconnect-Zyklus darf keine Default-Werte wieder in die aktive Session injizieren.
+
+### 7.4 Welt-, Admin- und Wirtschafts-Integration
+
+Die modularen Subsysteme sind im Relation-Design aufeinander abgestimmt:
+
+- `core.inc` verwaltet die Grundzustände und Rechte
+- `admin_system.inc` kontrolliert Admin-/ProjectLeader-Rechte und Karten-/Welt-Editoren
+- `state_spawn_system.inc` übernimmt Home-State-/Spawn-Logik
+- `government/` und `state/` bilden politische und verwaltungsbezogene Zustände
+- `vehicles/`, `housing/`, `business/`, `factions/`, `economy/`, `jobs/`, `laws/` bilden die wirtschaftlichen und siedlungsbezogenen Abläufe
+- `ui_hub.inc` und `roleplay_ui_system.inc` sorgen als sichtbare Oberfläche für den Zugang zu diesen Pfaden
+
+Das zentrale Prinzip ist die Lückenlosigkeit: Jeder Modulaufruf muss seine Existenz und Berechtigung durch die tatsächliche API verifizieren, keine indirekten, losen oder mehrfach shadowed Zustände verwenden und keine halben Transaktionen zulassen.
+
+### 7.5 Laufzeit-Guardrails unter qemu-i386
+
+Die Laufzeit ist bewusst auf ein begrenztes Ressourcenszenario ausgelegt:
+
+- keine großen Schleifen über `MAX_PLAYERS` ohne Early-Return
+- keine aktiven Ticks bei Inaktivität
+- keine Belastung durch wiederholte UI-Updates oder Camera-/Widget-Schleifen ohne echte Aktivität
+- sichere Parsing-Pfade statt unsicherer `sscanf`-Puffer
+- reduzierte Hotpaths in `TextWars_Tick` und `UBBVehicleSystem_Connect`
+
+Die Kriterien gelten als Architektur-Anforderung, nicht als Option. Sie sind Teil der Stabilität der kompletten Laufzeitumgebung unter QEMU/32-Bit-Pawn.
+
+### 7.6 Release-Status
+
+Die Codebasis ist als source-validiert und architektonisch konsistent einzuordnen, aber die final reale Freigabe bleibt weiterhin ein Live-Release-Gate auf der Ubuntu-VM. Eine reine Compile-Sicherheit genügt nicht, um den Server als produktiv freigegeben zu betrachten. Entscheidend sind tatsächlicher Serverstart, echte Log-Prüfung und Client-/State-/DB-Verifikation im realen Laufzeitkontext.
+
+---
+
+## 8. Schlussfazit der Architektur
+
+Das Projekt bleibt modular, konsistent und auf den Single-Target-Build ausgerichtet. Die Kernprinzipien lauten:
+
+- nur `gtasa_reallife.amx` als gültige Runtime-Ausgabe
+- `core.inc` als Single Source of Truth
+- strikte Include-/Lifecycle-Reihenfolge
+- Dini-first-Persistenz mit SQLite-Read-Only-Sicht
+- sichere Login-/Tutorial-/State-/Spawn-Maschine
+- saubere Hud-/Camera-/Reset- und Disconnect-Pfade
+- harte Guards gegen Default-State-Verfälschung, halbe Transfers und qemu-i386-Overhead
+
+Damit ist die Projektarchitektur für den nächsten echten Live-Check vorbereitet: Der Build ist klar, die Logik konsistent, die Hardening-Muster sind wiederverwendbar und die letzte Freigabe gilt weiterhin nur nach erfolgreicher Laufzeitvalidierung auf der Ubuntu-VM.
