@@ -390,7 +390,7 @@ stock DB_EnsurePlayerRecord(playerid, defaultState)
     }
 
     format(query, sizeof(query),
-        "INSERT OR REPLACE INTO player_state (player_id, state_id, last_updated) VALUES (%d, %d, datetime('now'));",
+        "INSERT OR IGNORE INTO player_state (player_id, state_id, last_updated) VALUES (%d, %d, datetime('now'));",
         playerid,
         stateid);
     return DB_Execute(query);
@@ -426,18 +426,35 @@ stock DB_SetPlayerState(playerid, stateid)
     {
         return false;
     }
-    if (!Core_IsValidState(stateid))
+
+    new normalizedState = Core_GetValidStateOrDefault(stateid, Core_GetPlayerState(playerid));
+    if (!Core_IsValidState(normalizedState))
     {
         return false;
     }
 
-    if (!DB_EnsurePlayerRecord(playerid, stateid))
+    new homeState = Core_GetPlayerHomeState(playerid);
+    if (!Core_IsValidState(homeState))
+    {
+        homeState = normalizedState;
+    }
+
+    if (!DB_EnsurePlayerRecord(playerid, normalizedState))
     {
         return false;
     }
 
-    new query[128];
-    format(query, sizeof(query), "INSERT OR REPLACE INTO player_state (player_id, state_id, last_updated) VALUES (%d, %d, datetime('now'))", playerid, stateid);
+    Core_SetPlayerState(playerid, normalizedState);
+    Core_SetPlayerHomeState(playerid, homeState);
+
+    new query[192];
+    format(query, sizeof(query), "UPDATE players SET state_id = %d, home_state = %d WHERE id = %d", normalizedState, homeState, playerid);
+    if (!DB_Execute(query))
+    {
+        return false;
+    }
+
+    format(query, sizeof(query), "INSERT OR IGNORE INTO player_state (player_id, state_id, last_updated) VALUES (%d, %d, datetime('now'))", playerid, normalizedState);
     return DB_Execute(query);
 }
 
@@ -470,18 +487,39 @@ stock DB_LoadPlayerState(playerid)
         return false;
     }
 
+    new stateValue = Core_ResolveStateId(gPlayerData[playerid][E_PLAYER_STATE]);
+    new homeValue = Core_ResolveStateId(gPlayerData[playerid][E_PLAYER_HOME_STATE]);
+
+    if (!Core_IsValidState(stateValue))
+    {
+        stateValue = STATE_LOS_SANTOS;
+    }
+    if (!Core_IsValidState(homeValue))
+    {
+        homeValue = stateValue;
+    }
+    else if (homeValue == STATE_LOS_SANTOS && stateValue != STATE_LOS_SANTOS)
+    {
+        homeValue = stateValue;
+    }
+
+    gDBPlayerStateCache[playerid] = stateValue;
+    gDBPlayerHomeStateCache[playerid] = homeValue;
+    Core_SetPlayerState(playerid, stateValue);
+    Core_SetPlayerHomeState(playerid, homeValue);
+
     new query[192];
-    format(query, sizeof(query), "SELECT state_id FROM player_state WHERE player_id = %d LIMIT 1;", playerid);
+    format(query, sizeof(query), "SELECT state_id, home_state FROM players WHERE id = %d LIMIT 1;", playerid);
     if (!DB_Query(query))
     {
-        gDBPlayerStateCache[playerid] = STATE_LOS_SANTOS;
-        gDBPlayerHomeStateCache[playerid] = STATE_LOS_SANTOS;
         return false;
     }
 
-    gDBPlayerStateCache[playerid] = STATE_LOS_SANTOS;
-    gDBPlayerHomeStateCache[playerid] = STATE_LOS_SANTOS;
-    return true;
+    if (Core_IsValidState(stateValue) && Core_IsValidState(homeValue))
+    {
+        return true;
+    }
+    return false;
 }
 
 stock DB_SavePlayerState(playerid, stateid)
@@ -490,16 +528,30 @@ stock DB_SavePlayerState(playerid, stateid)
     {
         return false;
     }
-    if (!Core_IsValidState(stateid))
+
+    new normalizedState = Core_GetValidStateOrDefault(stateid, Core_GetPlayerState(playerid));
+    if (!Core_IsValidState(normalizedState))
     {
         return false;
     }
 
-    gDBPlayerStateCache[playerid] = stateid;
-    gDBPlayerHomeStateCache[playerid] = stateid;
+    new homeState = Core_GetPlayerHomeState(playerid);
+    if (!Core_IsValidState(homeState))
+    {
+        homeState = normalizedState;
+    }
+
+    gDBPlayerStateCache[playerid] = normalizedState;
+    gDBPlayerHomeStateCache[playerid] = homeState;
 
     new query[192];
-    format(query, sizeof(query), "INSERT OR REPLACE INTO player_state (player_id, state_id, last_updated) VALUES (%d, %d, datetime('now'));", playerid, stateid);
+    format(query, sizeof(query), "UPDATE players SET state_id = %d, home_state = %d WHERE id = %d;", normalizedState, homeState, playerid);
+    if (!DB_Execute(query))
+    {
+        return false;
+    }
+
+    format(query, sizeof(query), "INSERT OR IGNORE INTO player_state (player_id, state_id, last_updated) VALUES (%d, %d, datetime('now'));", playerid, normalizedState);
     return DB_Execute(query);
 }
 

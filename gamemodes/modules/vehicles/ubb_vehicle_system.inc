@@ -176,12 +176,30 @@ stock UBBVehicleSystem_Connect(playerid)
         return false;
     }
 
-    for (new i = 0; i < MAX_UBB_VEHICLES; i++)
+    if (gUbbVehicleCount <= 0)
     {
-        if (gUbbVehicleOwner[i] == playerid)
+        return true;
+    }
+
+    new currentState = StateSystem_GetPlayerState(playerid);
+    new savedCount = 0;
+    for (new i = 0; i < MAX_UBB_VEHICLES && savedCount < 8; i++)
+    {
+        if (gUbbVehicleModel[i] == 0)
         {
-            DB_SaveUBBVehicle(i, gUbbVehicleModel[i], playerid, StateSystem_GetPlayerState(playerid), gUbbVehicleFuel[i], gUbbVehiclePrice[i], gUbbVehicleState[i]);
+            continue;
         }
+        if (gUbbVehicleOwner[i] != playerid)
+        {
+            continue;
+        }
+        if (gUbbVehicleState[i] == UBB_VEHICLE_STATUS_FREE && gUbbVehiclePrice[i] <= 0)
+        {
+            continue;
+        }
+
+        DB_SaveUBBVehicle(i, gUbbVehicleModel[i], playerid, currentState, gUbbVehicleFuel[i], gUbbVehiclePrice[i], gUbbVehicleState[i]);
+        savedCount++;
     }
 
     return true;

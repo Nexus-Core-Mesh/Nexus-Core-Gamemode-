@@ -117,54 +117,63 @@ stock AdminSystem_SetStateRank(playerid, stateid, level)
 
 stock AdminSystem_HandleCommand(playerid, const cmdtext[])
 {
-    if (cmdtext[0] == '/')
+    if (cmdtext[0] != '/')
     {
-        new cmd[32], idx;
-        idx = sscanf(cmdtext, "s[32]", cmd);
-        if (idx == 0)
-        {
-            return false;
-        }
-
-        if (strcmp(cmd, "admin", true) == 0)
-        {
-            if (AdminSystem_IsModerator(playerid))
-            {
-                SendClientMessage(playerid, 0x00FF00AA, "[ADMIN] Du bist im Adminsystem aktiv.");
-                return true;
-            }
-            SendClientMessage(playerid, 0xFF0000AA, "[ADMIN] Kein Adminzugang.");
-            return true;
-        }
-
-        if (strcmp(cmd, "state", true) == 0)
-        {
-            SendClientMessage(playerid, 0xFFFF00AA, "[STATE] Verfügbar: Los Santos, San Fierro, Las Venturas");
-            return true;
-        }
-
-        if (strcmp(cmd, "config", true) == 0)
-        {
-            if (AdminSystem_IsModerator(playerid))
-            {
-                AdminConfigSystem_ShowMenu(playerid);
-                return true;
-            }
-            SendClientMessage(playerid, 0xFF0000AA, "[ADMIN] Kein Zugangsrecht zur Konfiguration.");
-            return true;
-        }
-
-        if (strcmp(cmd, "togglewar", true) == 0)
-        {
-            if (AdminSystem_IsModerator(playerid))
-            {
-                GangWarSystem_Toggle();
-                SendClientMessage(playerid, 0x00FF00AA, "[GANGWAR] Status gewechselt.");
-                return true;
-            }
-            return true;
-        }
+        return false;
     }
+
+    new cmd[32];
+    new cmdPos = 0;
+    while (cmdtext[cmdPos] != '\0' && cmdtext[cmdPos] != ' ' && cmdtext[cmdPos] != '\t' && cmdtext[cmdPos] != '\r' && cmdtext[cmdPos] != '\n')
+    {
+        if (cmdPos + 1 >= sizeof(cmd))
+        {
+            break;
+        }
+        cmd[cmdPos] = cmdtext[cmdPos];
+        cmdPos++;
+    }
+    cmd[cmdPos] = '\0';
+
+    if (strcmp(cmd, "/admin", true) == 0 || strcmp(cmd, "/mod", true) == 0)
+    {
+        if (AdminSystem_IsModerator(playerid))
+        {
+            UiDialog_Show(playerid, DIALOG_UI_ADMIN_MENU, DIALOG_STYLE_LIST, "Admin-Menü", "Konfiguration\nGangwar\nStaatsstatus\nBerechtigungen", "Öffnen", "Schließen");
+            return true;
+        }
+        SendClientMessage(playerid, 0xFF0000AA, "[ADMIN] Kein Adminzugang.");
+        return true;
+    }
+
+    if (strcmp(cmd, "/state", true) == 0)
+    {
+        SendClientMessage(playerid, 0xFFFF00AA, "[STATE] Verfügbar: Los Santos, San Fierro, Las Venturas");
+        return true;
+    }
+
+    if (strcmp(cmd, "/config", true) == 0)
+    {
+        if (AdminSystem_IsModerator(playerid))
+        {
+            AdminConfigSystem_ShowMenu(playerid);
+            return true;
+        }
+        SendClientMessage(playerid, 0xFF0000AA, "[ADMIN] Kein Zugangsrecht zur Konfiguration.");
+        return true;
+    }
+
+    if (strcmp(cmd, "/togglewar", true) == 0)
+    {
+        if (AdminSystem_IsModerator(playerid))
+        {
+            GangWarSystem_Toggle();
+            SendClientMessage(playerid, 0x00FF00AA, "[GANGWAR] Status gewechselt.");
+            return true;
+        }
+        return true;
+    }
+
     return false;
 }
 

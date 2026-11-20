@@ -79,6 +79,10 @@ stock StateSpawnSystem_Apply(playerid, stateid)
     if (gStateSpawnCount[stateid] <= 0)
     {
         StateSystem_SpawnPlayerForState(playerid, stateid);
+        Core_SetPlayerState(playerid, stateid);
+        Core_SetPlayerHomeState(playerid, stateid);
+        DB_SetPlayerState(playerid, stateid);
+        DB_SavePlayerState(playerid, stateid);
         return true;
     }
 
@@ -93,6 +97,9 @@ stock StateSpawnSystem_Apply(playerid, stateid)
     SetPlayerFacingAngle(playerid, gStateSpawnHeadingByState[stateid][slot]);
     Core_SetPlayerState(playerid, stateid);
     Core_SetPlayerHomeState(playerid, stateid);
+    DB_SetPlayerState(playerid, stateid);
+    DB_SavePlayerState(playerid, stateid);
+    CameraSystem_Reset(playerid);
 
     new msg[128];
     format(msg, sizeof(msg), "[STATE] Spawn gesetzt: %s", stateName);
