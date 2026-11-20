@@ -133,6 +133,17 @@ stock CameraSystem_ToggleFreeCamera(playerid)
     CameraSystem_StartFreeCamera(playerid);
 }
 
+stock CameraSystem_ExitCameraMode(playerid)
+{
+    if (!Core_IsValidPlayerId(playerid))
+    {
+        return;
+    }
+
+    CameraSystem_Reset(playerid);
+    SetCameraBehindPlayer(playerid);
+    TogglePlayerControllable(playerid, true);
+}
 stock CameraSystem_PlayIntroScene(playerid)
 {
     gCameraMode[playerid] = CAMERA_MODE_TUTORIAL;

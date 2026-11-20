@@ -218,6 +218,17 @@ qemu-i386 Compiler/pawncc/pawncc ...
 
 Damit bleibt die Toolchain konkret und unabhängig von externen Installationen.
 
+### 2.5 Laufzeit- und Kantenfall-Guardrails
+
+Im aktuellen Stand wurden die früheren Runtime-Risiken nicht bloß dokumentiert, sondern in den geeigneten Funktionspfaden direkt abgesichert:
+
+- `DB_RehydratePlayerState()` prüft `state_id` und `home_state` mit `Core_IsValidState()` und überschreibt keine gültigen Werte mit `0` oder Fallbacks.
+- `OnPlayerSpawn()` erkennt einen bereits validen `home_state`/`state_id` und startet weder Tutorial noch State-Szene erneut.
+- `CameraSystem_Reset()` und `CameraSystem_ExitCameraMode()` sorgen für einen perfiden Reset-Pfad mit `SetCameraBehindPlayer()` und `TogglePlayerControllable(playerid, 1)`.
+- `UiHub_`-Pfad und `RoleplayUI_`-Cleanup verwenden nur sichere `INVALID_TEXT_DRAW`-Prüfungen, um veraltete HUD-/Textdraw-Handles beim Wechsel von Menü, Spawn und Disconnect aufzuräumen.
+
+Diese Vereinbarungen sind absichtlich kein „Wiederverschieben“ apt-ähnlicher Änderungen, sondern eine direkte Sicherheitsschicht für den Connect-/Spawn-/HUD-Flow.
+
 ### 2.5 Live-Server-Root und runtime contract
 
 `Compiler/samp03/` ist das aktive SA:MP-Laufzeit-Root. In diesem Ordner liegt

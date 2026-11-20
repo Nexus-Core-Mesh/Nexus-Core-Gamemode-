@@ -480,8 +480,8 @@ public OnPlayerSpawn(playerid)
         }
         else if (!hasCompletedOnboarding)
         {
-            TutorialSystem_Start(playerid);
-            CameraSystem_PlayStateScene(playerid, homeState);
+            CameraSystem_Reset(playerid);
+            StateSpawnSystem_Apply(playerid, homeState);
         }
         else
         {

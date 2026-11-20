@@ -643,7 +643,13 @@ stock UiHub_OnDialogResponse(playerid, dialogid, response, listitem, const input
                 case 15: UiHub_ShowQuickActionMenu(playerid);
                 case 16: CameraSystem_StartFreeCamera(playerid);
                 case 17: CameraSystem_StartDroneCamera(playerid);
-                case 18: CameraSystem_Reset(playerid);
+                case 18:
+                {
+                    CameraSystem_ExitCameraMode(playerid);
+                    CameraSystem_Reset(playerid);
+                    SetCameraBehindPlayer(playerid);
+                    TogglePlayerControllable(playerid, true);
+                }
             }
         }
         case DIALOG_UI_STATE_PICK:
@@ -1005,7 +1011,13 @@ stock UiHub_OnDialogResponse(playerid, dialogid, response, listitem, const input
                 case 9: ProgressionSystem_ShowStats(playerid);
                 case 10: CameraSystem_StartFreeCamera(playerid);
                 case 11: CameraSystem_StartDroneCamera(playerid);
-                case 12: CameraSystem_Reset(playerid);
+                case 12:
+                {
+                    CameraSystem_ExitCameraMode(playerid);
+                    CameraSystem_Reset(playerid);
+                    SetCameraBehindPlayer(playerid);
+                    TogglePlayerControllable(playerid, true);
+                }
             }
         }
         case DIALOG_UI_AUTH_MAIN:

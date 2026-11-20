@@ -487,8 +487,17 @@ stock DB_RehydratePlayerState(playerid)
         return false;
     }
 
-    new stateValue = Core_ResolveStateId(gPlayerData[playerid][E_PLAYER_STATE]);
-    new homeValue = Core_ResolveStateId(gPlayerData[playerid][E_PLAYER_HOME_STATE]);
+    new stateValue = Core_GetPlayerState(playerid);
+    new homeValue = Core_GetPlayerHomeState(playerid);
+
+    if (!Core_IsValidState(stateValue))
+    {
+        stateValue = Core_ResolveStateId(gPlayerData[playerid][E_PLAYER_STATE]);
+    }
+    if (!Core_IsValidState(homeValue))
+    {
+        homeValue = Core_ResolveStateId(gPlayerData[playerid][E_PLAYER_HOME_STATE]);
+    }
 
     if (!Core_IsValidState(stateValue))
     {
@@ -506,6 +515,15 @@ stock DB_RehydratePlayerState(playerid)
     if (!Core_IsValidState(stateValue) || !Core_IsValidState(homeValue))
     {
         return false;
+    }
+
+    if (stateValue != Core_GetPlayerState(playerid) && Core_IsValidState(Core_GetPlayerState(playerid)))
+    {
+        stateValue = Core_GetPlayerState(playerid);
+    }
+    if (homeValue != Core_GetPlayerHomeState(playerid) && Core_IsValidState(Core_GetPlayerHomeState(playerid)))
+    {
+        homeValue = Core_GetPlayerHomeState(playerid);
     }
 
     gDBPlayerStateCache[playerid] = stateValue;
@@ -531,8 +549,17 @@ stock DB_LoadPlayerState(playerid)
         return false;
     }
 
-    new stateValue = Core_ResolveStateId(gPlayerData[playerid][E_PLAYER_STATE]);
-    new homeValue = Core_ResolveStateId(gPlayerData[playerid][E_PLAYER_HOME_STATE]);
+    new stateValue = Core_GetPlayerState(playerid);
+    new homeValue = Core_GetPlayerHomeState(playerid);
+
+    if (!Core_IsValidState(stateValue))
+    {
+        stateValue = Core_ResolveStateId(gPlayerData[playerid][E_PLAYER_STATE]);
+    }
+    if (!Core_IsValidState(homeValue))
+    {
+        homeValue = Core_ResolveStateId(gPlayerData[playerid][E_PLAYER_HOME_STATE]);
+    }
 
     if (!Core_IsValidState(stateValue))
     {
@@ -545,6 +572,11 @@ stock DB_LoadPlayerState(playerid)
     else if (homeValue == STATE_LOS_SANTOS && stateValue != STATE_LOS_SANTOS)
     {
         homeValue = stateValue;
+    }
+
+    if (!Core_IsValidState(stateValue) || !Core_IsValidState(homeValue))
+    {
+        return false;
     }
 
     gDBPlayerStateCache[playerid] = stateValue;
