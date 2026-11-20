@@ -120,12 +120,16 @@ Die Architektur bleibt bewusst modular. Jedes neue System wird in einem passende
 
 ## Offline-Tooling- und Audit-Status (ergänzt)
 
-Zusätzlich zu den bestehenden Analyse-Helfern unter `tools/` wurden vier schlanke Python-Tooling-Module ergänzt, die ohne Serverstart, ohne Live-Test und ohne externe Abhängigkeiten arbeiten:
+Zusätzlich zu den bestehenden Analyse-Helfern unter `tools/` wurden weitere schlanke Python-Tooling-Module ergänzt, die ohne Serverstart, ohne Live-Test und ohne externe Abhängigkeiten arbeiten:
 
 - `tools/db_and_state_inspector.py`: prüft SQLite-State- und Dini-Persistenzdaten schreibgeschützt und kann Vorher-/Nachher-Snapshots erzeugen.
 - `tools/audit_modules_and_guards.py`: prüft Include-/Lifecycle-Reihenfolge, Guard-Muster, `Core_IsValidState()`, Camera-/HUD-Reset und Tick-/Loop-Guards.
 - `tools/textdraw_and_zone_mapper.py`: listet TextDraws, PlayerTextDraws, Zonen- und HUD-Layout-Elemente in einer klaren Übersicht auf.
 - `tools/projectlead_api_check.py`: gleicht Projektleiter-, Admin-, Spawn-, Fahrzeug-, Gangfight- und Zonen-API-Aufrufe über den Sourcetree ab.
+- `tools/gangfight_zone_validator.py`: prüft Rechteck-/Radius-Zonendefinitionen auf Plausibilität, Min/Max-Umkehrungen, unplausible Werte und fehlende Fraktions-/State-Zuordnung.
+- `tools/economy_and_state_ledger_check.py`: prüft Geld-, Cash-, Bank-, Home-State-, Safe- und Fahrzeug-/Ledger-Daten in SQLite und Dini-Dateien auf Null-/Negativwerte und Zustandsabweichungen.
+- `tools/dialog_and_camera_reset_check.py`: prüft Dialog-IDs, Reset-/Abbruchpfade, Camera-/Toggle-Gaurds und UI-Disengage-Pfade.
+- `tools/qemu_7780_readiness_check.py`: prüft statisch die 7780-Readiness (Single-Target AMX, `gamemode0 gtasa_reallife 1`, Port 7780, kein Port 7777) ohne Serverstart.
 
 Diese Werkzeuge sind bewusst auf 1,5 GB RAM / 2 CPU-Kerne und den Offline-Pfad unter `Compiler/samp03/` zugeschnitten; sie dienen ausschließlich der Quell- und Zustandsüberwachung, nicht als Live-Server-Test.
 

@@ -793,6 +793,10 @@ Um die Laufzeitarchitektur mit Architektur- und Persistenz-Sicherheit zu verifiz
 - `tools/audit_modules_and_guards.py`: kontrolliert Include-/Lifecycle-Reihenfolge, Guards, Camera-Reset, TextDraw-/State-Checks und Punkte der qemu-i386-Ressourcensicherung.
 - `tools/textdraw_and_zone_mapper.py`: listet TextDraws, Widget-Zonen und eventuelle Gebiet-/Radius-Definitionen übersichtlich auf.
 - `tools/projectlead_api_check.py`: identifiziert API-Mismatches bei Projektleiter-/RCON-/Spawn-/Fahrzeug-/Gangfight-Pfaden frühzeitig.
+- `tools/gangfight_zone_validator.py`: prüft Rechteck-/Radius-Zonentypen auf Plausibilität, Min/Max-Umkehrungen, große Bereiche und fehlende Zuordnungen.
+- `tools/economy_and_state_ledger_check.py`: kontrolliert den schreibgeschützten Ledger-/Cash-/State-/House-/Safe-/Vehicle-Status in DB und scriptfiles.
+- `tools/dialog_and_camera_reset_check.py`: prüft Dialogpfade, Trigger und Camera-/Cleanup-Reset-Guards.
+- `tools/qemu_7780_readiness_check.py`: validiert statisch die 7780-Readiness ohne Start des Servers, inklusive Single-Target AMX und Port-Checks.
 
 Diese Skripte ergänzen die bestehende `tools/`-Sammlung und sollen den Verlauf zwischen Build, Persistenz und systemweiterem Quellcheck dokumentieren, ohne den Laufzeitbetrieb zu provozieren.
 

@@ -8,6 +8,14 @@ Dieses Verzeichnis enthält Python 3 basierte Hilfswerkzeuge zur Fehleranalyse, 
 - `analyze_logs.py` – automatische Analyse von Logdateien nach Fehlern, Warnungen und wiederkehrenden Problemen
 - `validate_server_cfg.py` – prüft `server.cfg` und `sql.cfg` auf typische Konfigurationsfehler
 - `autorun.py` – startet den Server, überwacht Logs und sammelt Fehlerstatus in einer Zusammenfassung
+- `db_and_state_inspector.py` – schreibgeschützte Prüfung von SQLite-/Dini-Zuständen ohne Serverstart
+- `audit_modules_and_guards.py` – Source-Audit für Include-/Lifecycle-/Guard-Kontrakte und Reset-Checks
+- `textdraw_and_zone_mapper.py` – Übersicht für HUD-, TextDraw-, Zone- und Gangfight-Elemente
+- `projectlead_api_check.py` – statische API-Abgleichung für Projektleiter-, RCON-, Spawn-, Fahrzeug- und Zonen-Pfade
+- `gangfight_zone_validator.py` – Plausibilitätsprüfung für Rechteck-/Radius-Zonendefinitionen
+- `economy_and_state_ledger_check.py` – Read-only-Kontrolle von Geld-/State-/Ledger-/Dini-Abweichungen
+- `dialog_and_camera_reset_check.py` – statische Prüfung von Dialog-IDs, Reset-Pfaden und Camera-Guards
+- `qemu_7780_readiness_check.py` – 7780-Readiness-Prüfung ohne Start des Servers
 
 ## Beispiele
 
