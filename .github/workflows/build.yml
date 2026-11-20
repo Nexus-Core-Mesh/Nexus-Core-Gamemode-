@@ -30,15 +30,24 @@ jobs:
           SQLITE_DB_PATH: ${{ github.workspace }}/Compiler/samp03/data/db/gtasa_reallife.db
           LD_LIBRARY_PATH: ${{ github.workspace }}/Compiler/pawncc${{ env.LD_LIBRARY_PATH != '' && format(':{0}', env.LD_LIBRARY_PATH) || '' }}
         run: |
-          mkdir -p Compiler/samp03/gamemodes Compiler/samp03/data/db
-          rm -f Compiler/samp03/gamemodes/gtasa_reallife.amx
-          qemu-i386 Compiler/pawncc/pawncc \
+          mkdir -p Compiler/samp03/gamemodes Compiler/samp03/data/db data/db \
+            Compiler/samp03/scriptfiles/players Compiler/samp03/scriptfiles/houses Compiler/samp03/scriptfiles/safes \
+            Compiler/samp03/scriptfiles/vehicles Compiler/samp03/scriptfiles/ubb Compiler/samp03/scriptfiles/backups \
+            Compiler/samp03/scriptfiles/state/ls Compiler/samp03/scriptfiles/state/sf Compiler/samp03/scriptfiles/state/lv
+          chmod 755 Compiler/samp03/scriptfiles Compiler/samp03/scriptfiles/players Compiler/samp03/scriptfiles/houses \
+            Compiler/samp03/scriptfiles/safes Compiler/samp03/scriptfiles/vehicles Compiler/samp03/scriptfiles/ubb \
+            Compiler/samp03/scriptfiles/backups Compiler/samp03/scriptfiles/state Compiler/samp03/scriptfiles/state/ls \
+            Compiler/samp03/scriptfiles/state/sf Compiler/samp03/scriptfiles/state/lv Compiler/samp03/data/db data/db
+          find Compiler/samp03/gamemodes -maxdepth 1 -type f -name '*.amx' -delete
+          rm -f gamemode.amx Compiler/samp03/gamemodes/gamemode.amx
+          LD_LIBRARY_PATH="$PWD/Compiler/pawncc${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" qemu-i386 Compiler/pawncc/pawncc \
             -o"$SA_SERVER_ROOT/gamemodes/gtasa_reallife.amx" \
             gamemodes/gamemode.pwn \
             -iincludes \
             -iCompiler/samp03/include \
             -d3
           python3 tools/patch_legacy_amx_version.py "$SA_SERVER_ROOT/gamemodes/gtasa_reallife.amx"
+          find Compiler/samp03/gamemodes -maxdepth 1 -type f -name '*.amx' ! -name 'gtasa_reallife.amx' -delete
 
       - name: Verify AMX target name
         run: |

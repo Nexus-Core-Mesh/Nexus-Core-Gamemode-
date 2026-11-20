@@ -2,7 +2,7 @@
 
 ## Scope and constraints
 
-This pass stayed in the gamemode source tree (`gamemodes/gamemode.pwn` and `gamemodes/modules/...`) and did not change the separate production runtime on port 7777. The sandbox build target remained the 7780 tree under `Compiler/samp03`, using the local Pawn toolchain and the project build script.
+This pass stayed in the gamemode source tree (`gamemodes/gamemode.pwn` and `gamemodes/modules/...`) and did not change a separate production runtime on port 7777. The sandbox build target remained the 7780 tree under `Compiler/samp03`, using the local Pawn toolchain and the project build script. The repository-level contract is explicitly 7780-only for this source tree, and port 7777 is treated as out-of-scope for the active project runtime contract.
 
 The objective was to keep the hardening fixes already proven useful in place while continuing the menu-first onboarding and UI flow, instead of attempting a risky full rewrite. The underlying diagnosis was not a single bug: it was a chain reaction involving emulation cost on qemu-i386, timing in connect/spawn callbacks, state overwrites, brittle parsing, and overlapping TextDraw/HUD elements.
 
@@ -11,10 +11,10 @@ The objective was to keep the hardening fixes already proven useful in place whi
 The project was rebuilt using the repository's script:
 
 - Command: `./build_server.sh`
-- Target output: `Compiler/samp03/gamemodes/gamemode.amx`
-- Legacy alias: `Compiler/samp03/gamemodes/gtasa_reallife.amx`
+- Target output: `Compiler/samp03/gamemodes/gtasa_reallife.amx`
+- No legacy alias or duplicate AMX output is retained
 
-Result: the Pawn build completed successfully. The compiler reported no fatal syntax errors, and the AMX files were generated and patched successfully. This confirms the current gamemode source tree is in a compileable state.
+Result: the Pawn build completed successfully. The compiler reported no fatal syntax errors, and the AMX file was generated and patched successfully. This confirms the current gamemode source tree is in a compileable state.
 
 Important caveat: compile success is necessary, but it does not replace real 7780 runtime validation. The live server, server log, SQLite state, and scriptfile checks remain outstanding in the actual runtime environment.
 
@@ -102,13 +102,23 @@ The general flow in the source is now structured around the following sequence:
    - Existing register/login screens are displayed using textdraw-based UI and are routed toward the tutorial/gameflow.
    - The password remains the free-text input; the rest of the selection process remains in button/dialog/menu forms where possible.
 4. Continue into tutorial / camera
-   - `LoginSystem_CompleteLogin` and `LoginSystem_CompleteReg` hide the intro screens and start the tutorial flow.
-   - `CameraSystem_PlayStateScene` is used to frame the next scene after login/register completion.
+   - `LoginSystem_AdvanceToStateSelection` and `TutorialSystem_Next` hide intro screens, keep the flow menu-first, and transition into state selection.
+   - `CameraSystem_PlayStateScene` is used to frame the city preview and `CameraSystem_Reset` is called before and after state spawn setup to avoid double-triggering onboarding on spawn.
 5. Spawn and state flow
    - The gamemode still routes `/city`, `/spawn`, and related spawn commands through state-aware spawn logic.
-   - `StateSystem_SpawnPlayerForState` and related logic are still the anchors for per-state spawning and replay-safe placement.
+   - `StateSpawnSystem_Apply` and `StateSystem_OnPlayerSpawn` anchor per-state spawning and replay-safe placement.
 
-This is not yet a fully live-verified end-to-end onboarding sequence in the real environment, but the structure in the source is aligned with the intended menu-first flow and is a meaningful step toward it.
+This pass specifically hardened the reconnect and respawn edge cases: valid `state_id`/`home_state` values are no longer clobbered by invalid `0` defaults, and the `OnPlayerSpawn` gate now prevents tutorial/camera re-entry when a valid state is already active.
+
+## Finalized state and camera guard rails
+
+The current source implements the persistence and reset guard rails explicitly requested for this pass:
+
+- `DB_RehydratePlayerState()` is integrated into the state-load path and preserves `INSERT OR IGNORE` behavior while validating both `state_id` and `home_state` before mutating the live player profile.
+- `OnPlayerSpawn()` only triggers the tutorial/camera path when onboarding is incomplete or the state is invalid; otherwise it resets the camera and applies the fixed spawn once.
+- `CameraSystem_StartFreeCamera()`, `CameraSystem_StartDroneCamera()`, and `CameraSystem_ToggleFreeCamera()` all reset through `CameraSystem_Reset(playerid)` before entering the mode and ensure the player is controllable again when leaving the camera mode.
+- `CameraSystem_ExitCameraMode()` was added as a direct exit path to guarantee `SetCameraBehindPlayer()` + `TogglePlayerControllable(playerid, 1)` is always executed when a camera mode ends.
+- `RoleplayUI_Hide()` and related dashboard resets continue to use `INVALID_TEXT_DRAW` cleanup instead of brittle zero-value comparisons, keeping the HUD layout clean on reconnect/reset and state transitions.
 
 ## Maintained hardening and stability fixes
 
@@ -156,3 +166,23 @@ These checks should be run in the actual sandbox runtime, not inferred from a co
 ## Conclusion
 
 The current codebase is in a better state than before: it compiles successfully, the source structure is moving toward a menu-driven onboarding flow, the main hardening fixes remain in place, and the 4-zone HUD direction is more deliberate. However, the final live verification is still outstanding. The correct way to complete the task is to validate the actual runtime behavior on the 7780 sandbox with logs, SQLite state, and client testing before claiming the onboarding flow is fully complete.
+
+---
+
+## Final state summary
+
+The repository has been brought into a more stable source-level state by preserving the critical architectural contract and extending the hardening work rather than undoing it. The runtime target remains fixed to `Compiler/samp03/gamemodes/gtasa_reallife.amx`, the lifecycle binding in `gamemode.pwn` stays intact, and the central state logic remains rooted in `core.inc` instead of being duplicated across modules.
+
+This means the overall project quality is now better aligned with the intended onboarding and survival flow:
+
+- connect flow is menu-first rather than chat-heavy
+- auto-detect login/register mode is kept separate from explicit state selection
+- valid state/home values are protected against zero resets
+- tutorial and state selection re-trigger only when genuinely missing
+- camera resets and HUD cleanup remain consistent across disconnect and state changes
+- expensive loop logic is reduced to protect the qemu-i386 runtime budget
+- Dini-first data writes and SQLite-backed state checks stay conceptually aligned
+
+## Final release note
+
+The project is ready for live verification with the correct Ubuntu-VM runtime environment, but it is not yet considered fully live-released. The source code is currently in a hardened, architecture-aligned, compile-confirmed state, while final live confirmation remains a separate step that must follow explicit runtime approval.

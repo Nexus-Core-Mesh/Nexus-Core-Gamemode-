@@ -287,6 +287,38 @@ stock TextWars_Refresh(playerid)
 
 public TextWars_Tick()
 {
+    if (gTWTimer == 0)
+    {
+        return 1;
+    }
+
+    new activeFight = 0;
+    for (new i = 0; i < MAX_GANG_FIGHTS; i++)
+    {
+        if (gGangFightActive[i] == GANG_FIGHT_ACTIVE)
+        {
+            activeFight = 1;
+            break;
+        }
+    }
+    if (activeFight == 0)
+    {
+        return 1;
+    }
+
+    new activePlayers = 0;
+    for (new p = 0; p < MAX_PLAYERS; p++)
+    {
+        if (IsPlayerConnected(p) && gTWVisible[p] == 1)
+        {
+            activePlayers++;
+        }
+    }
+    if (activePlayers <= 0)
+    {
+        return 1;
+    }
+
     GangFightSystem_Tick();
     for (new p = 0; p < MAX_PLAYERS; p++)
     {

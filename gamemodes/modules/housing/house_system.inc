@@ -131,4 +131,35 @@ stock HouseSystem_ShowInfo(playerid, houseid)
     SendClientMessage(playerid, 0xFFFF00AA, msg);
 }
 
+stock HouseSystem_CreateHouseAtPlayer(playerid, stateid, price, interior)
+{
+    if (playerid < 0 || playerid >= MAX_PLAYERS)
+    {
+        return false;
+    }
+    if (!Core_IsValidState(stateid))
+    {
+        return false;
+    }
+
+    new houseid = 0;
+    while (houseid < MAX_HOUSES && gHouseOwner[houseid] != -1)
+    {
+        houseid++;
+    }
+    if (houseid >= MAX_HOUSES)
+    {
+        return false;
+    }
+
+    new Float:x, Float:y, Float:z;
+    GetPlayerPos(playerid, x, y, z);
+    gHouseState[houseid] = stateid;
+    gHouseOwner[houseid] = -1;
+    gHousePrice[houseid] = price > 0 ? price : 250000;
+    gHouseInterior[houseid] = interior > 0 ? interior : 1;
+    gHouseLocked[houseid] = HOUSE_UNLOCKED;
+    return true;
+}
+
 #endif

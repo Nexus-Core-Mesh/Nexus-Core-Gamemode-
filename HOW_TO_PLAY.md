@@ -494,3 +494,38 @@ Wenn ich den Server in einem Satz erklären müsste, dann so:
 Ich spiele nicht nur einen Modus, sondern lebe in einer staatlich geprägten Reallife-Stadt, in der ich meinen Staat wähle, meinen Charakter aufbaue, legal arbeite, Geld verdiene, Häuser und Fahrzeuge besitze, Fraktionen mitgestalte und in einer Welt überlebe, in der Wirtschaft, Recht und Territorium wirklich zählen.
 
 Das ist das Kernprinzip von Nexus-Core-Gamemode.
+
+---
+
+## 13. Finaler Stand vor der Live-Validierung
+
+Der aktuelle Spiel- und Server-Stand ist auf einen stabilen, konsistenten Source-Level ausgerichtet, aber die finale Freigabe bleibt explizit ein Live-Validation-Gate auf der Ubuntu-VM. Die Kernregel bleibt: keine ungebremste Live-Startfreigabe auf Basis eines reinen Source-Checks, sondern echte Verifikation mit Logs, DB-Status, Dini-Persistenz und Clientflow.
+
+### 13.1 Was bereits stabilisiert wurde
+
+- Login-/Register-Flow bleibt menu-first und nicht chat-abhängig
+- State-/Home-State-Auswahl bleibt auf gültige Werte und nicht auf Default-Null-Werte ausgelegt
+- Spawns laufen über den kontrollierten Pfad und nicht durch wiederholte Fallbacks
+- Camera-Reset und controls werden sauber wieder freigegeben
+- UI und HUD behalten die erwünschte Zonierung, mit freier unterer linker Zone für Radar/Mobile-Controls
+- Dini-/SQLite-Persistenz bleibt im Projekt als kritischer Pfad dokumentiert
+- Runtime-Hotpaths wurden reduziert, damit sie innerhalb der qemu-i386-Umgebung nicht unnötig belastend werden
+
+### 13.2 Was noch nicht als live-freigegeben gilt
+
+- echtes Login-/Register-/Spawn-Verhalten auf einer laufenden SA:MP-/OMP-Instanz
+- reale State- und Home-State-Checks in `gtasa_reallife.db`
+- reale scriptfiles-/Dini-Validierung nach Crash oder Reconnect
+- echte Client- und HUD-Tests unter realem UI-/Mobil-Layout
+
+### 13.3 Freigabe- und Startkriterien
+
+Die Live-Validierung darf erst dann als erfolgreich gelten, wenn alle folgenden Punkte in der echten Ubuntu-VM erfüllt sind:
+
+- `gtasa_reallife.amx` wird per `qemu-i386` Build sauber erzeugt
+- `server_log.txt` und `tools/log_watcher.py` zeigen keinen kritischen Start- oder Loop-Fehler
+- `data/db/gtasa_reallife.db` zeigt konsistente `state_id` / `home_state` / `player_state`-Werte
+- `Compiler/samp03/scriptfiles/` enthält die erwarteten Ordner mit korrekten Berechtigungen
+- Der vollständige Connect/Onboarding/Tutorial/State/Spawn-/Disconnect-Lebenszyklus funktioniert real und ohne doppelte Trigger
+
+Damit bleibt die Spielbeschreibung des Projekts korrekt, aber die Release-Freigabe steht weiterhin unter der echten Live-Validierung und nicht bloß unter dem Source-Status.

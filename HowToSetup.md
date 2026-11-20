@@ -762,7 +762,7 @@ plugins crashdetect streamer sscanf2 sqlite mysql zcmd
 # Server details
 hostname GTA:SA Reallife Modular
 maxplayers 100
-port 7777
+port 7780
 query 1
 lanmode 0
 rcon_password changeme
@@ -778,7 +778,7 @@ Das ist die Basis. Für einen echten V-Server musst du das an deine Infrastruktu
 
 - `hostname` auf deinen Servernamen setzen
 - `rcon_password` ändern
-- `port` je nach Bedarf auf 7777 oder separat setzen
+- `port` auf den aktiven Host-Port der lokalen 7780-Umgebung setzen
 - `gamemode0 gtasa_reallife 1` muss auf den tatsächlich kompilierten Modus passen
 - Plugins je nach Serverumgebung aktivieren oder entfernen
 
@@ -794,8 +794,8 @@ Diese Datei verwendet eine allgemeine Deployment-Konfiguration:
 
 hostname "GTA:SA Reallife Modular"
 maxplayers 100
-port 7777
-gamemode0 gtasa_reallife
+port 7780
+gamemode0 gtasa_reallife 1
 plugins crashdetect streamer sscanf2 sqlite mysql zcmd
 filterscripts
 rcon_password "changeme"
@@ -899,9 +899,9 @@ Wenn du mit der lokalen Repo-Toolchain arbeitest, nutze die im Projekt vorhanden
 
 Das Ergebnis ist normalerweise:
 
-- `gamemodes/gamemode.amx`
+- `Compiler/samp03/gamemodes/gtasa_reallife.amx`
 
-Die `.amx`-Datei wird anschließend in den SA:MP-Serverordner verschoben bzw. als `gamemode0`-Mode gestartet.
+Die `.amx`-Datei wird direkt als der einzige akzeptierte Laufzeitmodus im Serverordner verwendet. Ein Alias oder zusätzliches `gamemode.amx` im selben Ordner ist nicht erlaubt.
 
 ---
 
@@ -925,10 +925,10 @@ Beispiel:
 └── server
 ```
 
-### 7.2 `.amx` kopieren
+### 7.2 `.amx` bereitstellen
 
 ```bash
-cp /path/to/project/gamemodes/gamemode.amx /home/youruser/sampserver/gamemodes/gtasa_reallife.amx
+cp /path/to/project/Compiler/samp03/gamemodes/gtasa_reallife.amx /home/youruser/sampserver/gamemodes/gtasa_reallife.amx
 ```
 
 ### 7.3 Config kopieren
@@ -1057,8 +1057,8 @@ Wenn du das Projekt von null an auf einem V-Server einrichtest, gehst du so vor:
 1. SA:MP-Server installieren
 2. Verzeichnisstruktur anlegen
 3. `server.cfg` erzeugen oder anpassen
-4. `gamemodes/gamemode.amx` kompilieren
-5. `.amx` in den SA:MP-Server kopieren
+4. `Compiler/samp03/gamemodes/gtasa_reallife.amx` mit der lokalen Pawn-Toolchain kompilieren
+5. die fertige `.amx` in den SA:MP-Serverpfad als `gamemodes/gtasa_reallife.amx` übernehmen
 6. `data/db/` vorbereiten
 7. SQLite-Datenbank initialisieren
 8. `config/database.ini` anpassen

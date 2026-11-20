@@ -57,6 +57,46 @@ stock VehicleSystem_CreateVehicle(vehicleid, modelid, stateid, ownerid, price, t
     return true;
 }
 
+stock VehicleSystem_GetFreeSlot()
+{
+    for (new i = 0; i < MAX_VEHICLES; i++)
+    {
+        if (gVehicleModel[i] == 0)
+        {
+            return i;
+        }
+    }
+    return -1;
+}
+
+stock VehicleSystem_SpawnAdminVehicle(modelid, Float:x, Float:y, Float:z, ownerid)
+{
+    if (modelid <= 0)
+    {
+        return INVALID_VEHICLE_ID;
+    }
+
+    new slot = VehicleSystem_GetFreeSlot();
+    if (slot < 0)
+    {
+        return INVALID_VEHICLE_ID;
+    }
+
+    new vehicleid = CreateVehicle(modelid, x, y, z, 0.0, -1, -1, 600000);
+    if (vehicleid == INVALID_VEHICLE_ID)
+    {
+        return INVALID_VEHICLE_ID;
+    }
+
+    gVehicleModel[slot] = modelid;
+    gVehicleState[slot] = Core_GetPlayerState(ownerid);
+    gVehicleOwner[slot] = ownerid;
+    gVehiclePrice[slot] = 0;
+    gVehicleFuel[slot] = 100;
+    gVehicleType[slot] = VEHICLE_TYPE_CAR;
+    return vehicleid;
+}
+
 stock VehicleSystem_SetOwner(vehicleid, ownerid)
 {
     if (vehicleid < 0 || vehicleid >= MAX_VEHICLES)

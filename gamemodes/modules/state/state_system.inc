@@ -158,6 +158,7 @@ stock StateSystem_OnPlayerConnect(playerid)
     }
 
     DB_EnsurePlayerRecord(playerid, STATE_LOS_SANTOS);
+    DB_RehydratePlayerState(playerid);
     DB_LoadPlayerState(playerid);
     new stateid = DB_GetPlayerState(playerid);
     if (!Core_IsValidState(stateid))

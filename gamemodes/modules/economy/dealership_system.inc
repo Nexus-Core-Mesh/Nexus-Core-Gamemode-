@@ -109,4 +109,32 @@ stock DealershipSystem_ShowCatalog(playerid)
     SendClientMessage(playerid, 0xFFFF66AA, msg);
 }
 
+stock DealershipSystem_CreateListingAtPlayer(playerid, stateid, const name[], modelid, price, type)
+{
+    if (playerid < 0 || playerid >= MAX_PLAYERS)
+    {
+        return false;
+    }
+    if (!Core_IsValidState(stateid))
+    {
+        return false;
+    }
+
+    new dealerid = gDealerCount;
+    if (dealerid >= MAX_DEALERSHIPS)
+    {
+        return false;
+    }
+
+    new Float:x, Float:y, Float:z;
+    GetPlayerPos(playerid, x, y, z);
+    gDealerState[dealerid] = stateid;
+    gDealerModel[dealerid] = modelid;
+    gDealerPrice[dealerid] = price;
+    gDealerVehicleId[dealerid] = -1;
+    format(gDealerName[dealerid], 32, "%s", name);
+    gDealerCount++;
+    return true;
+}
+
 #endif

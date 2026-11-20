@@ -28,5 +28,5 @@ def patch_amx(path: str) -> None:
 
 
 if __name__ == "__main__":
-    target = sys.argv[1] if len(sys.argv) > 1 else "Compiler/samp03/gamemodes/gamemode.amx"
+    target = sys.argv[1] if len(sys.argv) > 1 else "Compiler/samp03/gamemodes/gtasa_reallife.amx"
     patch_amx(target)

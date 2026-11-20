@@ -25,6 +25,8 @@ Die Kernidee ist bewusst: keine monolithische `gamemode.pwn`-Logik, sondern ein 
 
 Das Projekt hat einen vollständigen modularen RP-Framework-Stand erreicht und ist als robuste Basis für reale SA:MP-Entwicklung dokumentiert. Wenn ein `c++`-Spiegel im Repository vorhanden ist, dient er als strukturtreuer Projektspiegel für Audit, Überblick und Tooling; er ist kein Laufzeitbestandteil des SA:MP-Servers. Die wichtigsten Systembereiche sind bereits als eigenständige Module angelegt und an die Haupt-Architektur angehängt. Der aktuelle Härtungsstand bezieht sich jedoch auf den aktuellen Code-/Build-Stand und die Architektur-Validierung; ein echter Live-Server-Start auf Ubuntu-VM bleibt noch als separate Produktionsprüfung auszuführen.
 
+Zusätzlich wurden im Offline-/Audit-Pfad mehrere manuelle `python3`-Werkzeuge ergänzt, die ausschließlich auf CLI-Aufruf und ohne Serverstart funktionieren. Diese Hilfsprogramme sind bewusst schlank und standardbibliotheksbasiert: `log_code_bridge.py`, `code_line_extractor.py`, `log_guided_autocorrect.py` und `debug_trace_collector.py` dienen zur Zuordnung von Log-Ereignissen zu Quellcode, Zeilen-/NL-Extrakten, sicheren Dry-Run-Korrekturen und kompakten Diagnose-Exports.
+
 ### Umgesetzte Kernmodule
 
 - `core/` – zentrale Spielerdaten, State-Logik, Admin-Status, Validierung, Bank-/Cash-Bridge
@@ -210,6 +212,15 @@ Empfohlener Stack:
 
 Die reale Produktionsvalidierung muss auf der Ubuntu-VM erfolgen, nicht im Container. Dort stehen die echten Laufzeitbestandteile zur Verfügung: `pawncc`, `qemu-i386`, `samp.service` / `omp-server.service`, `Compiler/samp03/scriptfiles/` und `control-panel/server.js`.
 
+### Manueller Offline-Workflow der Tools
+
+Die neuen `tools/*.py`-Helfer sind bewusst auf keinen Hintergrundbetrieb oder Daemon-Start ausgelegt. Sie dienen ausschließlich der manuellen Analyse im Kontext des Repo-Standes und bleiben dabei strikt offline:
+
+- `tools/log_code_bridge.py` liest Logdateien aus `Compiler/samp03/server_log.txt`, `samp7780_bg.log` oder einem übergebenen Pfad, prüft relevante Muster und exportiert strukturierte JSON/YSON-Brücken.
+- `tools/code_line_extractor.py` liest gezielte Codezeilen/Zeilenbereiche mit Zeilennummern (`nl`-Stil) aus `gamemodes/gamemode.pwn` und `gamemodes/modules/` und kann optional JSON/YSON-Exports schreiben.
+- `tools/log_guided_autocorrect.py` arbeitet standardmäßig im `--dry-run`-Modus und zeigt Vorschau/Diff, bevor mit `--apply` echte Backups und Korrekturen geschrieben werden.
+- `tools/debug_trace_collector.py` sammelt kompakten Diagnose-Auszug aus Logs, `tools/*.py`-Ausgaben, SQLite-Dateien (read-only) und `Compiler/samp03/`-Artefakten ohne Serverstart.
+
 ### Kritische Übergangspunkte
 
 1. Dini-first vs. Control Panel
@@ -326,4 +337,28 @@ Damit bleibt das Projekt als modularer, erweiterbarer Ausgangspunkt für ein rea
 
 ## Abschluss
 
-Die Projektbasis ist jetzt als konsistenter modularer RP-Framework-Stand dokumentiert und für den aktuellen Build-/Architektur-Abschnitt verifiziert. Die Dokumentation ist breit genug für echtes Reallife-Gameplay, stabil genug für produktionsnahe Architekturreflexionen und modular genug, um künftig einzelne Komponenten ohne kompletten Rewrite zu erweitern. Eine formelle Live-Release-Freigabe bleibt jedoch explizit offen, bis der echte Ubuntu-VM-Produktionslauf mit Kompilierung, Dini-Persistenz, Autosync, Panel-Validierung und Server-Daemonen bestanden ist.
+Die Projektbasis ist jetzt als konsistenter modularer RP-Framework-Stand dokumentiert und für den aktuellen Build-/Architektur-Abschnitt verifiziert. Die Dokumentation ist breit genug für echtes Reallife-Gameplay, stabil genug für produktionsnahe Architekturreflexionen und modular genug, um künftig einzelne Komponenten ohne kompletten Rewrite zu erweitern. Eine formelle Live-Release-Freigabe bleibt jedoch explizit offen, bis der echte Ubuntu-VM-Produktionslauf mit Kompilierung, Dini-Persistenz, Autosync, Panel-Validierung und Server-Daemonen bestanden ist. Der im Repository gültige Runtime-Contract bleibt der 7780-Tree unter `Compiler/samp03/`, nicht Port 7777.
+
+---
+
+## Finaler Stand des Projekts
+
+Der aktuelle Stand des Repositorys ist bewusst auf Stabilität, Source-Validity und realistische Runtime-Governance ausgerichtet. Es gilt weiterhin das harte Build-Contract: nur `Compiler/samp03/gamemodes/gtasa_reallife.amx` ist die gültige Ausgabe, der Build läuft über die lokale 32-Bit-Toolchain mit `qemu-i386`, und `core.inc` bleibt die zentrale Quelle für State-/Home-State-/Admin-/Project-Leader-Informationen.
+
+### Verifiziertes Source-Level
+
+- Single-Target-Output und Build-Sync mit `server.cfg`
+- Lifecycle- und Include-Reihenfolge in `gamemode.pwn` unverändert eingehalten
+- `INSERT OR IGNORE` und 0-Schutz bei kritischen State-Werten erhalten
+- `strmid`-basierte Token-Extraktion beibehalten
+- `INVALID_TEXT_DRAW`- und `SetCameraBehindPlayer()`-Baselines erhalten
+- Dini-first-Temp/Validate/Rename-Pfade für kritische Transfers sowie SQLite-Read-Only-Sicht konsistent dokumentiert
+- qemu-i386-Hotpath-Guards für `TextWars_Tick`, `UBBVehicleSystem_Connect` und ähnliche Laufzeit-Sensiblitäten beibehalten
+
+### Offener, aber klar definierter Status
+
+Der Code ist auf den aktuellen Standards des Projekts stabil und konsistent, aber der reale Live-Start bleibt ein separates Freigabe-Gate auf der Ubuntu-VM. Es wurde kein echter Serverstart auf Port 7780 oder 7777 unter Live-Betrieb durchgeführt, und genau dieser Zustand bleibt ausdrücklich gültig, bis die reale Runtime-Validierung freigegeben wird.
+
+### Kurzfazit
+
+Damit ist das Repository in einen sauberen, dokumentierten und architektonisch verständlichen Zwischenstand gebracht worden: Build-Kontrakt erfüllt, Hardening-Muster erhalten, Persistenzstrategie vorgezeichnet und der Proof-Point für die nächsten Live-Checks eindeutig definiert. Die endgültige Produktionsfreigabe bleibt weiterhin an den echten Live-Test gebunden.

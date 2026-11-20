@@ -9,10 +9,10 @@ Example server.cfg:
 	echo Executing Server Config...
 	lanmode 0
 	maxplayers 32
-	port 7777
+	port 7780
 	hostname Unnamed Server
 	announce 0
-	gamemode0 lvdm 1
+	gamemode0 gtasa_reallife 1
 	gamemode1 rivershell 1
 	weburl www.sa-mp.com
 	rcon_password changeme

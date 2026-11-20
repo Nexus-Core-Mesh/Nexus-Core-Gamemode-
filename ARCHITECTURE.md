@@ -213,10 +213,47 @@ Im Build-Workflow werden these Includes über `-iincludes` und `-iCompiler/samp0
 Auf 64-Bit-Hosts muss dieser Compiler über `qemu-i386` ausgeführt werden, da es sich um ein 32-Bit-Binary handelt. Genau deshalb gibt es die Logik:
 
 ```bash
-qemu-i386 Compiler/pawncc/pawncc ...
+LD_LIBRARY_PATH="$PWD/Compiler/pawncc${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" qemu-i386 Compiler/pawncc/pawncc -o"$PWD/Compiler/samp03/gamemodes/gtasa_reallife.amx" gamemodes/gamemode.pwn -iincludes -iCompiler/samp03/include -d3
 ```
 
-Damit bleibt die Toolchain konkret und unabhängig von externen Installationen.
+Damit bleibt die Toolchain konkret und unabhängig von externen Installationen. Der echte Single-Target-Build pflegt nur diese eine AMX-Ausgabe; keine Duplikate unter `Compiler/samp03/gamemodes/` oder im Projektroot bleiben stehen.
+
+### 2.5 Offline-Tooling und manuelle Diagnose-Pfade
+
+Das Repository enthält zusätzlich schlanke, standardbibliotheksbasierte Python-Helfer unter `tools/`, die ohne Live-Serverstart und ohne Hintergrundprozess arbeiten. Sie sind gezielt für die Offline-Analyse konzipiert und decken die wichtigsten auditierbaren Bereiche ab:
+
+- `log_code_bridge.py` – Logs -> Source-Zuordnung mit vereinfachter JSON/YSON-Bridge
+- `code_line_extractor.py` – Zeilen-/Match-Extraktion mit `nl`-ähnlicher Nummerierung
+- `log_guided_autocorrect.py` – sichere Vorschau-/Diff-Analyse mit `--dry-run` und Backup bei `--apply`
+- `debug_trace_collector.py` – kompakte Diagnose aus Logs, SQLite-State, scriptfiles und Build-Artefakten
+
+Diese Werkzeuge nutzen nur die Standardbibliothek, sind manuell per CLI aufrufbar und bleiben bewusst außerhalb eines autostartenden oder daemonisierten Betriebs.
+
+### 2.5 Laufzeit- und Kantenfall-Guardrails
+
+Im aktuellen Stand wurden die früheren Runtime-Risiken nicht bloß dokumentiert, sondern in den geeigneten Funktionspfaden direkt abgesichert:
+
+- `DB_RehydratePlayerState()` prüft `state_id` und `home_state` mit `Core_IsValidState()` und überschreibt keine gültigen Werte mit `0` oder Fallbacks.
+- `OnPlayerSpawn()` erkennt einen bereits validen `home_state`/`state_id` und startet weder Tutorial noch State-Szene erneut.
+- `CameraSystem_Reset()` und `CameraSystem_ExitCameraMode()` sorgen für einen perfiden Reset-Pfad mit `SetCameraBehindPlayer()` und `TogglePlayerControllable(playerid, 1)`.
+- `UiHub_`-Pfad und `RoleplayUI_`-Cleanup verwenden nur sichere `INVALID_TEXT_DRAW`-Prüfungen, um veraltete HUD-/Textdraw-Handles beim Wechsel von Menü, Spawn und Disconnect aufzuräumen.
+
+Diese Vereinbarungen sind absichtlich kein „Wiederverschieben“ apt-ähnlicher Änderungen, sondern eine direkte Sicherheitsschicht für den Connect-/Spawn-/HUD-Flow.
+
+### 2.5 Admin-/Projektleiter-Workflow und runtime contract
+
+Im laufenden Spielbetrieb wurde der Administrations- und Projektleiter-Export bewusst als separater, nicht-öffentlich sichtbarer Zugriff ergänzt. Die Kernidee ist: normale Spieler-Hilfen und Standardmenüs bleiben unverändert, während autorisierte Admins und Projektleiter im System über eine identische Core-Prüfung und einen zentralen State-/Spawn-Flow Zugang erhalten.
+
+Die relevanten Sicherheits- und Runtime-Regeln lauten:
+
+- `Core_IsProjectLeader()` setzt den Projektleiter-Status ausschließlich über das zentrale `gPlayerData`-Profil und erlaubt keine zweite parallele Statusquelle.
+- `AdminSystem_IsProjectLeader()` prüft zusätzlich den globalen Owner-/Admin-Pfad und hält den Zugriff sauber separiert von normalen Spieler-Menüs.
+- `/projectlead`, `/setstate` und `/spawnvehicle` laufen über `AdminSystem_HandleCommand()` und nutzen die vorhandenen State-/Spawn-/Vehicle-Guards statt unkontrollierten direktem Schreiben in globale Arrays.
+- `StateSpawnSystem_Apply()` bleibt der single entry point für State- und Spawn-Applikation; der Kamerarücksetzpfad läuft über `CameraSystem_Reset()` beziehungsweise `SetCameraBehindPlayer()` und verhindert so eine Rekursion in Tutorial-/State-Schleifen.
+- Fahrzeugspawns gehen über `VehicleSystem_SpawnAdminVehicle()` und respektieren die Slot-/Limit-Checks des Fahrzeugsystems statt rohe Slot-Array-Schreibzugriffe im Admin-Context zu erlauben.
+- Die Laufzeit-Hotpath-Guardrails wurden ergänzt: `TextWars_Tick()` prüft vor jedem Refresh aktivierte Gangfights und sichtbare Player-Widgets und beendet den Tick früh, sobald keine echte Aktivität mehr vorliegt. Damit bleiben die UI- und Faction-Hotpaths robust unter der qemu-i386-Umgebung mit begrenzten Ressourcen.
+
+Diese Regeln sind bewusst zusammen mit dem vordefinierten Core-Contract in der Architektur verankert, damit spätere Module denselben Single-Source-of-Truth- und Hardening-Pfad verwenden.
 
 ### 2.5 Live-Server-Root und runtime contract
 
@@ -671,3 +708,125 @@ Die wichtigste Betriebsregel lautet einfach und muss immer eingehalten werden:
 - Server mit dem korrekten `LD_LIBRARY_PATH` starten
 
 Damit wird der gewünschte Gamemode zuverlässig geladen und ein veralteter Default-Blueberry-Spawn verhindert.
+
+---
+
+## 7. Finaler Systemstand und Release-Guardrails
+
+Der aktuelle Architektur-Stand ist bewusst auf Stabilität, Wiederholbarkeit und Single-Source-of-Truth ausgelegt. Im Kern bleibt `core.inc` die zentrale Quelle für Spielerstatus, Home-State, Projektleiter-/Admin-Rechte und State-Validierung. Jede andere Stelle, die denselben Datensatz verwaltet, muss als Fallback oder ausgehender Leser fungieren und darf keine eigene, unabhängige Schattensicht etablieren.
+
+### 7.1 Build- und Runtime-Vertrag im Detail
+
+1. Single Target
+   - Die einzige gültige AMX-Ausgabe bleibt `Compiler/samp03/gamemodes/gtasa_reallife.amx`.
+   - Aliase wie `gamemode.amx` und andere Kopien sind in diesem Repository-Kontext nicht Teil des gültigen Builds.
+   - Der `server.cfg`-Eintrag bleibt auf `gamemode0 gtasa_reallife 1` synchronisiert.
+
+2. Toolchain
+   - Der Build läuft immer lokal mit der 32-Bit-Pawn-Toolchain über `qemu-i386`.
+   - Das erforderliche Kommando bleibt unverändert:
+     `LD_LIBRARY_PATH="$PWD/Compiler/pawncc${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" qemu-i386 Compiler/pawncc/pawncc -o"$PWD/Compiler/samp03/gamemodes/gtasa_reallife.amx" gamemodes/gamemode.pwn -iincludes -iCompiler/samp03/include -d3`
+
+3. Lifecycle und Include-Reihenfolge
+   - Include-Reihenfolge im laufenden Code: `Core -> DB -> State -> Admin -> Auth -> Economy -> Jobs -> Laws -> Housing/Vehicle -> Leisure/Web`
+   - Lifecycle-Folge: `BOOT -> DB_READY -> STATE_READY -> AUTH_READY -> WORLD_READY -> RUNTIME_READY`
+   - Diese Reihenfolge ist nicht als weicher Hinweis, sondern als Architekturvertrag zu verstehen.
+
+4. Hardening Guards
+   - `INSERT OR IGNORE` bleibt mit der DB-Sicht kompatibel und verhindert das Überschreiben gültiger Statewerte.
+   - Gültige `state_id` und `home_state` dürfen niemals durch `0` oder Standardwerte zurückgesetzt werden.
+   - `strmid`-basierte Token-Extraktion bleibt der bevorzugte Parsing-Pfad, insbesondere für Passwörter, Befehls-Input und Dialog-Parameter.
+   - `INVALID_TEXT_DRAW` und SetCameraBehindPlayer() bleiben die Muster für sauberes Reset- und Cleanup-Verhalten.
+
+### 7.2 Persistenz- und State-Sicherungsstrategie
+
+Die Persistenzarchitektur basiert auf einem doppelt abgestützten Modell:
+
+- primär: Dini-first-Textdateien unter `Compiler/samp03/scriptfiles/`
+- sekundär: SQLite-Upsert nach `data/db/gtasa_reallife.db` für konsistenze Sicht und Web-/Dashboard-Read-Only-Lesezugriff
+
+Diese Kombination ist für kritische Pfade notwendig, weil Dini-Transaktionen zwar atomar im Dateisystem über Temp/Validate/Rename umgesetzt werden können, SQLite aber für die Operational View und spätere Analyse dienen soll. Die Engine darf nie in den Zustand eines halben Transfers geraten, wenn ein Write abgebrochen wird oder ein Crash passiert.
+
+Wesentliche kritische Transfers bleiben daher auf einen konsistenten Ablauf festgelegt:
+
+- Write-Temp
+- Validate
+- Rename
+- nachfolgende SQLite-Upsert-Anbindung
+
+Das Muster ist explizit für Haus-Safes, Inventar, Fahrzeuge, Player-States und Ledger-Transfers vorgesehen.
+
+### 7.3 UI-, Tutorial- und Spawn-Sicherheit
+
+Der komplette Start-/Onboarding-/Spawn-Lebenszyklus muss in diesem Projekt als eine zusammenhängende Zustandsmaschine verstanden werden:
+
+`Connect -> Auto-Detect/Login/Register -> Tutorial -> State/Home-State-Auswahl -> StateSpawnSystem_Apply() -> Camera-Reset -> fester Spawnpunkt`
+
+Dabei gilt:
+
+- Keine Chat-Command-Verpflichtung für den Einstieg.
+- Keine erneute Triggerung von Tutorial-/State-Szene bei validem `state_id` / gültigem `home_state`.
+- `OnPlayerSpawn()` muss nach erfolgreichem Onboarding die bereits gültigen Werte nicht erneut überschreiben.
+- Beim Disconnect müssen Flags, TextDraws, Kamera- und Dialogzustände sauber zurückgesetzt und der Zustand als vollständig „frei“ gelten.
+
+Wichtig ist, dass die Sicherung nicht nur im Einzelfall, sondern im Gesamtpfad wirkt: Der Login/Spawn/Reset-/Disconnect-Zyklus darf keine Default-Werte wieder in die aktive Session injizieren.
+
+### 7.4 Welt-, Admin- und Wirtschafts-Integration
+
+Die modularen Subsysteme sind im Relation-Design aufeinander abgestimmt:
+
+- `core.inc` verwaltet die Grundzustände und Rechte
+- `admin_system.inc` kontrolliert Admin-/ProjectLeader-Rechte und Karten-/Welt-Editoren
+- `state_spawn_system.inc` übernimmt Home-State-/Spawn-Logik
+- `government/` und `state/` bilden politische und verwaltungsbezogene Zustände
+- `vehicles/`, `housing/`, `business/`, `factions/`, `economy/`, `jobs/`, `laws/` bilden die wirtschaftlichen und siedlungsbezogenen Abläufe
+- `ui_hub.inc` und `roleplay_ui_system.inc` sorgen als sichtbare Oberfläche für den Zugang zu diesen Pfaden
+
+Das zentrale Prinzip ist die Lückenlosigkeit: Jeder Modulaufruf muss seine Existenz und Berechtigung durch die tatsächliche API verifizieren, keine indirekten, losen oder mehrfach shadowed Zustände verwenden und keine halben Transaktionen zulassen.
+
+### 7.5 Laufzeit-Guardrails unter qemu-i386
+
+Die Laufzeit ist bewusst auf ein begrenztes Ressourcenszenario ausgelegt:
+
+- keine großen Schleifen über `MAX_PLAYERS` ohne Early-Return
+- keine aktiven Ticks bei Inaktivität
+- keine Belastung durch wiederholte UI-Updates oder Camera-/Widget-Schleifen ohne echte Aktivität
+- sichere Parsing-Pfade statt unsicherer `sscanf`-Puffer
+- reduzierte Hotpaths in `TextWars_Tick` und `UBBVehicleSystem_Connect`
+
+Die Kriterien gelten als Architektur-Anforderung, nicht als Option. Sie sind Teil der Stabilität der kompletten Laufzeitumgebung unter QEMU/32-Bit-Pawn.
+
+### 7.6 Offline-Tooling und Code-Audits
+
+Um die Laufzeitarchitektur mit Architektur- und Persistenz-Sicherheit zu verifizieren, ohne einen Live-Server zu starten, wurden zusätzliche Python-Tools als schlanke Offline-Checks eingeführt:
+
+- `tools/db_and_state_inspector.py`: prüft die SQLite-Konsistenz und die Dini-/scriptfiles-Struktur, ohne Daten zu ändern.
+- `tools/audit_modules_and_guards.py`: kontrolliert Include-/Lifecycle-Reihenfolge, Guards, Camera-Reset, TextDraw-/State-Checks und Punkte der qemu-i386-Ressourcensicherung.
+- `tools/textdraw_and_zone_mapper.py`: listet TextDraws, Widget-Zonen und eventuelle Gebiet-/Radius-Definitionen übersichtlich auf.
+- `tools/projectlead_api_check.py`: identifiziert API-Mismatches bei Projektleiter-/RCON-/Spawn-/Fahrzeug-/Gangfight-Pfaden frühzeitig.
+- `tools/gangfight_zone_validator.py`: prüft Rechteck-/Radius-Zonentypen auf Plausibilität, Min/Max-Umkehrungen, große Bereiche und fehlende Zuordnungen.
+- `tools/economy_and_state_ledger_check.py`: kontrolliert den schreibgeschützten Ledger-/Cash-/State-/House-/Safe-/Vehicle-Status in DB und scriptfiles.
+- `tools/dialog_and_camera_reset_check.py`: prüft Dialogpfade, Trigger und Camera-/Cleanup-Reset-Guards.
+- `tools/qemu_7780_readiness_check.py`: validiert statisch die 7780-Readiness ohne Start des Servers, inklusive Single-Target AMX und Port-Checks.
+
+Diese Skripte ergänzen die bestehende `tools/`-Sammlung und sollen den Verlauf zwischen Build, Persistenz und systemweiterem Quellcheck dokumentieren, ohne den Laufzeitbetrieb zu provozieren.
+
+### 7.7 Release-Status
+
+Die Codebasis ist als source-validiert und architektonisch konsistent einzuordnen, aber die final reale Freigabe bleibt weiterhin ein Live-Release-Gate auf der Ubuntu-VM. Eine reine Compile-Sicherheit genügt nicht, um den Server als produktiv freigegeben zu betrachten. Entscheidend sind tatsächlicher Serverstart, echte Log-Prüfung und Client-/State-/DB-Verifikation im realen Laufzeitkontext.
+
+---
+
+## 8. Schlussfazit der Architektur
+
+Das Projekt bleibt modular, konsistent und auf den Single-Target-Build ausgerichtet. Die Kernprinzipien lauten:
+
+- nur `gtasa_reallife.amx` als gültige Runtime-Ausgabe
+- `core.inc` als Single Source of Truth
+- strikte Include-/Lifecycle-Reihenfolge
+- Dini-first-Persistenz mit SQLite-Read-Only-Sicht
+- sichere Login-/Tutorial-/State-/Spawn-Maschine
+- saubere Hud-/Camera-/Reset- und Disconnect-Pfade
+- harte Guards gegen Default-State-Verfälschung, halbe Transfers und qemu-i386-Overhead
+
+Damit ist die Projektarchitektur für den nächsten echten Live-Check vorbereitet: Der Build ist klar, die Logik konsistent, die Hardening-Muster sind wiederverwendbar und die letzte Freigabe gilt weiterhin nur nach erfolgreicher Laufzeitvalidierung auf der Ubuntu-VM.

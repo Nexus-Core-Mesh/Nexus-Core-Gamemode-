@@ -91,7 +91,7 @@ def validate_cfg(root: Path, do_fix: bool = False):
         if "maxplayers" not in text.lower():
             text += "maxplayers 100\n"
         if "port" not in text.lower():
-            text += "port 7777\n"
+            text += "port 7780\n"
         if "plugins" not in text.lower():
             text += "plugins crashdetect streamer sscanf2 zcmd\n"
         if "rcon_password" not in text.lower():

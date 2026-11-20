@@ -203,4 +203,36 @@ stock BusinessSystem_ShowInfo(playerid, bizid)
     SendClientMessage(playerid, 0x00D9FFFF, msg);
 }
 
+stock BusinessSystem_CreateBusinessAtPlayer(playerid, stateid, type, value, const name[])
+{
+    if (playerid < 0 || playerid >= MAX_PLAYERS)
+    {
+        return false;
+    }
+    if (!Core_IsValidState(stateid))
+    {
+        return false;
+    }
+
+    new bizid = 0;
+    while (bizid < MAX_BUSINESSES && gBizOwner[bizid] != -1)
+    {
+        bizid++;
+    }
+    if (bizid >= MAX_BUSINESSES)
+    {
+        return false;
+    }
+
+    gBizState[bizid] = stateid;
+    gBizOwner[bizid] = -1;
+    gBizType[bizid] = type > 0 ? type : BUSINESS_TYPE_SHOP;
+    gBizValue[bizid] = value > 0 ? value : 150000;
+    gBizIncome[bizid] = gBizValue[bizid] / 25;
+    gBizTaxRate[bizid] = 10;
+    gBizActive[bizid] = 1;
+    format(gBizName[bizid], 32, "%s", name);
+    return true;
+}
+
 #endif

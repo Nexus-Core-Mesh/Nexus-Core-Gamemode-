@@ -94,14 +94,69 @@ stock dini_Set(const filename[], const key[], const value[])
         format(output, sizeof(output), "%s%s=%s\n", output, key, value);
     }
 
-    hFile = fopen(file, io_write);
-    if (hFile != INVALID_FILE_HANDLE)
+    new tempFile[128];
+    format(tempFile, sizeof(tempFile), "%s.tmp", file);
+    new File:tempHandle = fopen(tempFile, io_write);
+    if (tempHandle == INVALID_FILE_HANDLE)
     {
-        fwrite(hFile, output);
-        fclose(hFile);
-        return 1;
+        return 0;
     }
-    return 0;
+
+    fwrite(tempHandle, output);
+    fclose(tempHandle);
+
+    new validation[256];
+    new bool:hasContent = false;
+    new File:validateHandle = fopen(tempFile, io_read);
+    if (validateHandle == INVALID_FILE_HANDLE)
+    {
+        fremove(tempFile);
+        return 0;
+    }
+
+    while (fread(validateHandle, tmp))
+    {
+        if (tmp[0] != '\0')
+        {
+            hasContent = true;
+            break;
+        }
+    }
+    fclose(validateHandle);
+
+    if (!hasContent && output[0] == '\0')
+    {
+        fremove(tempFile);
+        return 0;
+    }
+
+    if (fexist(file))
+    {
+        fremove(file);
+    }
+
+    new File:commitHandle = fopen(file, io_write);
+    if (commitHandle == INVALID_FILE_HANDLE)
+    {
+        if (fexist(tempFile))
+        {
+            fremove(tempFile);
+        }
+        return 0;
+    }
+
+    validateHandle = fopen(tempFile, io_read);
+    if (validateHandle != INVALID_FILE_HANDLE)
+    {
+        while (fread(validateHandle, tmp))
+        {
+            fwrite(commitHandle, tmp);
+        }
+        fclose(validateHandle);
+    }
+    fclose(commitHandle);
+    fremove(tempFile);
+    return 1;
 }
 
 stock dini_Get(const filename[], const key[], value[], size = sizeof(value))
