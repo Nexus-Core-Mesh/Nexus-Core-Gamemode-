@@ -46,9 +46,16 @@ Für den reproduzierbaren Build-/Runtime-Contract des Projekts gilt:
 
 ## Aktueller Stand in dieser Umgebung (2026-11-20)
 
-Für die hier ausgeführte Prüfung waren GitHub-/Release-Endpunkte und direkte Downloadpfade für die empfohlenen SA:MP-Plugins zwar erreichbar, aber die verlässlichen 32-Bit-Linux-`*.so`-Artefakte für den vollständigen Stack (`crashdetect`, `streamer`, `sscanf2`, `sqlite`, `mysql`, `zcmd`, `foreach`, `MapAndreas`, `pawn-plus`) konnten in dieser Umgebung nicht reproduzierbar und sicher als projektberechtigte Binärdateien verifiziert werden. Einzelne Endpunkte lieferten 404, HTML-Seiten, Leerseiten oder keine belastbaren Release-Assets mit 32-Bit/Ubuntu-Ziel-ABI.
+Für die hier ausgeführte Prüfung waren GitHub-/Release-Endpunkte und direkte Downloadpfade für die empfohlenen SA:MP-Plugins zwar teilweise erreichbar. In der vorliegenden Umgebung konnten verifizierte 32-Bit-Linux-`*.so`-Artefakte für den nachweisbar verfügbaren Teil des Stacks sauber heruntergeladen und direkt im Repository abgelegt werden:
 
-Das bedeutet exakt: Es liegen derzeit keine echten, verifizierten Plugin-`*.so`-Dateien im Repository vor, und keine Platzhalter-/Fake-Binaries wurden erzeugt. Die korrekte Ergänzung erfolgt auf der Ziel-VM oder auf dem produktiven Ubuntu-Host, sofern die passenden 32-Bit-Linux-Binaries dort vertrauenswürdig bereitgestellt werden. Der Projekt-Contract bleibt weiterhin auf `port 7780`, `gamemode0 gtasa_reallife 1` und `Compiler/samp03/gamemodes/gtasa_reallife.amx` fixiert.
+- `crashdetect.so`
+- `streamer.so`
+- `sscanf.so`
+- `mysql.so`
+
+Echte, verifizierte 32-Bit-Linux-Binaries für den vollständigen Stack (`sqlite`, `zcmd`, `foreach`, `MapAndreas`, `pawn-plus`) konnten in dieser Umgebung nicht reproduzierbar und sicher als projektberechtigte Binärdateien bestätigt werden. Einzelne Endpunkte lieferten 404, HTML-Seiten, Leerseiten oder keine belastbaren Release-Assets mit 32-Bit/Ubuntu-Ziel-ABI.
+
+Das bedeutet exakt: Der Repository-Stand enthält derzeit echte, verifizierte ELF-32-Bit-Plugin-Binaries für den nachweisbaren Teil des Stacks; der komplette Plugin-Stack bleibt aber als Ziel-VM-/Host-Installation offen, sofern die restlichen 32-Bit-Linux-Binaries dort vertrauenswürdig bereitgestellt werden. Keine Platzhalter-/Fake-Binaries wurden erzeugt. Der Projekt-Contract bleibt weiterhin auf `port 7780`, `gamemode0 gtasa_reallife 1` und `Compiler/samp03/gamemodes/gtasa_reallife.amx` fixiert.
 
 ## Verknüpfung zum Projekt
 
