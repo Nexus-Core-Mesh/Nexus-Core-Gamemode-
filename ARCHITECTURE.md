@@ -210,6 +210,8 @@ Im Build-Workflow werden these Includes über `-iincludes` und `-iCompiler/samp0
 - `Compiler/pawncc/pawncc` – der lokale 32-Bit-Pawn-Compiler
 - `Compiler/samp03/` – der Laufzeitordner des tatsächlichen Servers
 
+Der Plugin-Bereich unter `Compiler/samp03/plugins/` ist ebenfalls Teil dieser Laufzeitumgebung, aber bewusst rein dokumentarisch organisiert, sofern keine verlässlichen Ziel-VM-Binaries vorliegen. Der Repo-Stand hält keine erfundenen oder vorgeschobenen Plugin-Binaries; der real vorhandene Plugin-Stack (`crashdetect`, `streamer`, `sscanf2`, `sqlite`, `mysql`, `zcmd`, `foreach`, `MapAndreas`, `pawn-plus`) ist als offener Stack dokumentiert, mit klarer Unterscheidung zwischen Git-Repo und Ziel-VM-Installationen.
+
 Auf 64-Bit-Hosts muss dieser Compiler über `qemu-i386` ausgeführt werden, da es sich um ein 32-Bit-Binary handelt. Genau deshalb gibt es die Logik:
 
 ```bash

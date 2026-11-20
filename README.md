@@ -310,6 +310,7 @@ Damit bleibt das Projekt als modularer, erweiterbarer Ausgangspunkt für ein rea
 
 - `SEASON.md` – vollständige Season- und World-Progression-Konzeption für das RP-System
 - `HowToSetup.md` – komplette Setup-, Server-, V-Server- und Deployment-Anleitung
+- `Compiler/samp03/plugins/README.md` – dokumentiertes Plugin-Layout für den 7780-Contract mit transparentem Hinweis auf echte VM-/Host-Binaries und ohne erfundene Placeholder-Dateien
 
 ## Nächste Entwicklungsstufen
 

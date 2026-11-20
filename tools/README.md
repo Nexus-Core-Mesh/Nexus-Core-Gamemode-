@@ -63,3 +63,13 @@ python3 tools/autorun.py --root . --server-bin ./samp03svr --log ./logs/server.l
 ## Hinweis
 
 Diese Hilfswerkzeuge sind keine Plattform- oder Hosting-Umstellung. Sie sind bewusst als lokales Debug- und Wartungs-Tooling im Projekt selbst verankert, damit man ohne Wechsel zu externen Plattformen schnell auf Fehler und Konfigurationsprobleme reagieren kann.
+
+## 7780- und Plugin-Contract
+
+Die Offline-Checks unter `tools/` sind bewusst auf den Single-Target-Contract der `Compiler/samp03/`-Umgebung ausgerichtet. Die wichtigsten Prüfungen bleiben:
+
+- `qemu_7780_readiness_check.py` – statische 7780-Readiness ohne Serverstart
+- `runtime_contract_guard.py` – Audit für `gtasa_reallife.amx`, `gamemode0 gtasa_reallife 1`, `port 7780` und Verhinderung von `7777`-Drift
+- `validate_server_cfg.py` – Konfigurationsprüfung für `server.cfg`/`sql.cfg`
+
+Der Plugin-Ordner `Compiler/samp03/plugins/` wird dabei als dokumentierter, transparent verwalteter Stack behandelt; es werden keine erdachten Binaries oder unautorisierte Port-7777-Konfigurationen im Repository verankert.
