@@ -117,10 +117,44 @@ function renderBusinesses(businesses) {
   `).join('');
 }
 
+function renderSeason(seasonData) {
+  const container = document.getElementById('season-container');
+  const season = seasonData?.season || {};
+  const events = season.events || [];
+  const states = season.states || [];
+
+  const rows = [];
+  if (states.length) {
+    rows.push(...states.map((state) => `
+      <div class="data-row">
+        <strong>${state.name || state.short_name || 'State'}</strong>
+        <span>Budget ${state.treasury || 0} · Steuer ${state.tax_rate || 0}%</span>
+      </div>
+    `));
+  }
+  if (events.length) {
+    rows.push(...events.slice(0, 4).map((event) => `
+      <div class="data-row">
+        <strong>${event.name || 'Event'}</strong>
+        <span>${event.type || 'season'} · ${event.value || 0}</span>
+      </div>
+    `));
+  }
+  if (!rows.length) {
+    container.innerHTML = '<div class="data-row"><span>Keine Season-/State-Daten verfügbar</span></div>';
+    return;
+  }
+
+  container.innerHTML = rows.join('');
+}
+
 async function loadDashboard() {
   try {
-    const overview = await fetchJson('/api/overview');
-    const info = await fetchJson('/api/server-info');
+    const [overview, info, season] = await Promise.all([
+      fetchJson('/api/overview'),
+      fetchJson('/api/server-info'),
+      fetchJson('/api/season').catch(() => ({ season: { events: [], states: [] } }))
+    ]);
 
     document.getElementById('server-status').textContent = info.status || 'online';
     document.getElementById('server-project').textContent = info.project || 'Nexus Core';
@@ -137,6 +171,7 @@ async function loadDashboard() {
     renderFactions(overview.factions || []);
     renderHouses(overview.houses || []);
     renderBusinesses(overview.businesses || []);
+    renderSeason(season);
   } catch (error) {
     document.getElementById('server-status').textContent = 'offline';
     document.getElementById('server-project').textContent = 'Datenbank nicht erreichbar';

@@ -43,17 +43,34 @@ stock VehicleSystem_CreateVehicle(vehicleid, modelid, stateid, ownerid, price, t
     {
         return false;
     }
-    if (stateid < -1 || stateid > 2)
+    new safeState = Core_GetValidStateOrDefault(stateid, STATE_LOS_SANTOS);
+    if (!Core_IsValidState(safeState))
     {
         return false;
     }
 
     gVehicleModel[vehicleid] = modelid;
-    gVehicleState[vehicleid] = stateid;
+    gVehicleState[vehicleid] = safeState;
     gVehicleOwner[vehicleid] = ownerid;
     gVehiclePrice[vehicleid] = price;
     gVehicleFuel[vehicleid] = 100;
     gVehicleType[vehicleid] = type;
+    return true;
+}
+
+stock VehicleSystem_SetState(vehicleid, stateid)
+{
+    if (vehicleid < 0 || vehicleid >= MAX_VEHICLES)
+    {
+        return false;
+    }
+    new safeState = Core_GetValidStateOrDefault(stateid, STATE_LOS_SANTOS);
+    if (!Core_IsValidState(safeState))
+    {
+        return false;
+    }
+
+    gVehicleState[vehicleid] = safeState;
     return true;
 }
 

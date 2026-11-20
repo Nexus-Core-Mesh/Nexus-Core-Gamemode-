@@ -24,11 +24,12 @@ fi
 mkdir -p "$SERVER_DIR/gamemodes" "$SERVER_DIR/data/db" "$ROOT_DIR/data/db" \
   "$SERVER_DIR/scriptfiles/players" "$SERVER_DIR/scriptfiles/houses" "$SERVER_DIR/scriptfiles/safes" \
   "$SERVER_DIR/scriptfiles/vehicles" "$SERVER_DIR/scriptfiles/ubb" "$SERVER_DIR/scriptfiles/backups" \
-  "$SERVER_DIR/scriptfiles/state/ls" "$SERVER_DIR/scriptfiles/state/sf" "$SERVER_DIR/scriptfiles/state/lv"
+  "$SERVER_DIR/scriptfiles/premium" "$SERVER_DIR/scriptfiles/state/ls" "$SERVER_DIR/scriptfiles/state/sf" "$SERVER_DIR/scriptfiles/state/lv"
 chmod 755 "$SERVER_DIR/scriptfiles" "$SERVER_DIR/scriptfiles/players" "$SERVER_DIR/scriptfiles/houses" \
   "$SERVER_DIR/scriptfiles/safes" "$SERVER_DIR/scriptfiles/vehicles" "$SERVER_DIR/scriptfiles/ubb" \
-  "$SERVER_DIR/scriptfiles/backups" "$SERVER_DIR/scriptfiles/state" "$SERVER_DIR/scriptfiles/state/ls" \
-  "$SERVER_DIR/scriptfiles/state/sf" "$SERVER_DIR/scriptfiles/state/lv" "$ROOT_DIR/data/db" "$SERVER_DIR/data/db"
+  "$SERVER_DIR/scriptfiles/backups" "$SERVER_DIR/scriptfiles/premium" "$SERVER_DIR/scriptfiles/state" \
+  "$SERVER_DIR/scriptfiles/state/ls" "$SERVER_DIR/scriptfiles/state/sf" "$SERVER_DIR/scriptfiles/state/lv" \
+  "$ROOT_DIR/data/db" "$SERVER_DIR/data/db"
 rm -f "$ROOT_DIR/gamemode.amx" "$SERVER_DIR/gamemodes/gamemode.amx" "$TARGET_AMX"
 
 qemu-i386 "$PAWNCC_BIN" \

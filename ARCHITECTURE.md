@@ -846,3 +846,14 @@ Das Projekt bleibt modular, konsistent und auf den Single-Target-Build ausgerich
 - harte Guards gegen Default-State-Verfälschung, halbe Transfers und qemu-i386-Overhead
 
 Damit ist die Projektarchitektur für den nächsten echten Live-Check vorbereitet: Der Build ist klar, die Logik konsistent, die Hardening-Muster sind wiederverwendbar und die letzte Freigabe gilt weiterhin nur nach erfolgreicher Laufzeitvalidierung auf der Ubuntu-VM.
+
+---
+
+## Additive Architektur-Notiz: Source-Blocker und Build-Konsistenz
+
+Diese Ergänzung dokumentiert die echten Quellbaum-Funde ohne bestehende Abschnitte zu verändern.
+
+- Ein reproduzierbarer Compile-Blocker war der fehlende `GetServerTime`-Symbol im Pawn-Quellbaum. Der Code wurde auf das im Projekt verwendete `gettime()`-API zurückgeführt und damit auch in `core.inc` sowie `premium_system.inc` konsistent gemacht.
+- Ein zweiter realer Blocker war die fehlende `DB_GetPlayerHomeState()`-Funktion. Sie wurde in `gamemodes/modules/db/db_interface.inc` ergänzt. Dadurch bleiben `state_system.inc` und die Connect-/Rehydrate-Pfade bezüglich `home_state` wieder korrekt mit `core.inc` verbunden.
+- Die Source-Validierung ist damit wieder in der echten Build-Contract-Achse: `gamemodes/gamemode.pwn` kompiliert mit `qemu-i386` in `Compiler/samp03/gamemodes/gtasa_reallife.amx` und erfüllt weiterhin die Architektur-Regel „ein Ziel, kein 7777-Drift“.
+- Die Persistenz-/State-Arbeit bleibt Dini-first, mit SQLite-Read-Only als ergänzender Sicht auf die Datenbank; die hier behobenen Fehler lagen im Source-/Contract-Level, nicht in einer Live-7780-Umgebung.

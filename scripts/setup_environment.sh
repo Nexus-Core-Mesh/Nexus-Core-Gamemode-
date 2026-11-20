@@ -53,6 +53,7 @@ mkdir -p "$ROOT_DIR/data/db" \
   "$ROOT_DIR/Compiler/samp03/scriptfiles/vehicles" \
   "$ROOT_DIR/Compiler/samp03/scriptfiles/ubb" \
   "$ROOT_DIR/Compiler/samp03/scriptfiles/backups" \
+  "$ROOT_DIR/Compiler/samp03/scriptfiles/premium" \
   "$ROOT_DIR/Compiler/samp03/scriptfiles/state/ls" \
   "$ROOT_DIR/Compiler/samp03/scriptfiles/state/sf" \
   "$ROOT_DIR/Compiler/samp03/scriptfiles/state/lv" \

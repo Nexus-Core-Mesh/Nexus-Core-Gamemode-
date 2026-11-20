@@ -69,19 +69,51 @@ stock LoginSystem_AdvanceToStateSelection(playerid)
 stock LoginSystem_OnPlayerConnect(playerid)
 {
     gLoginState[playerid] = LOGIN_STATE_NONE;
-    gPlayerHomeState[playerid] = STATE_LOS_SANTOS;
-    gPlayerData[playerid][E_PLAYER_HOME_STATE] = STATE_LOS_SANTOS;
-    gPlayerData[playerid][E_PLAYER_STATE] = STATE_LOS_SANTOS;
+
+    new defaultState = Core_GetValidStateOrDefault(gPlayerData[playerid][E_PLAYER_STATE], STATE_LOS_SANTOS);
+    new defaultHomeState = Core_GetValidStateOrDefault(gPlayerData[playerid][E_PLAYER_HOME_STATE], defaultState);
+    if (!Core_IsValidState(defaultState))
+    {
+        defaultState = STATE_LOS_SANTOS;
+    }
+    if (!Core_IsValidState(defaultHomeState))
+    {
+        defaultHomeState = defaultState;
+    }
+
+    gPlayerHomeState[playerid] = defaultHomeState;
+    gPlayerData[playerid][E_PLAYER_HOME_STATE] = defaultHomeState;
+    gPlayerData[playerid][E_PLAYER_STATE] = defaultState;
     Core_NormalizePlayerState(playerid);
     LoginSystem_AutoResolveFlow(playerid);
 }
 
 stock LoginSystem_OnPlayerDisconnect(playerid, reason)
 {
+    if (!Core_IsValidPlayerId(playerid))
+    {
+        return;
+    }
+
     LoginSystem_HideRegisterScreen(playerid);
     LoginSystem_HideLoginScreen(playerid);
     gLoginState[playerid] = LOGIN_STATE_NONE;
-    gPlayerHomeState[playerid] = 0;
+
+    new preservedState = Core_GetValidStateOrDefault(gPlayerData[playerid][E_PLAYER_STATE], STATE_LOS_SANTOS);
+    new preservedHomeState = Core_GetValidStateOrDefault(gPlayerData[playerid][E_PLAYER_HOME_STATE], preservedState);
+    if (!Core_IsValidState(preservedState))
+    {
+        preservedState = STATE_LOS_SANTOS;
+    }
+    if (!Core_IsValidState(preservedHomeState))
+    {
+        preservedHomeState = preservedState;
+    }
+
+    gPlayerHomeState[playerid] = preservedHomeState;
+    gPlayerData[playerid][E_PLAYER_HOME_STATE] = preservedHomeState;
+    gPlayerData[playerid][E_PLAYER_STATE] = preservedState;
+    Core_NormalizePlayerState(playerid);
     gLoginAccountExists[playerid] = false;
 }
 
@@ -253,9 +285,11 @@ stock LoginSystem_CompleteLogin(playerid)
     {
         homeState = STATE_LOS_SANTOS;
     }
+
     gPlayerHomeState[playerid] = homeState;
     Core_SetPlayerHomeState(playerid, homeState);
     Core_SetPlayerState(playerid, homeState);
+    DB_ValidateStateTransfer(playerid, homeState, homeState);
     DB_SavePlayerState(playerid, homeState);
 
     TogglePlayerControllable(playerid, true);
@@ -278,9 +312,11 @@ stock LoginSystem_CompleteReg(playerid)
     {
         homeState = STATE_LOS_SANTOS;
     }
+
     gPlayerHomeState[playerid] = homeState;
     Core_SetPlayerHomeState(playerid, homeState);
     Core_SetPlayerState(playerid, homeState);
+    DB_ValidateStateTransfer(playerid, homeState, homeState);
     DB_SavePlayerState(playerid, homeState);
 
     TogglePlayerControllable(playerid, true);

@@ -229,6 +229,28 @@ app.get('/api/businesses', async (req, res) => {
   }
 });
 
+app.get('/api/season', async (req, res) => {
+  try {
+    const rows = await tableExists('server_events') ? queryRows('SELECT * FROM server_events ORDER BY id ASC LIMIT 50') : [];
+    const states = await tableExists('states') ? queryRows('SELECT id, treasury, tax_rate, name FROM states ORDER BY id ASC') : [];
+    res.json({
+      season: {
+        source: 'sqlite-readonly',
+        note: 'Season state is sourced from the runtime layer and mirrored to the panel as operational status; it is not the primary save authority.',
+        events: rows,
+        states: states.map((row) => ({
+          ...row,
+          name: normalizeStateName(row.id, row.name),
+          short_name: row.short_name || ['LS', 'SF', 'LV'][Number(row.id)] || 'UNK'
+        }))
+      },
+      generatedAt: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });

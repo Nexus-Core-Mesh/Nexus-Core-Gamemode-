@@ -25,6 +25,9 @@ ZERO_OVERWRITE_PATTERNS = [
     re.compile(r'if\s*\(.*home_state.*==\s*0.*\)', re.I),
     re.compile(r'\bstate_id\s*=\s*0\b', re.I),
     re.compile(r'\bhome_state\s*=\s*0\b', re.I),
+    re.compile(r'gPlayerHomeState\s*\[[^\]]+\]\s*=\s*0', re.I),
+    re.compile(r'gPlayerData\s*\[[^\]]+\]\s*\[[^\]]+E_PLAYER_HOME_STATE[^\]]*\]\s*=\s*0', re.I),
+    re.compile(r'gPlayerData\s*\[[^\]]+\]\s*\[[^\]]+E_PLAYER_STATE[^\]]*\]\s*=\s*0', re.I),
 ]
 
 

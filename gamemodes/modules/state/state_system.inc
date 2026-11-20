@@ -166,10 +166,30 @@ stock StateSystem_OnPlayerConnect(playerid)
         stateid = STATE_LOS_SANTOS;
     }
 
+    new homeState = DB_GetPlayerHomeState(playerid);
+    if (!Core_IsValidState(homeState))
+    {
+        homeState = stateid;
+    }
+
     Core_SetPlayerState(playerid, stateid);
-    Core_SetPlayerHomeState(playerid, stateid);
+    Core_SetPlayerHomeState(playerid, homeState);
     Core_SetPlayerCash(playerid, DB_GetPlayerCash(playerid));
     DB_SavePlayerState(playerid, stateid);
+}
+
+stock StateSystem_ApplyWorldStatePulse(stateid, amount)
+{
+    if (!StateSystem_IsValidState(stateid))
+    {
+        return false;
+    }
+    if (amount == 0)
+    {
+        return true;
+    }
+
+    return StateSystem_ApplyTreasuryDelta(stateid, amount);
 }
 
 stock StateSystem_OnPlayerDisconnect(playerid, reason)
@@ -276,16 +296,20 @@ stock StateSystem_SetTreasuryBalance(stateid, amount)
         return false;
     }
 
-    if (amount < 0)
+    new normalizedAmount = amount;
+    if (normalizedAmount < 0)
     {
-        amount = 0;
+        normalizedAmount = 0;
     }
 
-    gStateBankCash[stateid] = amount;
-    gStateBank[stateid] = amount;
-    gGovernmentBudget[stateid] = amount;
+    gStateBankCash[stateid] = normalizedAmount;
+    gStateBank[stateid] = normalizedAmount;
+    gGovernmentBudget[stateid] = normalizedAmount;
 
-    DB_SetStateTreasury(stateid, amount);
+    if (!DB_SetStateTreasury(stateid, normalizedAmount))
+    {
+        return false;
+    }
     return true;
 }
 
@@ -326,7 +350,12 @@ stock StateSystem_ApplyTreasuryDelta(stateid, delta)
         gStateInfrastructureRevenue[stateid] += (StateSystem_AbsInt(delta) / 2);
     }
 
-    return StateSystem_SetTreasuryBalance(stateid, nextBalance);
+    if (!StateSystem_SetTreasuryBalance(stateid, nextBalance))
+    {
+        return false;
+    }
+
+    return true;
 }
 
 stock int:StateSystem_GetTaxRate(stateid)
@@ -427,6 +456,92 @@ stock StateSystem_ShowOverview(playerid, stateid)
     new msg[256];
     format(msg, sizeof(msg), "[STATE] %s | Budget: $%d | Steuer: %d%% | Leader: %s | Policy: %s | Einnahmen: $%d", stateName, StateSystem_GetBankCash(stateid), StateSystem_GetTaxRate(stateid), leaderName, policy, StateSystem_GetTaxRevenue(stateid));
     SendClientMessage(playerid, 0x00D9FFFF, msg);
+}
+
+stock StateSystem_ApplyTaxRevenue(stateid, amount)
+{
+    if (!StateSystem_IsValidState(stateid) || amount < 0)
+    {
+        return false;
+    }
+
+    new taxRate = StateSystem_GetTaxRate(stateid);
+    new collected = amount * taxRate / 100;
+    if (collected < 0)
+    {
+        collected = 0;
+    }
+
+    gStateTaxRevenue[stateid] += collected;
+    return StateSystem_ApplyTreasuryDelta(stateid, collected);
+}
+
+stock StateSystem_GetStateSnapshot(stateid, output[], len)
+{
+    if (!StateSystem_IsValidState(stateid))
+    {
+        format(output, len, "STATE:invalid");
+        return false;
+    }
+
+    new stateName[32];
+    new leaderName[24];
+    new policy[24];
+    StateSystem_GetStateName(stateid, stateName, sizeof(stateName));
+    StateSystem_GetLeaderName(stateid, leaderName, sizeof(leaderName));
+    StateSystem_GetPolicy(stateid, policy, sizeof(policy));
+
+    format(output, len, "%s|budget=%d|tax=%d|leader=%s|policy=%s|revenue=%d", stateName, StateSystem_GetBankCash(stateid), StateSystem_GetTaxRate(stateid), leaderName, policy, StateSystem_GetTaxRevenue(stateid));
+    return true;
+}
+
+stock StateSystem_GetStateEconomicProfile(stateid, output[], len)
+{
+    if (!StateSystem_IsValidState(stateid))
+    {
+        format(output, len, "STATE:invalid");
+        return false;
+    }
+
+    new stateName[32];
+    new shortName[8];
+    new leaderName[24];
+    new policy[24];
+    StateSystem_GetStateName(stateid, stateName, sizeof(stateName));
+    StateSystem_GetStateShortName(stateid, shortName, sizeof(shortName));
+    StateSystem_GetLeaderName(stateid, leaderName, sizeof(leaderName));
+    StateSystem_GetPolicy(stateid, policy, sizeof(policy));
+
+    format(output, len, "%s|short=%s|budget=%d|tax=%d|leader=%s|policy=%s|revenue=%d|infra=%d|enabled=%d",
+        stateName,
+        shortName,
+        StateSystem_GetBankCash(stateid),
+        StateSystem_GetTaxRate(stateid),
+        leaderName,
+        policy,
+        StateSystem_GetTaxRevenue(stateid),
+        StateSystem_GetInfraRev(stateid),
+        StateSystem_IsEnabled(stateid));
+    return true;
+}
+
+stock StateSystem_ApplyStateEconomicPulse(stateid, delta, const reason[], const actor[])
+{
+    if (!StateSystem_IsValidState(stateid) || delta == 0)
+    {
+        return true;
+    }
+
+    if (!StateSystem_ApplyTreasuryDelta(stateid, delta))
+    {
+        return false;
+    }
+
+    return StateLedgerSystem_LogTx(stateid,
+        (delta > 0) ? STATE_LEDGER_TYPE_GOV : STATE_LEDGER_TYPE_ADMIN,
+        delta,
+        actor,
+        reason);
 }
 
 #endif
