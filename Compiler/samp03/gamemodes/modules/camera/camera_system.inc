@@ -15,9 +15,16 @@ stock CameraSystem_Initialize()
 
 stock CameraSystem_Reset(playerid)
 {
+    if (!Core_IsValidPlayerId(playerid))
+    {
+        return;
+    }
+
     gCameraMode[playerid] = CAMERA_MODE_NONE;
     SetPlayerCameraPos(playerid, 0.0, 0.0, 0.0);
     SetPlayerCameraLookAt(playerid, 0.0, 0.0, 0.0);
+    SetCameraBehindPlayer(playerid);
+    TogglePlayerControllable(playerid, true);
 }
 
 stock CameraSystem_PlayIntroScene(playerid)

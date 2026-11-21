@@ -536,6 +536,15 @@ stock DB_EnsureStateSchema()
     return DB_Execute(query);
 }
 
+stock DB_ValidateStateValueForPersist(stateid)
+{
+    if (Core_IsValidState(stateid))
+    {
+        return stateid;
+    }
+    return STATE_LOS_SANTOS;
+}
+
 stock DB_EnsureStateBankSchema()
 {
     new query[512];

@@ -9,7 +9,6 @@
 #define LOGIN_STATE_ACTIVE 3
 
 new gLoginState[MAX_PLAYERS];
-new gPlayerHomeState[MAX_PLAYERS];
 new Text:gLoginTD[MAX_PLAYERS][8];
 
 stock LoginSystem_Initialize()
@@ -19,10 +18,20 @@ stock LoginSystem_Initialize()
 
 stock LoginSystem_OnPlayerConnect(playerid)
 {
+    if (!Core_IsValidPlayerId(playerid))
+    {
+        return;
+    }
+
     gLoginState[playerid] = LOGIN_STATE_REGISTER;
-    gPlayerHomeState[playerid] = STATE_LOS_SANTOS;
-    gPlayerData[playerid][E_PLAYER_HOME_STATE] = STATE_LOS_SANTOS;
-    gPlayerData[playerid][E_PLAYER_STATE] = STATE_LOS_SANTOS;
+
+    new preservedHome = Core_GetValidStateOrDefault(gPlayerData[playerid][E_PLAYER_HOME_STATE], STATE_LOS_SANTOS);
+    new preservedState = Core_GetValidStateOrDefault(gPlayerData[playerid][E_PLAYER_STATE], preservedHome);
+
+    Core_SetPlayerHomeState(playerid, preservedHome);
+    Core_SetPlayerState(playerid, preservedState);
+    gPlayerData[playerid][E_PLAYER_HOME_STATE] = preservedHome;
+    gPlayerData[playerid][E_PLAYER_STATE] = preservedState;
     Core_NormalizePlayerState(playerid);
     LoginSystem_ShowRegisterScreen(playerid);
     TogglePlayerControllable(playerid, false);
@@ -30,13 +39,31 @@ stock LoginSystem_OnPlayerConnect(playerid)
 
 stock LoginSystem_OnPlayerDisconnect(playerid, reason)
 {
+    if (!Core_IsValidPlayerId(playerid))
+    {
+        return;
+    }
+
     LoginSystem_HideRegisterScreen(playerid);
     gLoginState[playerid] = LOGIN_STATE_NONE;
-    gPlayerHomeState[playerid] = 0;
+
+    new preservedHome = Core_GetValidStateOrDefault(gPlayerData[playerid][E_PLAYER_HOME_STATE], Core_GetValidStateOrDefault(gPlayerData[playerid][E_PLAYER_STATE], STATE_LOS_SANTOS));
+    Core_SetPlayerHomeState(playerid, preservedHome);
+    gPlayerData[playerid][E_PLAYER_HOME_STATE] = preservedHome;
+    if (!Core_IsValidState(gPlayerData[playerid][E_PLAYER_STATE]))
+    {
+        gPlayerData[playerid][E_PLAYER_STATE] = preservedHome;
+        Core_SetPlayerState(playerid, preservedHome);
+    }
 }
 
 stock LoginSystem_ShowRegisterScreen(playerid)
 {
+    if (!Core_IsValidPlayerId(playerid))
+    {
+        return;
+    }
+
     LoginSystem_HideRegisterScreen(playerid);
 
     gLoginTD[playerid][0] = TextDrawCreate(320.0, 40.0, "GTA:SA Reallife");
@@ -105,7 +132,9 @@ stock LoginSystem_SetPlayerHomeState(playerid, stateid)
     {
         return;
     }
-    gPlayerHomeState[playerid] = stateid;
+
+    Core_SetPlayerHomeState(playerid, stateid);
+    Core_SetPlayerState(playerid, stateid);
     gPlayerData[playerid][E_PLAYER_HOME_STATE] = stateid;
     gPlayerData[playerid][E_PLAYER_STATE] = stateid;
     gLoginState[playerid] = LOGIN_STATE_ACTIVE;
@@ -126,7 +155,7 @@ stock LoginSystem_IsActive(playerid)
 
 stock int:LoginSystem_GetHomeState(playerid)
 {
-    return gPlayerHomeState[playerid];
+    return Core_GetPlayerHomeState(playerid);
 }
 
 stock LoginSystem_CompleteRegistration(playerid)

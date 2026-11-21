@@ -99,6 +99,8 @@ Das Projekt als modularen, erweiterbaren GTA:SA-Reallife-Gamemode mit 3-Staaten-
 - [x] Offline-Tooling unter `tools/` ergänzt: log bridge, line extractor, autocorrect, debug collector
 - [x] Dokumentations-/Audit-Pfade für 4-Zonen-HUD, Gangfight-Zonen, Projektleiter-/RCON-Steuerung und `7780`-Laufzeitpfad ergänzt
 - [ ] echte Live-Validierung im Ubuntu-VM mit Serverstart, Logs, `gtasa_reallife.db` und Client-Flow bleibt bewusst offen bis zur expliziten Freigabe
+- [x] frühe Connect-/Disconnect-Guards für gültige `state_id`/`home_state`-Werte in `core.inc` und `auth/login_system.inc` verschärft; keine 0-Default-Resets durch vorzeitige Reset-Pfade mehr
+- [x] Offline-Readiness-/Guard-Audits auf `tools/qemu_7780_readiness_check.py` und `tools/audit_modules_and_guards.py` erfolgreich ausgeführt; Build bleibt `qemu-i386`-bedingt blockiert in der aktuellen Umgebung
 
 ### Release-Milestone C – RP-Expansion
 - [ ] Mission-Board mit verknüpfter Staatspolitik erweitern
