@@ -449,6 +449,12 @@ stock UiHub_ShowBusinessList(playerid)
         gUiPick[playerid][gUiPickCount[playerid]++] = b;
     }
 
+    if (gUiPickCount[playerid] == 0)
+    {
+        UiHub_ShowText(playerid, "Business-Verwaltung", "Aktuell sind keine aktiven Businesses verfügbar.");
+        return;
+    }
+
     new const bizCaption[] = "Business-Verwaltung";
     new const bizButton[] = "Öffnen";
     UiDialog_Show(playerid, DIALOG_UI_BIZ_LIST, DIALOG_STYLE_TABLIST_HEADERS, bizCaption, list, bizButton, UI_DIALOG_BUTTON_CLOSE);
@@ -456,6 +462,12 @@ stock UiHub_ShowBusinessList(playerid)
 
 stock UiHub_ShowBusinessAction(playerid, bizid)
 {
+    if (!Core_IsValidPlayerId(playerid) || bizid < 0 || bizid >= MAX_BUSINESSES || gBizActive[bizid] != 1 || !Core_IsValidState(gBizState[bizid]))
+    {
+        UiHub_ShowBusinessList(playerid);
+        return;
+    }
+
     new title[48];
     format(title, sizeof(title), "%s", gBizName[bizid]);
     if (gBizOwner[bizid] == -1)

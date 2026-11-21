@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Patch a Pawn AMX file back to the legacy SA-MP 0.3.7-compatible header format."""
+"""Patch a Pawn AMX file back to the legacy SA-MP-compatible header format."""
 
 import sys
 from pathlib import Path
 
 TARGET_OFFSET = 0x06
 LEGACY_BYTES = b"\x08\x08"
+AMX_FLAG_OVERLAY = 0x04
 
 
 def patch_amx(path: str) -> None:
@@ -20,11 +21,19 @@ def patch_amx(path: str) -> None:
         )
 
     data[TARGET_OFFSET : TARGET_OFFSET + len(LEGACY_BYTES)] = LEGACY_BYTES
+
+    if len(data) >= 0x0C:
+        flags_offset = 0x08
+        flags = data[flags_offset]
+        if flags & AMX_FLAG_OVERLAY == 0:
+            data[flags_offset] = flags | AMX_FLAG_OVERLAY
+
     file_path.write_bytes(data)
 
     patched = bytes(data[TARGET_OFFSET : TARGET_OFFSET + len(LEGACY_BYTES)])
     print(f"Successfully patched: {file_path} to AMX version 8.")
     print(f"Header bytes at 0x{TARGET_OFFSET:X}: {patched.hex()}")
+    print(f"Header flag byte at 0x{0x08:X}: 0x{data[0x08]:02x}")
 
 
 if __name__ == "__main__":

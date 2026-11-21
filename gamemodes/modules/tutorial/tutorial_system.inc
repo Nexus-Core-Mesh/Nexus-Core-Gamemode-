@@ -17,6 +17,17 @@ stock TutorialSystem_Initialize()
     print("[TUTORIAL] Tutorialsystem aktiviert");
 }
 
+stock TutorialSystem_Reset(playerid)
+{
+    if (!Core_IsValidPlayerId(playerid))
+    {
+        return;
+    }
+
+    TutorialSystem_HideStage(playerid);
+    gTutorialStage[playerid] = TUTORIAL_STAGE_NONE;
+}
+
 stock TutorialSystem_Start(playerid)
 {
     if (!Core_IsValidPlayerId(playerid))
@@ -30,6 +41,7 @@ stock TutorialSystem_Start(playerid)
         return;
     }
 
+    TutorialSystem_Reset(playerid);
     gTutorialStage[playerid] = TUTORIAL_STAGE_INTRO;
     TutorialSystem_ShowStage(playerid, gTutorialStage[playerid]);
     SendClientMessage(playerid, 0xFFCC00AA, "[TUTORIAL] Willkommen im GTA:SA Reallife. Folge dem kurzen Einstieg und wähle anschließend deine Heimatstadt im Menü.");
@@ -127,6 +139,7 @@ stock TutorialSystem_ShowStage(playerid, stage)
 
 stock TutorialSystem_HideStage(playerid)
 {
+    CancelSelectTextDraw(playerid);
     for (new i = 0; i < 4; i++)
     {
         if (gTutorialTD[playerid][i] != Text:INVALID_TEXT_DRAW)
@@ -140,6 +153,11 @@ stock TutorialSystem_HideStage(playerid)
 
 stock TutorialSystem_Next(playerid)
 {
+    if (!Core_IsValidPlayerId(playerid))
+    {
+        return;
+    }
+
     if (gTutorialStage[playerid] < TUTORIAL_STAGE_FINISH)
     {
         gTutorialStage[playerid]++;

@@ -10,6 +10,15 @@
 - Port- und Systemtrennung bleiben konsistent, insbesondere für den 7780-Contract und den Dini-first-Pfad.
 - Die optische Aufwertung dient nur der Lesbarkeit, nicht der inhaltlichen Interpretation.
 
+### Runtime-Härtung, Login-/TextDraw- und DB-Fix (aktualisiert)
+
+- `/login`/`/register` werden im Command-Handler sauber erkannt und an den Auth-/Dialog-Flow weitergereicht, statt als `SERVER: Unknown command` zu fallen.
+- `LoginSystem_IsActive(playerid)` bleibt nach erfolgreichem Login/Register auf `true`, damit `UiHub_Ready(playerid)`, `/menu`, `/jobs`, `/garage`, `/spawn` und `Y` nicht mehr durch den UI-Gate-Block hängen.
+- Intro-/Login-TextDraws werden beim Spawn und nach erfolgreichem Login/Tutorial-Übergang mit `TextDrawHideForPlayer` und `CancelSelectTextDraw` freigegeben, damit das 4-Zonen-HUD nicht überlagert wird.
+- Die vollständige TextDraw-Cleanup im Auth-Flow wurde auf alle 12 Login-/Register-Handles erweitert, damit nach Spawn oder Login keine veralteten Box-Buttons im Sichtfeld bleiben.
+- `DB_EnsurePlayerRecord()` nutzt nun den echten Spielernamen aus `GetPlayerName()` statt eines Platzhalters, und der doppelte `player_state`-Insert im Join-Flow wurde in der zentralen Save-Route eliminiert.
+- Die AMX-Header-Validierung bleibt auf `0x06..0x07 = 0808` und `flags |= 0x04` mit intaktem `stp`/`cip`-Verhalten, ohne die legacy-compat runtime zu beschädigen.
+
 ---
 ## 🧭 Schnellüberblick
 

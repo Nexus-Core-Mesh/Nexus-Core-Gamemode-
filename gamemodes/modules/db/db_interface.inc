@@ -375,24 +375,27 @@ stock DB_EnsurePlayerRecord(playerid, defaultState)
     }
 
     new stateid = Core_ResolveStateId(defaultState);
-    new playerName[32];
-    format(playerName, sizeof(playerName), "Player_%d", playerid);
+    if (!Core_IsValidState(stateid))
+    {
+        stateid = STATE_LOS_SANTOS;
+    }
+
+    new playerName[MAX_PLAYER_NAME];
+    GetPlayerName(playerid, playerName, sizeof(playerName));
+    if (strlen(playerName) <= 0)
+    {
+        format(playerName, sizeof(playerName), "Player_%d", playerid);
+    }
+
+    new safeName[MAX_PLAYER_NAME];
+    DB_SanitizeMetadata(playerName, safeName, sizeof(safeName));
 
     new query[320];
     format(query, sizeof(query),
         "INSERT OR IGNORE INTO players (id, name, state_id, money, admin_level, admin_state, home_state, phone_number, has_health_insurance, created_at) VALUES (%d, '%s', %d, 0, 0, -1, %d, 'NONE', 0, datetime('now'));",
         playerid,
-        playerName,
+        safeName,
         stateid,
-        stateid);
-    if (!DB_Execute(query))
-    {
-        return false;
-    }
-
-    format(query, sizeof(query),
-        "INSERT OR IGNORE INTO player_state (player_id, state_id, last_updated) VALUES (%d, %d, datetime('now'));",
-        playerid,
         stateid);
     return DB_Execute(query);
 }
@@ -455,8 +458,7 @@ stock DB_SetPlayerState(playerid, stateid)
         return false;
     }
 
-    format(query, sizeof(query), "INSERT OR IGNORE INTO player_state (player_id, state_id, last_updated) VALUES (%d, %d, datetime('now'))", playerid, normalizedState);
-    return DB_Execute(query);
+    return true;
 }
 
 stock DB_ValidateStateTransfer(playerid, stateValue, homeValue)
@@ -559,27 +561,12 @@ stock DB_RehydratePlayerState(playerid)
         return false;
     }
 
-    if (stateValue != Core_GetPlayerState(playerid) && Core_IsValidState(Core_GetPlayerState(playerid)))
-    {
-        stateValue = Core_GetPlayerState(playerid);
-    }
-    if (homeValue != Core_GetPlayerHomeState(playerid) && Core_IsValidState(Core_GetPlayerHomeState(playerid)))
-    {
-        homeValue = Core_GetPlayerHomeState(playerid);
-    }
-
     gDBPlayerStateCache[playerid] = stateValue;
     gDBPlayerHomeStateCache[playerid] = homeValue;
     Core_SetPlayerState(playerid, stateValue);
     Core_SetPlayerHomeState(playerid, homeValue);
 
     new query[192];
-    format(query, sizeof(query), "INSERT OR IGNORE INTO player_state (player_id, state_id, last_updated) VALUES (%d, %d, datetime('now'));", playerid, stateValue);
-    if (!DB_Execute(query))
-    {
-        return false;
-    }
-
     format(query, sizeof(query), "UPDATE players SET state_id = %d, home_state = %d WHERE id = %d;", stateValue, homeValue, playerid);
     return DB_Execute(query);
 }
@@ -671,12 +658,6 @@ stock DB_SavePlayerState(playerid, stateid)
 
     new query[192];
     format(query, sizeof(query), "UPDATE players SET state_id = %d, home_state = %d WHERE id = %d;", normalizedState, homeState, playerid);
-    if (!DB_Execute(query))
-    {
-        return false;
-    }
-
-    format(query, sizeof(query), "INSERT OR IGNORE INTO player_state (player_id, state_id, last_updated) VALUES (%d, %d, datetime('now'));", playerid, normalizedState);
     return DB_Execute(query);
 }
 

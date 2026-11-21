@@ -108,6 +108,8 @@
 
 #define SERVER_NAME "GTA:SA Reallife Modular"
 
+#pragma dynamic 131072
+
 main()
 {
 }
@@ -179,6 +181,7 @@ public OnGameModeInit()
     Core_MarkModuleReady("security");
     JobsCore_Initialize();
     StateJobs_Initialize();
+    Core_MarkModuleReady("jobs");
     LoginSystem_Initialize();
     Core_MarkModuleReady("auth");
     Core_SetLifecycleStage(CORE_LIFECYCLE_AUTH_READY);
@@ -187,6 +190,7 @@ public OnGameModeInit()
     Core_MarkModuleReady("camera");
     Core_MarkModuleReady("tutorial");
     GovernmentSystem_Initialize();
+    Core_MarkModuleReady("government");
     HouseSystem_Initialize();
     BusinessSystem_Initialize();
     Core_MarkModuleReady("housing");
@@ -194,10 +198,12 @@ public OnGameModeInit()
     FactionSystem_Initialize();
     GangWarSystem_Initialize();
     GangFightSystem_Initialize();
+    Core_MarkModuleReady("factions");
     VehicleSystem_Initialize();
     ProgressionSystem_Initialize();
     AdminConfigSystem_Initialize();
     DynamicJobSystem_Initialize();
+    Core_MarkModuleReady("vehicles");
     LawSystem_Initialize();
     JailSystem_Initialize();
     EmergencySystem_Initialize();
@@ -219,7 +225,6 @@ public OnGameModeInit()
     DealershipSystem_Initialize();
     TuningSystem_Initialize();
     UBBVehicleSystem_Initialize();
-    Core_MarkModuleReady("vehicles");
     Core_MarkModuleReady("inventory");
     FuelStationSystem_Initialize();
     WebBridge_Initialize();
@@ -248,6 +253,10 @@ public OnGameModeInit()
     StateLedgerSystem_Initialize();
     RoleplayUI_Initialize();
     Core_MarkModuleReady("social");
+    Core_MarkModuleReady("events");
+    Core_MarkModuleReady("season");
+    Core_MarkModuleReady("world");
+    Core_MarkModuleReady("premium");
     Core_SetLifecycleStage(CORE_LIFECYCLE_WORLD_READY);
     JobCenter_Initialize();
     TextWars_Initialize();
@@ -276,6 +285,7 @@ public OnGameModeExit()
 public OnPlayerConnect(playerid)
 {
     Core_RunPlayerConnectHooks(playerid);
+    LoginSystem_OnPlayerConnect(playerid);
     CameraSystem_PlayIntroScene(playerid);
     return 1;
 }
@@ -285,13 +295,72 @@ public OnPlayerDisconnect(playerid, reason)
     Core_RunPlayerDisconnectHooks(playerid, reason);
     CameraSystem_ExitCameraMode(playerid);
     CameraSystem_Reset(playerid);
+    LoginSystem_HideLoginScreen(playerid);
+    LoginSystem_HideRegisterScreen(playerid);
     TutorialSystem_HideStage(playerid);
+    TutorialSystem_Reset(playerid);
     RoleplayUI_Hide(playerid);
+    CancelSelectTextDraw(playerid);
+    gLoginState[playerid] = LOGIN_STATE_NONE;
+    gTutorialStage[playerid] = TUTORIAL_STAGE_NONE;
     return 1;
 }
 
 public OnPlayerCommandText(playerid, cmdtext[])
 {
+    if (cmdtext[0] == '\0')
+        return 0;
+
+    if (strcmp(cmdtext, "/login", true, 6) == 0)
+    {
+        new offset = 6;
+        while (cmdtext[offset] == ' ' && cmdtext[offset] != '\0')
+        {
+            offset++;
+        }
+
+        if (cmdtext[offset] == '\0')
+        {
+            if (!LoginSystem_IsActive(playerid))
+            {
+                LoginSystem_AutoResolveFlow(playerid);
+            }
+            else
+            {
+                UiHub_ShowPasswordInput(playerid);
+            }
+            return 1;
+        }
+
+        gLoginState[playerid] = LOGIN_STATE_LOGIN;
+        UiHub_ShowPasswordInput(playerid);
+        SendClientMessage(playerid, 0x00D9FFFF, "[LOGIN] Passwort-Input aktiv. Bitte das Passwort im Dialog eingeben.");
+        return 1;
+    }
+
+    if (strcmp(cmdtext, "/register", true, 9) == 0)
+    {
+        new offset = 9;
+        while (cmdtext[offset] == ' ' && cmdtext[offset] != '\0')
+        {
+            offset++;
+        }
+
+        if (cmdtext[offset] == '\0')
+        {
+            gLoginState[playerid] = LOGIN_STATE_REGISTER;
+            LoginSystem_ShowRegisterScreen(playerid);
+            UiHub_ShowPasswordInput(playerid);
+            SendClientMessage(playerid, 0x00D9FFFF, "[REGISTER] Bitte ein Passwort im Dialog eingeben.");
+            return 1;
+        }
+
+        gLoginState[playerid] = LOGIN_STATE_REGISTER;
+        UiHub_ShowPasswordInput(playerid);
+        SendClientMessage(playerid, 0x00D9FFFF, "[REGISTER] Passwort-Input aktiv. Bitte das Passwort im Dialog eingeben.");
+        return 1;
+    }
+
     if (RoleplayUI_HandleCommand(playerid, cmdtext))
         return 1;
 
@@ -498,6 +567,9 @@ public OnPlayerCommandText(playerid, cmdtext[])
 public OnPlayerSpawn(playerid)
 {
     StateSystem_OnPlayerSpawn(playerid);
+    LoginSystem_HideLoginScreen(playerid);
+    LoginSystem_HideRegisterScreen(playerid);
+    TutorialSystem_HideStage(playerid);
 
     new stateid = Core_GetPlayerState(playerid);
     new homeState = Core_GetPlayerHomeState(playerid);
@@ -561,7 +633,22 @@ public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 
 public OnPlayerClickTextDraw(playerid, Text:clickedid)
 {
-    TextWars_OnClickTextDraw(playerid, clickedid);
+    if (LoginSystem_HandleClickTextDraw(playerid, clickedid))
+    {
+        return 1;
+    }
+
+    if (TextWars_OnClickTextDraw(playerid, clickedid))
+    {
+        return 1;
+    }
+
+    if (clickedid == Text:INVALID_TEXT_DRAW)
+    {
+        CancelSelectTextDraw(playerid);
+        return 1;
+    }
+
     return 0;
 }
 

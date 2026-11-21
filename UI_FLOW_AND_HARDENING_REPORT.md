@@ -137,6 +137,7 @@ The current source implements the persistence and reset guard rails explicitly r
 
 - `DB_RehydratePlayerState()` is integrated into the state-load path and preserves `INSERT OR IGNORE` behavior while validating both `state_id` and `home_state` before mutating the live player profile.
 - `OnPlayerSpawn()` only triggers the tutorial/camera path when onboarding is incomplete or the state is invalid; otherwise it resets the camera and applies the fixed spawn once.
+- `LoginSystem_HideLoginScreen()` and `LoginSystem_HideRegisterScreen()` now destroy every auth textdraw handle in the array (not just the first five/eight entries), which prevents stale clickable login/register buttons from remaining visible after spawn or successful auth.
 - `CameraSystem_StartFreeCamera()`, `CameraSystem_StartDroneCamera()`, and `CameraSystem_ToggleFreeCamera()` all reset through `CameraSystem_Reset(playerid)` before entering the mode and ensure the player is controllable again when leaving the camera mode.
 - `CameraSystem_ExitCameraMode()` was added as a direct exit path to guarantee `SetCameraBehindPlayer()` + `TogglePlayerControllable(playerid, 1)` is always executed when a camera mode ends.
 - `RoleplayUI_Hide()` and related dashboard resets continue to use `INVALID_TEXT_DRAW` cleanup instead of brittle zero-value comparisons, keeping the HUD layout clean on reconnect/reset and state transitions.
