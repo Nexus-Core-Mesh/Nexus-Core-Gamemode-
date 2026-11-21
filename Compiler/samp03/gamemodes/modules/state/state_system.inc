@@ -192,8 +192,27 @@ stock StateSystem_OnPlayerDisconnect(playerid, reason)
 
 stock StateSystem_OnPlayerSpawn(playerid)
 {
+    if (!Core_IsValidPlayerId(playerid))
+    {
+        return;
+    }
+
+    if (!Core_AssertLifecycleStage(CORE_LIFECYCLE_RUNTIME_READY))
+    {
+        return;
+    }
+
+    new stateid = Core_GetValidStateOrDefault(Core_GetPlayerState(playerid), Core_GetPlayerHomeState(playerid));
+    if (!Core_IsValidState(stateid))
+    {
+        stateid = STATE_LOS_SANTOS;
+    }
+
+    Core_SetPlayerState(playerid, stateid);
+    Core_SetPlayerHomeState(playerid, stateid);
+
     new stateName[32];
-    StateSystem_GetStateName(Core_GetPlayerState(playerid), stateName, sizeof(stateName));
+    StateSystem_GetStateName(stateid, stateName, sizeof(stateName));
 
     SendClientMessage(playerid, 0x00FF00AA, "[STATE] Aktueller Staat:");
     SendClientMessage(playerid, 0x00FF00AA, stateName);

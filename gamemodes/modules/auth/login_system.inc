@@ -9,7 +9,6 @@
 #define LOGIN_STATE_ACTIVE 3
 
 new gLoginState[MAX_PLAYERS];
-new gPlayerHomeState[MAX_PLAYERS];
 new bool:gLoginAccountExists[MAX_PLAYERS];
 new Text:gLoginTD[MAX_PLAYERS][8];
 
@@ -81,7 +80,8 @@ stock LoginSystem_OnPlayerConnect(playerid)
         defaultHomeState = defaultState;
     }
 
-    gPlayerHomeState[playerid] = defaultHomeState;
+    Core_SetPlayerHomeState(playerid, defaultHomeState);
+    Core_SetPlayerState(playerid, defaultState);
     gPlayerData[playerid][E_PLAYER_HOME_STATE] = defaultHomeState;
     gPlayerData[playerid][E_PLAYER_STATE] = defaultState;
     Core_NormalizePlayerState(playerid);
@@ -110,7 +110,8 @@ stock LoginSystem_OnPlayerDisconnect(playerid, reason)
         preservedHomeState = preservedState;
     }
 
-    gPlayerHomeState[playerid] = preservedHomeState;
+    Core_SetPlayerHomeState(playerid, preservedHomeState);
+    Core_SetPlayerState(playerid, preservedState);
     gPlayerData[playerid][E_PLAYER_HOME_STATE] = preservedHomeState;
     gPlayerData[playerid][E_PLAYER_STATE] = preservedState;
     Core_NormalizePlayerState(playerid);
@@ -248,9 +249,9 @@ stock LoginSystem_SetPlayerHomeState(playerid, stateid)
         return;
     }
 
-    gPlayerHomeState[playerid] = stateid;
     Core_SetPlayerHomeState(playerid, stateid);
     Core_SetPlayerState(playerid, stateid);
+    gPlayerData[playerid][E_PLAYER_HOME_STATE] = stateid;
     gPlayerData[playerid][E_PLAYER_STATE] = stateid;
     gLoginState[playerid] = LOGIN_STATE_ACTIVE;
     gLoginAccountExists[playerid] = true;
@@ -271,7 +272,7 @@ stock LoginSystem_IsActive(playerid)
 
 stock int:LoginSystem_GetHomeState(playerid)
 {
-    return gPlayerHomeState[playerid];
+    return Core_GetPlayerHomeState(playerid);
 }
 
 stock LoginSystem_CompleteLogin(playerid)
@@ -286,9 +287,10 @@ stock LoginSystem_CompleteLogin(playerid)
         homeState = STATE_LOS_SANTOS;
     }
 
-    gPlayerHomeState[playerid] = homeState;
     Core_SetPlayerHomeState(playerid, homeState);
     Core_SetPlayerState(playerid, homeState);
+    gPlayerData[playerid][E_PLAYER_HOME_STATE] = homeState;
+    gPlayerData[playerid][E_PLAYER_STATE] = homeState;
     DB_ValidateStateTransfer(playerid, homeState, homeState);
     DB_SavePlayerState(playerid, homeState);
 
@@ -313,9 +315,10 @@ stock LoginSystem_CompleteReg(playerid)
         homeState = STATE_LOS_SANTOS;
     }
 
-    gPlayerHomeState[playerid] = homeState;
     Core_SetPlayerHomeState(playerid, homeState);
     Core_SetPlayerState(playerid, homeState);
+    gPlayerData[playerid][E_PLAYER_HOME_STATE] = homeState;
+    gPlayerData[playerid][E_PLAYER_STATE] = homeState;
     DB_ValidateStateTransfer(playerid, homeState, homeState);
     DB_SavePlayerState(playerid, homeState);
 

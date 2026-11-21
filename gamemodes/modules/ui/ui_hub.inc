@@ -1077,8 +1077,11 @@ stock UiHub_OnDialogResponse(playerid, dialogid, response, listitem, const input
 
             if (gLoginState[playerid] == LOGIN_STATE_REGISTER)
             {
-                new defaultHome = Core_GetValidStateOrDefault(gPlayerHomeState[playerid], STATE_LOS_SANTOS);
-                gPlayerHomeState[playerid] = defaultHome;
+                new defaultHome = Core_GetValidStateOrDefault(Core_GetPlayerHomeState(playerid), Core_GetPlayerState(playerid));
+                if (!Core_IsValidState(defaultHome))
+                {
+                    defaultHome = STATE_LOS_SANTOS;
+                }
                 Core_SetPlayerHomeState(playerid, defaultHome);
                 Core_SetPlayerState(playerid, defaultHome);
                 DB_SavePlayerState(playerid, defaultHome);

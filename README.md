@@ -452,3 +452,30 @@ Diese Notiz ergänzt die bisherigen Dokumentationsabschnitte ohne sie zu übersc
 - Build-Check wieder grün: `bash scripts/build_gamemode.sh` lief erfolgreich durch und erzeugte `Compiler/samp03/gamemodes/gtasa_reallife.amx` ohne Live-Serverstart.
 - Offline-Checks liefen durch: Python-Compile, Shell-Syntax, JS-Check (falls verfügbar) und die statischen Guard-Skripte blieben ohne Fehler.
 - Offener Status bleibt bewusst unverändert: echte Live-Validierung auf Port 7780 muss weiterhin auf der realen Ubuntu-VM erfolgen; sie wurde hier nicht unterstellt.
+
+---
+
+## Additive Ist-Analyse – Gesamtprojekt 2026-11-20
+
+Diese Ergänzung erweitert die vorhandene Dokumentation ohne bestehende Abschnitte zu überschreiben.
+
+- Gesamt-Stand: Der Quellbaum ist als modularer Gamemode mit klarer Kern-/State-/DB-/UI-Architektur aktiv. Der zentrale Build- und Laufzeitcontract bleibt auf `Compiler/samp03/gamemodes/gtasa_reallife.amx`, `gamemode0 gtasa_reallife 1` und `port 7780` fixiert; Port `7777` bleibt kein aktiver Projekt-Contract.
+- Core-/State-Quelle: `Compiler/samp03/gamemodes/modules/core/core.inc` bleibt die Single Source of Truth für `state`, `home_state`, Bank, Admin-/Projektleiterrechte und gemeinsame Validierung. Das gilt auch für `Core_IsValidState()`, `Core_GetValidStateOrDefault()`, `Core_SetPlayerState()` und `Core_SetPlayerHomeState()`.
+- Lifecycle: `Compiler/samp03/gamemodes/gamemode.pwn` setzt die aktive Reihenfolge `BOOT -> DB_READY -> STATE_READY -> AUTH_READY -> WORLD_READY -> RUNTIME_READY`, mit Include- und Initialisierungsreihenfolge in der beschriebenen Architektur. Die Strukturen sind im derzeitigen Source-Stand aktiviert und konsistent.
+- Dini-/SQLite-/MySQL: `Compiler/samp03/scriptfiles/` bleibt der Dini-first/Laufzeitpersistenzpfad mit `temp -> validate -> rename`-Design; `control-panel/server.js` liest `data/db/gtasa_reallife.db` schreibgeschützt und dient der Betriebsansicht. MySQL ist im aktuellen Quellbaum nur als Stub-/Nachlauf-Backend vorhanden und nicht als aktive Write-Route verknüpft.
+- State-Guard: Die 0-Reset-Schutzlogik ist im Core-/State-/Login-/Disconnect-Stack aktiv. Gültige `state_id`- und `home_state`-Werte werden nicht auf 0 normiert; stattdessen werden Fallbacks auf valide Zustände verwendet.
+- Guardrails: `TextWars_Tick`, frühe `If -> Return`-Guards, `SetCameraBehindPlayer()`, `TogglePlayerControllable`, `INVALID_TEXT_DRAW`-Konventionen und Wohn-/State-Normalisierung sind im Code als aktive Schutzmechanismen vorhanden.
+- Build-Status: Der aktuelle Container fehlt die 32-Bit-Pawn-Toolchain; `bash build_server.sh` endet mit `qemu-i386: command not found` und `Compiler/samp03/gamemodes/gtasa_reallife.amx` ist im Container nicht produziert. Das betrifft die reale Kompilierung, nicht die Source-/Architektur-Analyse.
+- Open Gaps: Der echte Live-Test auf Port 7780, die vollständige Dini-zu-SQLite-Transparenz in der Laufzeit, die finale AMX-Kompilierung und die tatsächliche serverseitige Prüfung der `scriptfiles/`-Struktur bleiben für die Zielumgebung offen und sind keine Release-Freigaben.
+
+---
+
+## Additive Validierungsnotiz – 2026-11-20
+
+Diese Ergänzung erweitert den vorhandenen Status ohne bestehende Abschnitte zu verändern.
+
+- Source-Härtung: In `Compiler/samp03/gamemodes/modules/auth/login_system.inc` und `Compiler/samp03/gamemodes/modules/core/core.inc` wurden frühe Connect-/Disconnect-Guards verschärft, damit gültige `state_id`/`home_state`-Werte nicht durch vorzeitige Default-Resets verworfen werden. Die Logik nutzt `Core_GetValidStateOrDefault()` vor einer Normalisierung oder einem Reset.
+- SQLite-/Persistenzstand: `data/db/gtasa_reallife.db` wird als lokale Grundlage für die lesende Control-Panel-Perspektive behandelt; die Laufzeit-Persistenz bleibt Dini-first unter `Compiler/samp03/scriptfiles/` mit atomarem `temp -> validate -> rename`-Muster und ohne Live-Serverstart.
+- Offline-Checks: `tools/qemu_7780_readiness_check.py` und `tools/audit_modules_and_guards.py` wurden ausgeführt. Der statische Check bestätigt die 7780-Architektur- und Single-Target-Contract-Regeln, während der Build-Pfad durch das fehlende `qemu-i386`-Binary in der aktuellen Umgebung blockiert ist.
+- Build-Status: `bash build_server.sh` endet aktuell mit `qemu-i386: command not found`; damit bleibt die Quellvalidierung sauber, aber die reale AMX-Kompilierung auf `Compiler/samp03/gamemodes/gtasa_reallife.amx` in dieser Umgebung ausgesetzt.
+- Freigabe-Gate: Kein Live-Server auf Port 7780 oder 7777 wurde gestartet; der verbleibende Testbedarf ist weiterhin ein echter Laufzeit-Check auf Port 7780 mit funktionierendem `qemu-i386`/Pawn-Toolchain, validierter Scriptfiles-Struktur und auslaufender SQLite-/Dini-Abgleichung.

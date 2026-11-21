@@ -281,9 +281,19 @@ stock TextWars_Refresh(playerid)
 
 public TextWars_Tick()
 {
+    if (!Core_AssertLifecycleStage(CORE_LIFECYCLE_RUNTIME_READY))
+    {
+        return 1;
+    }
+
     GangFightSystem_Tick();
     for (new p = 0; p < MAX_PLAYERS; p++)
     {
+        if (!Core_IsValidPlayerId(p))
+        {
+            continue;
+        }
+
         if (IsPlayerConnected(p) && gTWVisible[p] == 1)
         {
             TextWars_Refresh(p);

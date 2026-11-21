@@ -71,6 +71,95 @@ new gPlayerData[MAX_PLAYERS][E_PLAYER_PROFILE_COUNT];
 new gPlayerBank[MAX_PLAYERS];
 new gPlayerCash[MAX_PLAYERS];
 
+#define CORE_SQLITE_ENABLED 1
+#define CORE_DINI_ENABLED 1
+#define CORE_MYSQL_ENABLED 0
+
+new gSQLiteModuleEnabled = CORE_SQLITE_ENABLED;
+new gDiniModuleEnabled = CORE_DINI_ENABLED;
+new gMySQLModuleEnabled = CORE_MYSQL_ENABLED;
+
+stock Core_SetSQLiteModuleEnabled(enabled)
+{
+    gSQLiteModuleEnabled = enabled;
+    return gSQLiteModuleEnabled;
+}
+
+stock Core_SetDiniModuleEnabled(enabled)
+{
+    gDiniModuleEnabled = enabled;
+    return gDiniModuleEnabled;
+}
+
+stock Core_SetMySQLModuleEnabled(enabled)
+{
+    gMySQLModuleEnabled = enabled;
+    return gMySQLModuleEnabled;
+}
+
+stock Core_IsSQLiteModuleEnabled()
+{
+    return gSQLiteModuleEnabled == 1;
+}
+
+stock Core_IsDiniModuleEnabled()
+{
+    return gDiniModuleEnabled == 1;
+}
+
+stock Core_IsMySQLModuleEnabled()
+{
+    return gMySQLModuleEnabled == 1;
+}
+
+stock Core_HasActivePersistenceLayer()
+{
+    return Core_IsSQLiteModuleEnabled() || Core_IsDiniModuleEnabled();
+}
+
+stock Core_GetPersistenceModeSummary(output[], len)
+{
+    if (Core_IsSQLiteModuleEnabled() && Core_IsDiniModuleEnabled())
+    {
+        format(output, len, "sqlite+dini");
+        return;
+    }
+
+    if (Core_IsSQLiteModuleEnabled())
+    {
+        format(output, len, "sqlite-primary");
+        return;
+    }
+
+    if (Core_IsDiniModuleEnabled())
+    {
+        format(output, len, "dini-fallback");
+        return;
+    }
+
+    format(output, len, "offline");
+}
+
+stock Core_CanProcessPersistenceHotpath(playerid, requireValidState = false)
+{
+    if (!Core_IsValidPlayerId(playerid))
+    {
+        return false;
+    }
+
+    if (!Core_IsSQLiteModuleEnabled() && !Core_IsDiniModuleEnabled())
+    {
+        return false;
+    }
+
+    if (requireValidState && !Core_IsValidState(gPlayerData[playerid][E_PLAYER_STATE]))
+    {
+        return false;
+    }
+
+    return true;
+}
+
 stock Core_IsValidPlayerId(playerid)
 {
     return (playerid >= 0 && playerid < MAX_PLAYERS);
@@ -411,8 +500,11 @@ stock Core_OnPlayerDisconnect(playerid, reason)
         return;
     }
 
-    gPlayerData[playerid][E_PLAYER_STATE] = STATE_LOS_SANTOS;
-    gPlayerData[playerid][E_PLAYER_HOME_STATE] = STATE_LOS_SANTOS;
+    new preservedState = Core_GetValidStateOrDefault(gPlayerData[playerid][E_PLAYER_STATE], STATE_LOS_SANTOS);
+    new preservedHome = Core_GetValidStateOrDefault(gPlayerData[playerid][E_PLAYER_HOME_STATE], preservedState);
+
+    gPlayerData[playerid][E_PLAYER_STATE] = preservedState;
+    gPlayerData[playerid][E_PLAYER_HOME_STATE] = preservedHome;
     gPlayerData[playerid][E_PLAYER_ADMIN_LEVEL] = 0;
     gPlayerData[playerid][E_PLAYER_ADMIN_STATE] = -1;
     gPlayerData[playerid][E_PLAYER_WANTED] = 0;
