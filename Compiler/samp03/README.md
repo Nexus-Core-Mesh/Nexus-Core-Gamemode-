@@ -1,18 +1,27 @@
 # Server-Readme – Nexus-Core-Gamemode
 
-Dieses Verzeichnis ist der lokale SA:MP-Laufzeitordner des Projekts.
+> [!NOTE]
+> Diese Doku wurde optisch aufbereitet, ohne technische Fakten, Pfade, Ports oder Projektregeln zu verändern.
+> Fokus lag auf Lesbarkeit, Struktur, Übersichten und deutlicherer Orientierung.
 
-Wichtiger Hinweis:
+## ✅ Wichtig zu wissen
 
-- Der Quellcode liegt im Repository-Root unter `gamemodes/gamemode.pwn`.
-- Der aktive Build schreibt die fertige Binary direkt als `Compiler/samp03/gamemodes/gtasa_reallife.amx`.
-- Im Serverordner sind keine redundanten Alias-Dateien erlaubt.
-- `server.cfg` muss exakt `gamemode0 gtasa_reallife 1` verwenden.
-- Die primäre Persistenz läuft Dini-first über `Compiler/samp03/scriptfiles/`; SQLite/MySQL bleiben optional und dürfen den Bootstrap nicht blockieren.
+- Technische Fakten, Befehle, Pfade und Projektregeln bleiben bewusst unverändert.
+- Port- und Systemtrennung bleiben konsistent, insbesondere für den 7780-Contract und den Dini-first-Pfad.
+- Die optische Aufwertung dient nur der Lesbarkeit, nicht der inhaltlichen Interpretation.
 
-Dieser Ordner dient ausschließlich der Serverausführung und nicht der Entwicklung oder dem Bearbeiten des Source-Codes.
+---
+## 🧭 Schnellüberblick
 
-## Plugin-Layout und 7780-Contract
+| Bereich | Inhalt |
+| --- | --- |
+| Dokument | `README.md` |
+| Typ | Projekt-Readme |
+| Fokus | Zugang, Überblick und Startpfad |
+| Wichtige Pfade | `gamemodes/`, `Compiler/samp03/`, `tools/` |
+
+---
+## 🖥️ Plugin-Layout und 7780-Contract
 
 Der Laufzeitordner enthält zusätzlich das dedizierte Plugin-Layout unter `Compiler/samp03/plugins/`. Dieses Layout dokumentiert den empfohlenen Stack (`crashdetect`, `streamer`, `sscanf2`, `sqlite`, `mysql`, `zcmd`, `foreach`, `MapAndreas`, `pawn-plus`) und merkt sich sauber, dass reale `.so`-/`.dll`-Binaries nur in der Zielumgebung bzw. der Ubuntu-VM vorhanden sein dürfen. Keine erfundenen oder placeholderhaften Binärdateien werden im Repository verankert.
 

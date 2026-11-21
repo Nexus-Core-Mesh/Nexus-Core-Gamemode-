@@ -1,10 +1,31 @@
 # Nexus Core Control Panel
 
-## Zweck
+> [!NOTE]
+> Diese Doku wurde optisch aufbereitet, ohne technische Fakten, Pfade, Ports oder Projektregeln zu verändern.
+> Fokus lag auf Lesbarkeit, Struktur, Übersichten und deutlicherer Orientierung.
+
+## ✅ Wichtig zu wissen
+
+- Technische Fakten, Befehle, Pfade und Projektregeln bleiben bewusst unverändert.
+- Port- und Systemtrennung bleiben konsistent, insbesondere für den 7780-Contract und den Dini-first-Pfad.
+- Die optische Aufwertung dient nur der Lesbarkeit, nicht der inhaltlichen Interpretation.
+
+---
+## 🧭 Schnellüberblick
+
+| Bereich | Inhalt |
+| --- | --- |
+| Dokument | `README.md` |
+| Typ | Projekt-Readme |
+| Fokus | Zugang, Überblick und Startpfad |
+| Wichtige Pfade | `control-panel/`, `data/db/`, `Compiler/samp03/scriptfiles/` |
+
+---
+## 📘 Zweck
 
 Das Control Panel ist ein eigenständiges Web-Managementmodul für den GTA:SA-Reallife-Gamemode. Es ist bewusst vom SA:MP-Pawn-Gamemode entkoppelt und liest dieselbe SQLite-Datenbank, damit Betriebsüberwachung, Administration und Weiterentwicklung ohne direkte Einbindung in die Spielserver-Logik möglich bleiben.
 
-## Funktionen
+## 📘 Funktionen
 
 - serverweite Zustandsübersicht
 - Länder-/Staatskassenübersicht für LS, SF und LV
@@ -13,7 +34,7 @@ Das Control Panel ist ein eigenständiges Web-Managementmodul für den GTA:SA-Re
 - Event-, Market-, Dispatch- und Economy-Übersichten
 - vorbereitete Admin-/UCP-/Webbridge-Integration
 
-## Architektur
+## 🏗️ Architektur
 
 ```text
 control-panel/
@@ -28,13 +49,13 @@ control-panel/
 └── node_modules/
 ```
 
-## Voraussetzungen
+## 📘 Voraussetzungen
 
 - Node.js 18+
 - Zugriff auf `../data/db/gtasa_reallife.db`
 - gültiges SQLite-Schema mit Tabellen wie `states`, `state_bank`, `players`, `jobs`, `factions`, `houses`, `businesses`, `vehicle_mods`, `server_events`
 
-## Starten
+## 🔧 Starten
 
 ```bash
 cd control-panel
@@ -51,7 +72,7 @@ python3 tools/control_panel_manager.py start
 
 Danach ist das Dashboard unter `http://localhost:3001/` erreichbar.
 
-## Projektweite Integration
+## 📘 Projektweite Integration
 
 Das Panel ist bewusst ein optionales Betriebsmodul, nicht der primäre Spielzustand. Die zentrale Produktionsquelle bleibt der SA:MP-Gamemode mit Dini-first-Saves unter `Compiler/samp03/scriptfiles/`, während die Dashboard-Sicht lesend auf `data/db/gtasa_reallife.db` basiert.
 
@@ -65,7 +86,7 @@ python3 tools/control_panel_manager.py start
 
 Unter dieser Logik ist das Panel ein kontrollierter Zusatz-Worker: wenn `node`/`npm` oder die Datenbank fehlen, wird nur eine Warnung ausgegeben, die Serverinitialisierung läuft aber weiter, solange der eigentliche Gamemode-Build valid ist.
 
-## API-Endpunkte
+## 📘 API-Endpunkte
 
 - `GET /api/overview`
 - `GET /api/summary`
@@ -89,7 +110,7 @@ Unter dieser Logik ist das Panel ein kontrollierter Zusatz-Worker: wenn `node`/`
 - `GET /api/web-sync`
 - `GET /api/events`
 
-## Designprinzipien
+## ✅ Designprinzipien
 
 - nur lesender Zugriff auf SQLite
 - stateless und leicht erweiterbar
@@ -100,7 +121,7 @@ Unter dieser Logik ist das Panel ein kontrollierter Zusatz-Worker: wenn `node`/`
 - die Datenbasis des Panels ist keine primäre Speicherquelle, sondern eine lesende Betriebsansicht; fehlende Synchronisation zählt als produktiver Mismatch, nicht als normaler Zustand
 - der Panel-Read-Only-Zugriff ist im echten Betrieb nur dann korrekt, wenn der Dini-first-Save-Pfad mit einem validen SQLite-Upsert oder einer direkten INI-Lese-Sicherheitslage konsistent bleibt
 
-## Produktionshinweis: Dini-first vs. SQLite-Read-Only
+## ✅ Produktionshinweis: Dini-first vs. SQLite-Read-Only
 
 Das Panel ist bewusst lesend auf SQLite ausgelegt, aber der Gamemode läuft in der aktuellen Architektur Dini-first über `Compiler/samp03/scriptfiles/`. Das bedeutet für den echten Betrieb:
 
@@ -111,11 +132,11 @@ Das Panel ist bewusst lesend auf SQLite ausgelegt, aber der Gamemode läuft in d
 
 Das Panel ist also keine Ersatzquelle für den State, sondern eine lesende Betriebsansicht auf dieselbe Produktionsdatenbasis.
 
-## Veröffentlichungsstand
+## 📊 Veröffentlichungsstand
 
 Das Control Panel ist als modernes Betriebs- und Monitoringmodul für den aktuellen Projektstand dokumentiert und auf den erweiterten RP-Stand des Projekts abgestimmt. Es bildet die betriebliche Sicht für Treasury, State-Management, Fahrzeug-Ownership, House-/Property-Status und Admin-Informationen. Ein echter Produktionsbetrieb ist nur freigegeben, wenn der Dini-first-Save-Pfad und der SQLite-/Autosync-Pfad auf der Ziel-VM konsistent synchronisiert sind.
 
-## Erweiterungsplan
+## 📌 Erweiterungsplan
 
 1. Live-Admin-Aktionen im Panel
 2. Fraktions- und Business-Management-Views
@@ -124,6 +145,6 @@ Das Control Panel ist als modernes Betriebs- und Monitoringmodul für den aktuel
 5. UCP-/Forum-Bridge und Auth-Integration
 6. Logs und Audit-Tracking
 
-## Wichtig
+## ⚠️ Wichtig
 
 Das Panel ist bewusst nur als Betriebs- und Managementschicht konzipiert. Die eigentliche Spiel- und Besitzlogik bleibt im SA:MP-Gamemode, während das Panel als sichere, lesende Schnittstelle für Zustände, Kassen und Statusdaten dient.
