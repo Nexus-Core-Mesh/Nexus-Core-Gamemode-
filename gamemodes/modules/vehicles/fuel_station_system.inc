@@ -17,6 +17,8 @@ new gFuelStationCount = 0;
 stock FuelStationSystem_Initialize()
 {
     DB_EnsureFuelStationSchema();
+    DB_Execute("DELETE FROM fuel_stations WHERE state_id < 0 OR (x = 0.0 AND y = 0.0 AND z = 0.0 AND price <= 0)");
+
     for (new i = 0; i < MAX_FUEL_STATIONS; i++)
     {
         gFuelStationState[i] = -1;
@@ -49,7 +51,14 @@ stock FuelStationSystem_RegStation(stateid, Float:x, Float:y, Float:z, price)
     gFuelStationY[gFuelStationCount] = y;
     gFuelStationZ[gFuelStationCount] = z;
     gFuelStationPrice[gFuelStationCount] = price;
-    DB_Execute("INSERT OR REPLACE INTO fuel_stations (state_id, x, y, z, price, updated_at) VALUES (-1, 0.0, 0.0, 0.0, 0, datetime('now'))");
+
+    new query[256];
+    format(query, sizeof(query), "INSERT INTO fuel_stations (state_id, x, y, z, price, updated_at) VALUES (%d, %f, %f, %f, %d, datetime('now'))", stateid, x, y, z, price);
+    if (!DB_Execute(query))
+    {
+        return false;
+    }
+
     gFuelStationCount++;
     return true;
 }

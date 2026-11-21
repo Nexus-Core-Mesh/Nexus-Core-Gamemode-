@@ -1095,6 +1095,7 @@ stock UiHub_OnDialogResponse(playerid, dialogid, response, listitem, const input
                 Core_SetPlayerState(playerid, defaultHome);
                 DB_SavePlayerState(playerid, defaultHome);
                 LoginSystem_SetPlayerHomeState(playerid, defaultHome);
+                LoginSystem_CompleteReg(playerid);
                 return true;
             }
 
