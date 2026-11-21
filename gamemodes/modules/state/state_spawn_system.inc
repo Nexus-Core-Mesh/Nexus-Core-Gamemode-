@@ -71,35 +71,50 @@ stock int:StateSpawnSystem_GetSpawnCount(stateid)
 
 stock StateSpawnSystem_Apply(playerid, stateid)
 {
-    if (!Core_IsValidPlayerId(playerid) || !Core_IsValidState(stateid))
+    if (!Core_IsValidPlayerId(playerid))
     {
         return false;
     }
 
-    if (gStateSpawnCount[stateid] <= 0)
+    new safeState = Core_GetValidStateOrDefault(stateid, Core_GetPlayerState(playerid));
+    if (!Core_IsValidState(safeState))
     {
-        StateSystem_SpawnPlayerForState(playerid, stateid);
-        Core_SetPlayerState(playerid, stateid);
-        Core_SetPlayerHomeState(playerid, stateid);
-        DB_SetPlayerState(playerid, stateid);
-        DB_SavePlayerState(playerid, stateid);
+        safeState = STATE_LOS_SANTOS;
+    }
+
+    new safeHomeState = Core_GetValidStateOrDefault(Core_GetPlayerHomeState(playerid), safeState);
+    if (!Core_IsValidState(safeHomeState))
+    {
+        safeHomeState = safeState;
+    }
+
+    Core_SetPlayerState(playerid, safeState);
+    Core_SetPlayerHomeState(playerid, safeHomeState);
+    DB_ValidateStateTransfer(playerid, safeState, safeHomeState);
+    DB_SetPlayerState(playerid, safeState);
+    DB_SavePlayerState(playerid, safeState);
+
+    if (gStateSpawnCount[safeState] <= 0)
+    {
+        StateSystem_SpawnPlayerForState(playerid, safeState);
+        CameraSystem_ExitCameraMode(playerid);
+        SetCameraBehindPlayer(playerid);
+        TogglePlayerControllable(playerid, 1);
         return true;
     }
 
-    new slot = gStateSpawnCount[stateid] - 1;
+    new slot = gStateSpawnCount[safeState] - 1;
     new stateName[32];
-    StateSystem_GetStateName(stateid, stateName, sizeof(stateName));
+    StateSystem_GetStateName(safeState, stateName, sizeof(stateName));
 
     SetPlayerPos(playerid,
-        gStateSpawnXByState[stateid][slot],
-        gStateSpawnYByState[stateid][slot],
-        gStateSpawnZByState[stateid][slot]);
-    SetPlayerFacingAngle(playerid, gStateSpawnHeadingByState[stateid][slot]);
-    Core_SetPlayerState(playerid, stateid);
-    Core_SetPlayerHomeState(playerid, stateid);
-    DB_SetPlayerState(playerid, stateid);
-    DB_SavePlayerState(playerid, stateid);
-    CameraSystem_Reset(playerid);
+        gStateSpawnXByState[safeState][slot],
+        gStateSpawnYByState[safeState][slot],
+        gStateSpawnZByState[safeState][slot]);
+    SetPlayerFacingAngle(playerid, gStateSpawnHeadingByState[safeState][slot]);
+    CameraSystem_ExitCameraMode(playerid);
+    SetCameraBehindPlayer(playerid);
+    TogglePlayerControllable(playerid, 1);
 
     new msg[128];
     format(msg, sizeof(msg), "[STATE] Spawn gesetzt: %s", stateName);
@@ -117,6 +132,107 @@ stock StateSpawnSystem_SetHome(playerid, stateid)
     Core_SetPlayerHomeState(playerid, stateid);
     Core_SetPlayerState(playerid, stateid);
     return StateSpawnSystem_Apply(playerid, stateid);
+}
+
+stock bool:StateSpawnSystem_RegisterStateCoordinates(stateid, Float:x, Float:y, Float:z, Float:angle)
+{
+    if (!Core_IsValidState(stateid))
+    {
+        return false;
+    }
+
+    new slot = gStateSpawnCount[stateid];
+    if (slot >= MAX_STATE_SPAWN_POINTS)
+    {
+        return false;
+    }
+    gStateSpawnXByState[stateid][slot] = x;
+    gStateSpawnYByState[stateid][slot] = y;
+    gStateSpawnZByState[stateid][slot] = z;
+    gStateSpawnHeadingByState[stateid][slot] = angle;
+    gStateSpawnCount[stateid]++;
+    return true;
+}
+
+stock bool:StateSpawnSystem_SetStateSpawn(stateid, Float:x, Float:y, Float:z, Float:angle)
+{
+    if (!Core_IsValidState(stateid))
+    {
+        return false;
+    }
+
+    new safeState = Core_GetValidStateOrDefault(stateid, STATE_LOS_SANTOS);
+    if (!Core_IsValidState(safeState))
+    {
+        return false;
+    }
+
+    new slot = gStateSpawnCount[safeState];
+    if (slot >= MAX_STATE_SPAWN_POINTS)
+    {
+        slot = MAX_STATE_SPAWN_POINTS - 1;
+    }
+
+    gStateSpawnXByState[safeState][slot] = x;
+    gStateSpawnYByState[safeState][slot] = y;
+    gStateSpawnZByState[safeState][slot] = z;
+    gStateSpawnHeadingByState[safeState][slot] = angle;
+    if (gStateSpawnCount[safeState] < MAX_STATE_SPAWN_POINTS)
+    {
+        gStateSpawnCount[safeState]++;
+    }
+    return true;
+}
+
+stock bool:StateSpawnSystem_GetStateSpawn(stateid, slot, &Float:x, &Float:y, &Float:z, &Float:angle)
+{
+    if (!Core_IsValidState(stateid) || slot < 0 || slot >= MAX_STATE_SPAWN_POINTS)
+    {
+        x = 0.0; y = 0.0; z = 0.0; angle = 0.0;
+        return false;
+    }
+
+    x = gStateSpawnXByState[stateid][slot];
+    y = gStateSpawnYByState[stateid][slot];
+    z = gStateSpawnZByState[stateid][slot];
+    angle = gStateSpawnHeadingByState[stateid][slot];
+    return true;
+}
+
+stock StateSpawnSystem_TpToState(playerid, stateid)
+{
+    if (!Core_IsValidPlayerId(playerid) || !Core_IsValidState(stateid))
+    {
+        return false;
+    }
+
+    new safeState = Core_GetValidStateOrDefault(stateid, Core_GetPlayerState(playerid));
+    if (!Core_IsValidState(safeState))
+    {
+        safeState = STATE_LOS_SANTOS;
+    }
+
+    Core_SetPlayerState(playerid, safeState);
+    Core_SetPlayerHomeState(playerid, safeState);
+    DB_ValidateStateTransfer(playerid, safeState, safeState);
+    DB_SavePlayerState(playerid, safeState);
+    StateSpawnSystem_Apply(playerid, safeState);
+    return true;
+}
+
+stock StateSpawnSystem_TpToPos(playerid, Float:x, Float:y, Float:z, Float:angle)
+{
+    if (!Core_IsValidPlayerId(playerid))
+    {
+        return false;
+    }
+
+    SetPlayerPos(playerid, x, y, z);
+    SetPlayerFacingAngle(playerid, angle);
+    CameraSystem_Reset(playerid);
+    SetCameraBehindPlayer(playerid);
+    TogglePlayerControllable(playerid, 1);
+    return true;
 }
 
 #endif

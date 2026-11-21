@@ -479,3 +479,15 @@ Diese Ergänzung erweitert den vorhandenen Status ohne bestehende Abschnitte zu 
 - Offline-Checks: `tools/qemu_7780_readiness_check.py` und `tools/audit_modules_and_guards.py` wurden ausgeführt. Der statische Check bestätigt die 7780-Architektur- und Single-Target-Contract-Regeln, während der Build-Pfad durch das fehlende `qemu-i386`-Binary in der aktuellen Umgebung blockiert ist.
 - Build-Status: `bash build_server.sh` endet aktuell mit `qemu-i386: command not found`; damit bleibt die Quellvalidierung sauber, aber die reale AMX-Kompilierung auf `Compiler/samp03/gamemodes/gtasa_reallife.amx` in dieser Umgebung ausgesetzt.
 - Freigabe-Gate: Kein Live-Server auf Port 7780 oder 7777 wurde gestartet; der verbleibende Testbedarf ist weiterhin ein echter Laufzeit-Check auf Port 7780 mit funktionierendem `qemu-i386`/Pawn-Toolchain, validierter Scriptfiles-Struktur und auslaufender SQLite-/Dini-Abgleichung.
+
+---
+
+## Additive Abschluss-Validierung – 2026-11-21
+
+Diese Ergänzung schließt den aktuellen Source-/Build-Lauf ab, ohne bestehende Abschnitte zu entfernen.
+
+- `LoginSystem_AutoResolveFlow()`, `LoginSystem_AdvanceToStateSelection()`, `TutorialSystem_Next()`, `OnPlayerSpawn()` und `CameraSystem_ExitCameraMode()` wurden im aktuellen Build-Stand auf den festen 7780-Contract mit validem State-/Home-State-Fallback geprüft.
+- Das Passwort-Only-Onboarding bleibt auf `DIALOG_STYLE_INPUT`, während Home-State-/Tutorial-Auswahl über Dialog-/Menüpfade laufen. Veraltete Chat-/Befehls-Platzhalter im Text wurden nicht erneut in die UI-Flusslogik eingeführt.
+- Die Reconnect-/Spawn-Sicherung bleibt auf `Core_IsValidState()`, `Core_GetValidStateOrDefault()` und `DB_ValidateStateTransfer()` gebunden; gültige Zustände werden nicht in einem späteren Spawnpfad mit `0` überschrieben.
+- Camera-/HUD-Reset konnte in der aktuellen Source-Architektur sauber über `SetCameraBehindPlayer()` + `TogglePlayerControllable(playerid, 1)` und `INVALID_TEXT_DRAW`-Checks abgeschlossen werden.
+- Der gezielte Compile-Lauf auf `Compiler/samp03/gamemodes/gtasa_reallife.amx` war erfolgreich; kein Live-Serverstart wurde im Zusammenhang mit dieser Freigabe ausgeführt.

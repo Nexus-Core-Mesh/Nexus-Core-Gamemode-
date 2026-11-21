@@ -111,8 +111,22 @@ stock BusinessSystem_BuyBusiness(playerid, bizid)
         return false;
     }
 
+    new safeState = Core_GetValidStateOrDefault(gBizState[bizid], STATE_LOS_SANTOS);
+    if (!Core_IsValidState(safeState))
+    {
+        Core_ChangePlayerBank(playerid, gBizValue[bizid]);
+        SendClientMessage(playerid, 0xFF0000AA, "[BIZ] Staatlicher Kontext für das Geschäft ist ungültig.");
+        return false;
+    }
+
+    if (!StateLedgerSystem_Transfer(safeState, max(0, gBizValue[bizid] / 10), "business_purchase", "business_system"))
+    {
+        Core_ChangePlayerBank(playerid, gBizValue[bizid]);
+        SendClientMessage(playerid, 0xFF0000AA, "[BIZ] Staatlicher Transfer für das Business fehlgeschlagen.");
+        return false;
+    }
+
     gBizOwner[bizid] = playerid;
-    StateLedgerSystem_Transfer(gBizState[bizid], gBizValue[bizid] / 10, "business_purchase", "business_system");
     SendClientMessage(playerid, 0x00FF00AA, "[BIZ] Geschäft erfolgreich erworben.");
     return true;
 }
@@ -165,6 +179,7 @@ stock BusinessSystem_ApplyEconomyPulse(bizid, amount, const reason[])
         return true;
     }
 
+    new safeState = Core_GetValidStateOrDefault(gBizState[bizid], STATE_LOS_SANTOS);
     new total = gBizIncome[bizid] + amount;
     if (total < 0)
     {
@@ -172,7 +187,12 @@ stock BusinessSystem_ApplyEconomyPulse(bizid, amount, const reason[])
     }
 
     gBizIncome[bizid] = total;
-    return StateLedgerSystem_Transfer(gBizState[bizid], amount / 2, reason, "business_system");
+    if (!StateLedgerSystem_Transfer(safeState, max(0, amount / 2), reason, "business_system"))
+    {
+        gBizIncome[bizid] = max(0, total - amount);
+        return false;
+    }
+    return true;
 }
 
 stock BusinessSystem_CollectIncome(bizid)
@@ -185,7 +205,9 @@ stock BusinessSystem_CollectIncome(bizid)
     {
         return false;
     }
-    if (!Core_IsValidState(gBizState[bizid]))
+
+    new safeState = Core_GetValidStateOrDefault(gBizState[bizid], STATE_LOS_SANTOS);
+    if (!Core_IsValidState(safeState))
     {
         return false;
     }
@@ -197,7 +219,7 @@ stock BusinessSystem_CollectIncome(bizid)
     }
 
     gBizIncome[bizid] = income;
-    return StateSystem_ApplyTreasuryDelta(gBizState[bizid], max(0, income / 4));
+    return StateLedgerSystem_Transfer(safeState, max(0, income / 4), "business_income", "business_system");
 }
 
 stock BusinessSystem_GetIncome(bizid)
@@ -216,6 +238,38 @@ stock BusinessSystem_GetBusinessState(bizid)
         return STATE_LOS_SANTOS;
     }
     return Core_GetValidStateOrDefault(gBizState[bizid], STATE_LOS_SANTOS);
+}
+
+stock BusinessSystem_SetOwner(bizid, ownerid)
+{
+    if (bizid < 0 || bizid >= MAX_BUSINESSES)
+    {
+        return false;
+    }
+    if (ownerid < -1 || ownerid >= MAX_PLAYERS)
+    {
+        return false;
+    }
+
+    gBizOwner[bizid] = ownerid;
+    return true;
+}
+
+stock BusinessSystem_SetState(bizid, stateid)
+{
+    if (bizid < 0 || bizid >= MAX_BUSINESSES)
+    {
+        return false;
+    }
+
+    new safeState = Core_GetValidStateOrDefault(stateid, STATE_LOS_SANTOS);
+    if (!Core_IsValidState(safeState))
+    {
+        return false;
+    }
+
+    gBizState[bizid] = safeState;
+    return true;
 }
 
 // Zahlt das aufgelaufene Einkommen abzüglich Staatsanteil auf das Bankkonto des Besitzers aus.

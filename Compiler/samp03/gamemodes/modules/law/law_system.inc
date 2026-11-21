@@ -162,7 +162,7 @@ stock LawSystem_ShowWanted(playerid)
 
     for (new i = 0; i < 3; i++)
     {
-        if (gLawTD[playerid][i] != Text:0)
+        if (gLawTD[playerid][i] != Text:INVALID_TEXT_DRAW)
         {
             TextDrawShowForPlayer(playerid, gLawTD[playerid][i]);
         }
@@ -173,11 +173,11 @@ stock LawSystem_HideWanted(playerid)
 {
     for (new i = 0; i < 8; i++)
     {
-        if (gLawTD[playerid][i] != Text:0)
+        if (gLawTD[playerid][i] != Text:INVALID_TEXT_DRAW)
         {
             TextDrawHideForPlayer(playerid, gLawTD[playerid][i]);
             TextDrawDestroy(gLawTD[playerid][i]);
-            gLawTD[playerid][i] = Text:0;
+            gLawTD[playerid][i] = Text:INVALID_TEXT_DRAW;
         }
     }
 }

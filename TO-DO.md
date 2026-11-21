@@ -82,7 +82,18 @@ Das Projekt als modularen, erweiterbaren GTA:SA-Reallife-Gamemode mit 3-Staaten-
 - [x] Single-Target-Build-Pfad auf `Compiler/samp03/gamemodes/gtasa_reallife.amx` konsolidiert; alte `gamemode.amx`-Duplikate und Legacy-Aliase werden im Build und im Serverordner bereinigt.
 
 ### Release-Milestone B2 – Admin / Projektleiter-System
+
+#### Additive 7780-Härtung – 2026-11-21
+
+- [x] `StateSpawnSystem_Apply()` auf validierte State-/Home-State-Normalisierung und Reset-Schutz angepasst; gültige Werte werden nicht erneut auf `0` zurückgesetzt.
+- [x] `OnPlayerSpawn()` verhindert erneute Tutorial-/State-Szenen, sobald `home_state` oder `state_id` bereits gültig gesetzt sind.
+- [x] Camera-/Control-Reset über `CameraSystem_ExitCameraMode()`, `SetCameraBehindPlayer()` und `TogglePlayerControllable(playerid, 1)` konsolidiert, um veraltete Intro- und Spawn-Kameras zu verhindern.
+- [x] Single-Target-Build auf `Compiler/samp03/gamemodes/gtasa_reallife.amx` mit `qemu-i386`-Toolchain und Exit-Code `0` bestätigt; Port `7777` bleibt tabu.
+- [x] Offline-Checks auf `tools/*.py`, `scripts/*.sh` und Build-Path laufen ohne Serverstart durch; Live-Server- und Client-Tests bleiben bewusst aus.
+
+### Release-Milestone B2 – Admin / Projektleiter-System
 - [x] Projektleiter-/Owner-Zugang als versteckter Spezialzugang in `core.inc` und `admin_system.inc` ergänzt; `Core_IsProjectLeader()` und `AdminSystem_IsProjectLeader()` sichern Zugriff ohne normale Spieler-Hilfen.
+- [x] Disconnect-/Reset-/Menüwechselpfade auf saubere Camera- und HUD-Cleanup erweitert: `CameraSystem_ExitCameraMode()`, `CameraSystem_Reset()`, `RoleplayUI_Hide()` und `TutorialSystem_HideStage()` werden vor Disconnect/Reset und beim Öffnen von Haupt-/Quick-Action-/State-Menüs aufgerufen, um doppelte 4-Zonen-HUD-Renderings oder veraltete Kamerazustände zu verhindern.
 - [x] State-Setzen, Teleport und Spawnen über `StateSpawnSystem_Apply()`/`CameraSystem_Reset()` eingebaut; `Core_SetPlayerState()` und `Core_SetPlayerHomeState()` bleiben auf gültige State-IDs beschränkt.
 - [x] Fahrzeug-Spawnen über `VehicleSystem_SpawnAdminVehicle()` integriert; Slot-/Limit-Checks verbleiben im Vehiclesystem und vermeiden direkte rohe Array-Schreibpfade.
 - [x] Admin-/Projektleiter-Befehle `/projectlead`, `/setstate`, `/spawnvehicle` in `AdminSystem_HandleCommand()` ergänzt und auf gültige `strmid`/sscanf-Befehlsanalyse mit klaren Fehlermeldungen stabilisiert.
@@ -194,4 +205,26 @@ Diese Eintragung ergänzt die vorhandenen Milestones ohne einen bestehenden Absc
 - Reale DB-API-Lücke behoben: `DB_GetPlayerHomeState()` ergänzt, damit State-/Home-State-Rehydrate- und Connect-Pfade die Core-Quelle erneut korrekt lesen können.
 - Offlinestrategie bestätigt: `bash scripts/build_gamemode.sh` und die statischen Guards `(py_compile`, `bash -n`, `node --check`, Tool-Guard-Skripte) liefen erfolgreich durch.
 - Der Fortgang bleibt immer noch nicht als Live-Server-Start auf Port 7780 interpretiert; das bleibt ein separates Freigabe-Gate außerhalb der Code-Validierung.
+
+---
+
+## Additive Abschluss-Validierung – 2026-11-21
+
+Diese Abschlussnotiz ergänzt den Projekttracker, ohne frühere Einträge zu entfernen.
+
+- Finaler Build- und Hardening-Lauf: `LoginSystem_AutoResolveFlow()`, `LoginSystem_AdvanceToStateSelection()`, `TutorialSystem_Next()`, `OnPlayerSpawn()` und `CameraSystem_ExitCameraMode()` wurden in der aktuellen 7780-Source-Konfiguration geprüft und auf den menu-first-Flow mit gültigem State-/Home-State-Fallback ausgerichtet.
+- Passwort-Only-Onboarding bleibt auf `DIALOG_STYLE_INPUT` mit freiem Passwort-Feld beschränkt; alle Auswahlpunkte für Stadt/State und Tutorial-Schritte laufen über Dialog-/Menü-Buttons weiter.
+- State-/Home-State-Sicherung bleibt unverändert durch `Core_IsValidState()`, `Core_GetValidStateOrDefault()` und den bestehenden `DB_ValidateStateTransfer()`-Guard. Gültige Werte werden nicht durch spätere Reconnect-/Spawn-Pfade auf `0` zurückgesetzt.
+- Camera-/HUD-Cleanup blieb zentralisiert: `SetCameraBehindPlayer()` + `TogglePlayerControllable(playerid, 1)` wurden bei Reset/Exit gepflegt und der TextDraw-/HUD-Cleanup bleibt über `INVALID_TEXT_DRAW`-Checks abgesichert.
+- Build-Status: Der gezielte AMX-Build auf `Compiler/samp03/gamemodes/gtasa_reallife.amx` lief erfolgreich und hat Exit-Code `0` zurückgegeben; ein echter Live-Serverstart unter Port 7780 blieb bewusst aus, da die Freigabe dafür ausdrücklich offen bleibt.
+- Zusätzlicher Admin-/State-Integrationsschritt: `AdminSystem_ApplyStateTeleport()` und `/tpstate`-/`/setstateplayer`-Commands wurden ergänzt, damit Projektleiter-/Admin-Pfade gültige State-Transfers mit Reset- und Camera-Guard absichern, ohne andere Spielerrechte zu überschreiten.
+
+### Saison-Endstand – 2026-11-21
+
+- Source-Status: Architektur-, Lifecycle-, Kamera- und State-Guardrails sind im aktuellen Quellbaum stabil und konsistent im 7780-Target verankert.
+- Build-Status: `LD_LIBRARY_PATH="$PWD/Compiler/pawncc${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" qemu-i386 Compiler/pawncc/pawncc -o"$PWD/Compiler/samp03/gamemodes/gtasa_reallife.amx" gamemodes/gamemode.pwn -iincludes -iCompiler/samp03/include -d3` liefert `Exit-Code 0`.
+- Offline-Validierung: `python3 -m py_compile tools/*.py`, `bash -n` auf den passenden Shell-Skripten und die Guard-Skripte unter `tools/` liefen ohne Fehler durch; der einzige verbleibende Hinweis ist ein nicht-blockierender Compiler-Warnhinweis in `includes/dini.inc` (`warning 224`).
+- Abgeschlossen: State-Transfer, Tutorial-/Spawn-Guards, Kamera-/HUD-Reset und Single-Target-Build wurden erneut verifiziert.
+- Offen für späteren Live-Check auf Port 7780: echter Serverstart, Client-Loop, DB-Live-Sync und Gameplay-Validierung. Diese Schritte bleiben bewusst auf ausdrückliche Freigabe verschoben.
+- Haus- und Business-API wurden konsistent erweitert: `HouseSystem_SetState()` und `HouseSystem_SetPrice()` sichern gültige State-/Preiswerte beim dynamischen Haus-Editor, während `BusinessSystem_*`-Pfade weiterhin auf gültige State-IDs und atomare Treasury-/Bank-Checks ausgerichtet bleiben.
 

@@ -73,10 +73,25 @@ stock HouseSystem_BuyHouse(playerid, houseid)
         return false;
     }
 
+    new safeState = Core_GetValidStateOrDefault(gHouseState[houseid], STATE_LOS_SANTOS);
+    if (!Core_IsValidState(safeState))
+    {
+        Core_ChangePlayerBank(playerid, price);
+        SendClientMessage(playerid, 0xFF0000AA, "[HOUSE] Staatlicher Kontext für das Haus ist ungültig.");
+        return false;
+    }
+
     gPlayerData[playerid][E_PLAYER_BANK] = Core_GetPlayerBank(playerid);
     gHouseOwner[houseid] = playerid;
     gHouseLocked[houseid] = HOUSE_LOCKED;
-    StateSystem_ApplyTreasuryDelta(gHouseState[houseid], price / 12);
+    if (!StateLedgerSystem_Transfer(safeState, max(0, price / 12), "house_purchase", "house_system"))
+    {
+        Core_ChangePlayerBank(playerid, price);
+        gHouseOwner[houseid] = -1;
+        gHouseLocked[houseid] = HOUSE_UNLOCKED;
+        SendClientMessage(playerid, 0xFF0000AA, "[HOUSE] Staatlicher Transfer für das Haus fehlgeschlagen.");
+        return false;
+    }
     SendClientMessage(playerid, 0x00FF00AA, "[HOUSE] Haus erfolgreich gekauft. Staatseinnahme: %d$", price / 12);
     return true;
 }
@@ -87,8 +102,45 @@ stock HouseSystem_SetOwner(houseid, ownerid)
     {
         return false;
     }
+    if (ownerid < -1 || ownerid >= MAX_PLAYERS)
+    {
+        return false;
+    }
+
     gHouseOwner[houseid] = ownerid;
-    gHouseLocked[houseid] = HOUSE_LOCKED;
+    gHouseLocked[houseid] = (ownerid == -1) ? HOUSE_UNLOCKED : HOUSE_LOCKED;
+    return true;
+}
+
+stock HouseSystem_SetState(houseid, stateid)
+{
+    if (houseid < 0 || houseid >= MAX_HOUSES)
+    {
+        return false;
+    }
+
+    new safeState = Core_GetValidStateOrDefault(stateid, STATE_LOS_SANTOS);
+    if (!Core_IsValidState(safeState))
+    {
+        return false;
+    }
+
+    gHouseState[houseid] = safeState;
+    return true;
+}
+
+stock HouseSystem_SetPrice(houseid, price)
+{
+    if (houseid < 0 || houseid >= MAX_HOUSES)
+    {
+        return false;
+    }
+    if (price < 0)
+    {
+        return false;
+    }
+
+    gHousePrice[houseid] = price;
     return true;
 }
 

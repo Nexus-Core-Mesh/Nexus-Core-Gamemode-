@@ -198,11 +198,11 @@ stock GangWarSystem_HideStatus(playerid)
 {
     for (new i = 0; i < 8; i++)
     {
-        if (gGangWarTD[playerid][i] != Text:0)
+        if (gGangWarTD[playerid][i] != Text:INVALID_TEXT_DRAW)
         {
             TextDrawHideForPlayer(playerid, gGangWarTD[playerid][i]);
             TextDrawDestroy(gGangWarTD[playerid][i]);
-            gGangWarTD[playerid][i] = Text:0;
+            gGangWarTD[playerid][i] = Text:INVALID_TEXT_DRAW;
         }
     }
 }

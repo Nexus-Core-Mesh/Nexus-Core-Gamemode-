@@ -250,7 +250,7 @@ stock AdminMappingSystem_ShowMenu(playerid)
 
     for (new i = 0; i < 9; i++)
     {
-        if (gAdminMapTD[playerid][i] != Text:0)
+        if (gAdminMapTD[playerid][i] != Text:INVALID_TEXT_DRAW)
         {
             TextDrawShowForPlayer(playerid, gAdminMapTD[playerid][i]);
         }
@@ -261,11 +261,11 @@ stock AdminMappingSystem_HideMenu(playerid)
 {
     for (new i = 0; i < 12; i++)
     {
-        if (gAdminMapTD[playerid][i] != Text:0)
+        if (gAdminMapTD[playerid][i] != Text:INVALID_TEXT_DRAW)
         {
             TextDrawHideForPlayer(playerid, gAdminMapTD[playerid][i]);
             TextDrawDestroy(gAdminMapTD[playerid][i]);
-            gAdminMapTD[playerid][i] = Text:0;
+            gAdminMapTD[playerid][i] = Text:INVALID_TEXT_DRAW;
         }
     }
 }

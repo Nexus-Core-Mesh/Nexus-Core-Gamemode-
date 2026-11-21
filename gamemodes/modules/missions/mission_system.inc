@@ -103,7 +103,12 @@ stock MissionSystem_CompleteMission(playerid)
             SendClientMessage(playerid, 0xFF6666AA, "[MISSION] Die Auszahlung konnte nicht verarbeitet werden.");
             return;
         }
-        StateSystem_ApplyTreasuryDelta(stateid, reward / 10);
+        if (!StateLedgerSystem_Transfer(stateid, max(0, reward / 10), "mission_reward", "mission_system"))
+        {
+            Core_ChangePlayerBank(playerid, -reward);
+            SendClientMessage(playerid, 0xFF6666AA, "[MISSION] Staatskasse/Transfer für Belohnung war ungültig, Abschluss abgebrochen.");
+            return;
+        }
     }
 
     printf("[MISSION] Spieler %d hat Mission %d abgeschlossen und %d$ erhalten.", playerid, missionid, reward);
@@ -184,7 +189,7 @@ stock MissionSystem_ShowMissionList(playerid)
 
     for (new i = 0; i < 8; i++)
     {
-        if (gMissionTD[playerid][i] != Text:0)
+        if (gMissionTD[playerid][i] != Text:INVALID_TEXT_DRAW)
         {
             TextDrawShowForPlayer(playerid, gMissionTD[playerid][i]);
         }
@@ -195,11 +200,11 @@ stock MissionSystem_HideMissionList(playerid)
 {
     for (new i = 0; i < 8; i++)
     {
-        if (gMissionTD[playerid][i] != Text:0)
+        if (gMissionTD[playerid][i] != Text:INVALID_TEXT_DRAW)
         {
             TextDrawHideForPlayer(playerid, gMissionTD[playerid][i]);
             TextDrawDestroy(gMissionTD[playerid][i]);
-            gMissionTD[playerid][i] = Text:0;
+            gMissionTD[playerid][i] = Text:INVALID_TEXT_DRAW;
         }
     }
 }

@@ -206,6 +206,54 @@ stock FactionSystem_SetLeader(factionid, playerid)
     return true;
 }
 
+stock FactionSystem_SetMemberRank(playerid, factionid, rank)
+{
+    if (playerid < 0 || playerid >= MAX_PLAYERS)
+    {
+        return false;
+    }
+    if (factionid < 0 || factionid >= MAX_FACTIONS)
+    {
+        return false;
+    }
+    if (!FactionSystem_IsPlayerMember(playerid, factionid))
+    {
+        return false;
+    }
+    if (rank < 0 || rank > 10)
+    {
+        return false;
+    }
+
+    gFactionRank[playerid] = rank;
+    if (rank >= 5)
+    {
+        gFactionLeader[factionid] = playerid;
+    }
+    else if (gFactionLeader[factionid] == playerid)
+    {
+        gFactionLeader[factionid] = -1;
+    }
+    return true;
+}
+
+stock FactionSystem_SetFactionState(factionid, stateid)
+{
+    if (factionid < 0 || factionid >= MAX_FACTIONS)
+    {
+        return false;
+    }
+
+    new safeState = Core_GetValidStateOrDefault(stateid, STATE_LOS_SANTOS);
+    if (!Core_IsValidState(safeState))
+    {
+        return false;
+    }
+
+    gFactionState[factionid] = safeState;
+    return true;
+}
+
 stock FactionSystem_RemoveMember(playerid, factionid)
 {
     if (playerid < 0 || playerid >= MAX_PLAYERS)
@@ -271,14 +319,18 @@ stock FactionSystem_TransferToBalance(factionid, amount)
         return false;
     }
 
-    gFactionBalance[factionid] += amount;
-    if (gFactionState[factionid] >= 0)
+    new safeState = Core_GetValidStateOrDefault(gFactionState[factionid], STATE_LOS_SANTOS);
+    if (!Core_IsValidState(safeState))
     {
-        new treasuryShare = amount / 10;
-        if (treasuryShare > 0)
-        {
-            StateSystem_ApplyTreasuryDelta(gFactionState[factionid], treasuryShare);
-        }
+        gFactionBalance[factionid] += amount;
+        return true;
+    }
+
+    gFactionBalance[factionid] += amount;
+    new treasuryShare = amount / 10;
+    if (treasuryShare > 0)
+    {
+        StateLedgerSystem_Transfer(safeState, treasuryShare, "faction_balance_transfer", "faction_system");
     }
     return true;
 }
@@ -299,7 +351,16 @@ stock FactionSystem_DeductFromBalance(factionid, amount)
         return false;
     }
 
+    new safeState = Core_GetValidStateOrDefault(gFactionState[factionid], STATE_LOS_SANTOS);
     gFactionBalance[factionid] -= amount;
+    if (Core_IsValidState(safeState))
+    {
+        new treasuryShare = amount / 10;
+        if (treasuryShare > 0)
+        {
+            StateLedgerSystem_Transfer(safeState, -treasuryShare, "faction_balance_deduct", "faction_system");
+        }
+    }
     return true;
 }
 

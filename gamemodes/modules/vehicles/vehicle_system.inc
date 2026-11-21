@@ -92,6 +92,10 @@ stock VehicleSystem_SpawnAdminVehicle(modelid, Float:x, Float:y, Float:z, owneri
     {
         return INVALID_VEHICLE_ID;
     }
+    if (!Core_IsValidPlayerId(ownerid))
+    {
+        return INVALID_VEHICLE_ID;
+    }
 
     new slot = VehicleSystem_GetFreeSlot();
     if (slot < 0)
@@ -105,8 +109,14 @@ stock VehicleSystem_SpawnAdminVehicle(modelid, Float:x, Float:y, Float:z, owneri
         return INVALID_VEHICLE_ID;
     }
 
+    new safeState = Core_GetValidStateOrDefault(Core_GetPlayerState(ownerid), STATE_LOS_SANTOS);
+    if (!Core_IsValidState(safeState))
+    {
+        safeState = STATE_LOS_SANTOS;
+    }
+
     gVehicleModel[slot] = modelid;
-    gVehicleState[slot] = Core_GetPlayerState(ownerid);
+    gVehicleState[slot] = safeState;
     gVehicleOwner[slot] = ownerid;
     gVehiclePrice[slot] = 0;
     gVehicleFuel[slot] = 100;

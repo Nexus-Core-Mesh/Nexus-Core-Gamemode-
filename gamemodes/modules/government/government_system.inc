@@ -24,11 +24,29 @@ stock GovernmentSystem_SetStateLeader(stateid, const name[])
 
 stock GovernmentSystem_SetPlayerRole(playerid, level)
 {
+    if (playerid < 0 || playerid >= MAX_PLAYERS)
+    {
+        return;
+    }
+
+    if (level < GOVERNMENT_NONE)
+    {
+        level = GOVERNMENT_NONE;
+    }
+    if (level > GOVERNMENT_STATE)
+    {
+        level = GOVERNMENT_STATE;
+    }
+
     gGovernmentState[playerid] = level;
 }
 
 stock int:GovernmentSystem_GetPlayerRole(playerid)
 {
+    if (playerid < 0 || playerid >= MAX_PLAYERS)
+    {
+        return GOVERNMENT_NONE;
+    }
     return gGovernmentState[playerid];
 }
 
@@ -48,7 +66,12 @@ stock GovernmentSystem_TransferBudget(stateid, amount)
         return false;
     }
 
-    return StateSystem_ApplyTreasuryDelta(stateid, amount);
+    if (!StateLedgerSystem_ValidateTransfer(stateid, amount))
+    {
+        return false;
+    }
+
+    return StateLedgerSystem_Transfer(stateid, amount, "government_budget_transfer", "government_system");
 }
 
 stock GovernmentSystem_ShowStateInfo(playerid, stateid)

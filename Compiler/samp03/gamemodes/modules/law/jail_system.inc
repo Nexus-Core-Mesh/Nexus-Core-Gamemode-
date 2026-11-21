@@ -139,7 +139,7 @@ stock JailSystem_ShowHUD(playerid)
 
     for (new i = 0; i < 2; i++)
     {
-        if (gJailTD[playerid][i] != Text:0)
+        if (gJailTD[playerid][i] != Text:INVALID_TEXT_DRAW)
             TextDrawShowForPlayer(playerid, gJailTD[playerid][i]);
     }
 }
@@ -148,11 +148,11 @@ stock JailSystem_HideHUD(playerid)
 {
     for (new i = 0; i < 8; i++)
     {
-        if (gJailTD[playerid][i] != Text:0)
+        if (gJailTD[playerid][i] != Text:INVALID_TEXT_DRAW)
         {
             TextDrawHideForPlayer(playerid, gJailTD[playerid][i]);
             TextDrawDestroy(gJailTD[playerid][i]);
-            gJailTD[playerid][i] = Text:0;
+            gJailTD[playerid][i] = Text:INVALID_TEXT_DRAW;
         }
     }
 }

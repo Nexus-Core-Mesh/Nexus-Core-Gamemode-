@@ -473,6 +473,18 @@ stock InventorySystem_TransferItem(playerid, targetplayerid, itemid, quantity, m
     }
 
     new originalTargetWeight = gInventoryWeight[targetplayerid];
+    new targetSnapshotItem[MAX_INVENTORY_SLOTS];
+    new targetSnapshotQty[MAX_INVENTORY_SLOTS];
+    new targetSnapshotMeta[MAX_INVENTORY_SLOTS][32];
+    new targetSnapshotUsed[MAX_INVENTORY_SLOTS];
+    for (new i = 0; i < MAX_INVENTORY_SLOTS; i++)
+    {
+        targetSnapshotItem[i] = gInventoryItem[targetplayerid][i];
+        targetSnapshotQty[i] = gInventoryItemQty[targetplayerid][i];
+        format(targetSnapshotMeta[i], 32, "%s", gInventoryItemMeta[targetplayerid][i]);
+        targetSnapshotUsed[i] = (gInventoryItem[targetplayerid][i] != INVENTORY_ITEM_NONE && gInventoryItemQty[targetplayerid][i] > 0) ? 1 : 0;
+    }
+
     if (!Inventory_Add(targetplayerid, itemid, quantity, metadata))
     {
         return false;
@@ -480,6 +492,18 @@ stock InventorySystem_TransferItem(playerid, targetplayerid, itemid, quantity, m
 
     if (!Inventory_Remove(playerid, itemid, quantity))
     {
+        for (new i = 0; i < MAX_INVENTORY_SLOTS; i++)
+        {
+            gInventoryItem[targetplayerid][i] = targetSnapshotItem[i];
+            gInventoryItemQty[targetplayerid][i] = targetSnapshotQty[i];
+            format(gInventoryItemMeta[targetplayerid][i], 32, "%s", targetSnapshotMeta[i]);
+            if (targetSnapshotUsed[i] == 0)
+            {
+                gInventoryItem[targetplayerid][i] = INVENTORY_ITEM_NONE;
+                gInventoryItemQty[targetplayerid][i] = 0;
+                format(gInventoryItemMeta[targetplayerid][i], 32, "NONE");
+            }
+        }
         gInventoryWeight[targetplayerid] = originalTargetWeight;
         return false;
     }

@@ -224,11 +224,11 @@ stock GangFightSystem_HideStatus(playerid)
 {
     for (new i = 0; i < 8; i++)
     {
-        if (gGangFightTD[playerid][i] != Text:0)
+        if (gGangFightTD[playerid][i] != Text:INVALID_TEXT_DRAW)
         {
             TextDrawHideForPlayer(playerid, gGangFightTD[playerid][i]);
             TextDrawDestroy(gGangFightTD[playerid][i]);
-            gGangFightTD[playerid][i] = Text:0;
+            gGangFightTD[playerid][i] = Text:INVALID_TEXT_DRAW;
         }
     }
 }

@@ -112,7 +112,7 @@ stock CityEconomy_ShowOverview(playerid)
 
     for (new i = 0; i < 4; i++)
     {
-        if (gCityEconomyTD[playerid][i] != Text:0)
+        if (gCityEconomyTD[playerid][i] != Text:INVALID_TEXT_DRAW)
         {
             TextDrawShowForPlayer(playerid, gCityEconomyTD[playerid][i]);
         }
@@ -123,11 +123,11 @@ stock CityEconomy_HideOverview(playerid)
 {
     for (new i = 0; i < 8; i++)
     {
-        if (gCityEconomyTD[playerid][i] != Text:0)
+        if (gCityEconomyTD[playerid][i] != Text:INVALID_TEXT_DRAW)
         {
             TextDrawHideForPlayer(playerid, gCityEconomyTD[playerid][i]);
             TextDrawDestroy(gCityEconomyTD[playerid][i]);
-            gCityEconomyTD[playerid][i] = Text:0;
+            gCityEconomyTD[playerid][i] = Text:INVALID_TEXT_DRAW;
         }
     }
 }

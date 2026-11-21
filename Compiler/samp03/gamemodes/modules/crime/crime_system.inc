@@ -126,7 +126,7 @@ stock CrimeSystem_ShowCrimeInfo(playerid)
 
     for (new i = 0; i < 3; i++)
     {
-        if (gCrimeTD[playerid][i] != Text:0)
+        if (gCrimeTD[playerid][i] != Text:INVALID_TEXT_DRAW)
         {
             TextDrawShowForPlayer(playerid, gCrimeTD[playerid][i]);
         }
@@ -137,11 +137,11 @@ stock CrimeSystem_HideCrimeInfo(playerid)
 {
     for (new i = 0; i < 8; i++)
     {
-        if (gCrimeTD[playerid][i] != Text:0)
+        if (gCrimeTD[playerid][i] != Text:INVALID_TEXT_DRAW)
         {
             TextDrawHideForPlayer(playerid, gCrimeTD[playerid][i]);
             TextDrawDestroy(gCrimeTD[playerid][i]);
-            gCrimeTD[playerid][i] = Text:0;
+            gCrimeTD[playerid][i] = Text:INVALID_TEXT_DRAW;
         }
     }
 }

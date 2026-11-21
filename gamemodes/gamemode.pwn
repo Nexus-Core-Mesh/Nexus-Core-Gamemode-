@@ -264,6 +264,10 @@ public OnPlayerConnect(playerid)
 public OnPlayerDisconnect(playerid, reason)
 {
     Core_RunPlayerDisconnectHooks(playerid, reason);
+    CameraSystem_ExitCameraMode(playerid);
+    CameraSystem_Reset(playerid);
+    TutorialSystem_HideStage(playerid);
+    RoleplayUI_Hide(playerid);
     return 1;
 }
 
@@ -492,16 +496,23 @@ public OnPlayerSpawn(playerid)
         homeState = Core_GetValidStateOrDefault(homeState, stateid);
         Core_SetPlayerState(playerid, stateid);
         Core_SetPlayerHomeState(playerid, homeState);
+        DB_ValidateStateTransfer(playerid, stateid, homeState);
         DB_SavePlayerState(playerid, stateid);
+        hasValidState = Core_IsValidState(stateid) && Core_IsValidState(homeState);
     }
 
-    if (!hasCompletedOnboarding)
+    if (!hasCompletedOnboarding && !hasValidState)
     {
         CameraSystem_Reset(playerid);
         StateSpawnSystem_Apply(playerid, Core_GetValidStateOrDefault(homeState, stateid));
         RoleplayUI_ShowDashboard(playerid);
         PhoneSystem_OnPlayerConnect(playerid);
         PrisonSystem_OnPlayerConnect(playerid);
+        return 1;
+    }
+
+    if (!hasCompletedOnboarding && hasValidState)
+    {
         return 1;
     }
 

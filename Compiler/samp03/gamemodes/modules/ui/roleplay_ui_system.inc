@@ -27,11 +27,11 @@ stock RoleplayUI_Hide(playerid)
 
     for (new i = 0; i < RP_UI_MAX_LINES; i++)
     {
-        if (gRoleplayUIDraw[playerid][i] != Text:0)
+        if (gRoleplayUIDraw[playerid][i] != Text:INVALID_TEXT_DRAW)
         {
             TextDrawHideForPlayer(playerid, gRoleplayUIDraw[playerid][i]);
             TextDrawDestroy(gRoleplayUIDraw[playerid][i]);
-            gRoleplayUIDraw[playerid][i] = Text:0;
+            gRoleplayUIDraw[playerid][i] = Text:INVALID_TEXT_DRAW;
         }
     }
 
@@ -112,7 +112,7 @@ stock RoleplayUI_ShowDashboard(playerid)
 
     for (new i = 0; i < 9; i++)
     {
-        if (gRoleplayUIDraw[playerid][i] != Text:0)
+        if (gRoleplayUIDraw[playerid][i] != Text:INVALID_TEXT_DRAW)
         {
             TextDrawShowForPlayer(playerid, gRoleplayUIDraw[playerid][i]);
         }

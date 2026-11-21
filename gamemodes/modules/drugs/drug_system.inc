@@ -61,15 +61,27 @@ stock DrugSystem_BuyDrug(playerid, stateid, type, amount)
         SendClientMessage(playerid, 0xFF0000AA, "[DRUGS] Der Drogenticker ist derzeit deaktiviert.");
         return false;
     }
-
     if (gDrugStock[stateid][type] < amount)
     {
         SendClientMessage(playerid, 0xFF0000AA, "[DRUGS] Nicht genug Vorrat im Markt.");
         return false;
     }
 
+    new totalCost = gDrugPrice[stateid][type] * amount;
+    if (Core_GetPlayerBank(playerid) < totalCost)
+    {
+        SendClientMessage(playerid, 0xFF0000AA, "[DRUGS] Nicht genug Geld auf der Bank für den Einkauf.");
+        return false;
+    }
+    if (!Core_ChangePlayerBank(playerid, -totalCost))
+    {
+        SendClientMessage(playerid, 0xFF0000AA, "[DRUGS] Zahlung fehlgeschlagen.");
+        return false;
+    }
+
     gDrugStock[stateid][type] -= amount;
     gPlayerDrugInventory[playerid][type] += amount;
+    StateLedgerSystem_Transfer(stateid, totalCost / 10, "drug_market_sale", "drug_system");
     CrimeSystem_AddHeat(playerid, 6 + amount);
     SendClientMessage(playerid, 0x00FF00AA, "[DRUGS] Drogen erworben.");
     return true;
@@ -111,7 +123,7 @@ stock DrugSystem_ShowMarket(playerid, stateid)
 
     for (new i = 0; i < 6; i++)
     {
-        if (gDrugTD[playerid][i] != Text:0)
+        if (gDrugTD[playerid][i] != Text:INVALID_TEXT_DRAW)
         {
             TextDrawShowForPlayer(playerid, gDrugTD[playerid][i]);
         }
@@ -122,11 +134,11 @@ stock DrugSystem_HideMarket(playerid)
 {
     for (new i = 0; i < 8; i++)
     {
-        if (gDrugTD[playerid][i] != Text:0)
+        if (gDrugTD[playerid][i] != Text:INVALID_TEXT_DRAW)
         {
             TextDrawHideForPlayer(playerid, gDrugTD[playerid][i]);
             TextDrawDestroy(gDrugTD[playerid][i]);
-            gDrugTD[playerid][i] = Text:0;
+            gDrugTD[playerid][i] = Text:INVALID_TEXT_DRAW;
         }
     }
 }

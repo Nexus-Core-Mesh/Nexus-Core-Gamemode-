@@ -6,6 +6,13 @@ Dieser Bericht dokumentiert die vollständige Selbstprüfung des Repositorys gem
 
 Wichtigstes Ergebnis der Validierung: Die Single-Target-Build-Architektur ist technisch sauber und konsistent umgesetzt. Die Serverkonfiguration und das Buildziel stimmen mit dem erwarteten Produktivpfad überein. Der eigentliche Prozessstart des SA:MP-Servers konnte in dieser Sandbox-Umgebung nicht als produktiver Live-Start bestätigt werden, weil der Serverprozess hier beim Start fehlschlägt; die Ursache liegt dabei nicht in der Build- oder AMX-Target-Logik, sondern im Laufzeitkontext des Serverbinarys.
 
+### Abschluss-Check 2026-11-21
+
+- `python3 -m py_compile tools/*.py` ausgeführt und ohne Fehler durchgelaufen.
+- `bash -n build_server.sh` und die relevanten Shell-Skripte geprüft.
+- Single-Target-Build auf `Compiler/samp03/gamemodes/gtasa_reallife.amx` mit dem verankerten Befehl ausgeführt und erfolgreich abgeschlossen.
+- Validierungsergebnis: `Exit-Code 0`; ein nicht blockierender Compiler-Hinweis bleibt in `includes/dini.inc` (`warning 224`).
+- Live-Server-Start auf Port 7780 blieb bewusst aus und ist für spätere explizite Freigabe offen.
 ---
 
 ## 2. Prüfmethodik
@@ -178,14 +185,32 @@ Status: Bestanden
 
 ### 4.3 Bewertung der Build-Pipeline
 
+#### Additive finale Verifikation – 2026-11-21
+
+- Der gezielte Build in der 7780-Target-Umgebung wurde erneut mit:
+  `LD_LIBRARY_PATH="$PWD/Compiler/pawncc${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" qemu-i386 Compiler/pawncc/pawncc -o"$PWD/Compiler/samp03/gamemodes/gtasa_reallife.amx" gamemodes/gamemode.pwn -iincludes -iCompiler/samp03/include -d3`
+  ausgeführt und erfolgreich abgeschlossen.
+- Erfasstes Ergebnis: `Exit-Code 0`, eine Warnung aus `includes/dini.inc` (`warning 224: indeterminate array size in "sizeof" expression (symbol "maxlength")`) und keine kritischen Buildfehler.
+- Der Source-/Build-Lauf blieb bewusst auf Quellvalidierung und AMX-Compile begrenzt; kein Start des SA:MP-Prozesses, kein Live-Test und kein Commit wurden in diesem Lauf ausgeführt.
+
+### 4.3 Bewertung der Build-Pipeline
+
 Die Build-Pipeline erfüllt die Vorgabe exakt:
 
 - Quellcode: `gamemodes/gamemode.pwn`
 - Build-Ausgabe: `Compiler/samp03/gamemodes/gtasa_reallife.amx`
-- Keine redundantem AMX-Staging im Laufzeitpfad
+- Keine redundante AMX-Staging im Laufzeitpfad
 - Kein `gamemode.amx`-Fallback oder Aliasing im Live-Serverordner
 
 Wenn die Build-Pipeline in einem echten Produktiv-Host verwendet wird, müssen nur die Regeln aus `scripts/build_gamemode.sh` beibehalten werden, damit dieser Single-Target-Vertrag nicht verloren geht.
+
+### 4.4 Saison-Endstand – 2026-11-21
+
+- Build- und Hardening-Lauf: `LoginSystem_AutoResolveFlow()`, `LoginSystem_AdvanceToStateSelection()`, `TutorialSystem_Next()`, `OnPlayerSpawn()` und `CameraSystem_ExitCameraMode()` wurden erneut in der aktuellen 7780-Konfiguration geprüft.
+- State-/Home-State-Schutz bleibt stabil: `Core_IsValidState()`, `Core_GetValidStateOrDefault()`, `DB_ValidateStateTransfer()` und `INSERT OR IGNORE` verhindern das Überschreiben gültiger Werte mit `0`.
+- UI-/HUD-/Camera-Reset bleibt konsistent: `SetCameraBehindPlayer()` + `TogglePlayerControllable(playerid, 1)` sind in Reset-/Exit-Pfaden weiter fest verankert; `INVALID_TEXT_DRAW` bleibt das Standard-Cleanup-Muster für Textdraw-Bereinigung.
+- Ergebnis: Der Single-Target-Build auf `Compiler/samp03/gamemodes/gtasa_reallife.amx` lief erfolgreich durch (`Exit-Code 0`).
+- Offen bleibt die echte Live-Validierung auf Port 7780; diese muss nach ausdrücklicher Freigabe mit Serverstart, Logs und Client-Flow erfolgen und ist hier bewusst nicht Bestandteil der Offline-Validierung.
 
 ---
 
@@ -442,3 +467,14 @@ Der Runtime-Betrag wurde ebenfalls auf echte Infrastruktur-Respektierung geprüf
 Der aktuelle Repository-Stand ist als implementierungs- und build-sicher zu bewerten, auch wenn die Live-Validierung auf der echten Ubuntu-VM noch aussteht. Die wichtigste Aussage lautet: Die Stabilität wurde dort, wo sie in der Codearchitektur wirklich eine Rolle spielt, nicht ignoriert; sie wurde als strukturelle Entscheidung durch die Nutzung von zentralen Guards, sauberem Lifecycle und konsistenten Reset-Pfaden eingeordnet.
 
 Damit bleibt der definitive Release-Gate unverändert: Der echte SA:MP-/OMP-Live-Test auf der Ubuntu-VM ist nach dem Build noch erforderlich und darf nicht durch source-seitige Analyse ersetzt werden.
+
+---
+
+## Additive Abschluss-Validierung – 2026-11-21
+
+Diese Notiz ergänzt den Verifikationsbericht ohne bestehende Inhalte zu überschreiben.
+
+- Der gezielte Build auf `Compiler/samp03/gamemodes/gtasa_reallife.amx` wurde erneut mit dem angegebenen `qemu-i386`/`pawncc`-Kommando ausgeführt und als Exit-Code `0` bestätigt.
+- Die relevantesten Hardening-Pfade (`LoginSystem_AutoResolveFlow()`, `LoginSystem_AdvanceToStateSelection()`, `TutorialSystem_Next()`, `OnPlayerSpawn()`, `CameraSystem_ExitCameraMode()`) wurden für die validen State-/Home-State-Guards, den password-only-Flow und den Reset-/Cleanup-Pfad re-evaluiert.
+- Die UI-/Camera-/TextDraw-Sicherung blieb konsistent: `SetCameraBehindPlayer()`, `TogglePlayerControllable(playerid, 1)`, `INVALID_TEXT_DRAW`-Checks und der gültige `Core_*State`-Fallback-Pfad wurden in der aktuellen Source-Architektur sauber gehalten.
+- Ein Live-Serverstart unter Port 7780 blieb bewusst ungenutzt, da die reale Runtime-Freigabe nach wie vor ein getrenntes Gate auf der Ubuntu-VM darstellt.

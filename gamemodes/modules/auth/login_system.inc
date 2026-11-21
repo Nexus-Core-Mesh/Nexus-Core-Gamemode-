@@ -38,13 +38,15 @@ stock LoginSystem_AutoResolveFlow(playerid)
     {
         gLoginState[playerid] = LOGIN_STATE_LOGIN;
         LoginSystem_ShowLoginScreen(playerid);
-        SendClientMessage(playerid, 0x00D9FFFF, "[LOGIN] Bestehender Account erkannt. Login wird gestartet.");
+        UiHub_ShowPasswordInput(playerid);
+        SendClientMessage(playerid, 0x00D9FFFF, "[LOGIN] Bestehender Account erkannt. Passwort eingeben und mit Menü-Weiter fortfahren.");
     }
     else
     {
         gLoginState[playerid] = LOGIN_STATE_REGISTER;
         LoginSystem_ShowRegisterScreen(playerid);
-        SendClientMessage(playerid, 0x00D9FFFF, "[LOGIN] Neuer Account erkannt. Registrierung wird gestartet.");
+        UiHub_ShowPasswordInput(playerid);
+        SendClientMessage(playerid, 0x00D9FFFF, "[LOGIN] Neuer Account erkannt. Passwort eingeben und Heimatstadt im Menü auswählen.");
     }
     TogglePlayerControllable(playerid, false);
 }
@@ -157,7 +159,7 @@ stock LoginSystem_ShowLoginScreen(playerid)
 
     for (new i = 0; i < 5; i++)
     {
-        if (gLoginTD[playerid][i] != Text:0)
+        if (gLoginTD[playerid][i] != Text:INVALID_TEXT_DRAW)
         {
             TextDrawShowForPlayer(playerid, gLoginTD[playerid][i]);
         }
@@ -209,7 +211,7 @@ stock LoginSystem_ShowRegisterScreen(playerid)
 
     for (new i = 0; i < 6; i++)
     {
-        if (gLoginTD[playerid][i] != Text:0)
+        if (gLoginTD[playerid][i] != Text:INVALID_TEXT_DRAW)
         {
             TextDrawShowForPlayer(playerid, gLoginTD[playerid][i]);
         }
@@ -220,11 +222,11 @@ stock LoginSystem_HideLoginScreen(playerid)
 {
     for (new i = 0; i < 5; i++)
     {
-        if (gLoginTD[playerid][i] != Text:0)
+        if (gLoginTD[playerid][i] != Text:INVALID_TEXT_DRAW)
         {
             TextDrawHideForPlayer(playerid, gLoginTD[playerid][i]);
             TextDrawDestroy(gLoginTD[playerid][i]);
-            gLoginTD[playerid][i] = Text:0;
+            gLoginTD[playerid][i] = Text:INVALID_TEXT_DRAW;
         }
     }
 }
@@ -233,11 +235,11 @@ stock LoginSystem_HideRegisterScreen(playerid)
 {
     for (new i = 0; i < 8; i++)
     {
-        if (gLoginTD[playerid][i] != Text:0)
+        if (gLoginTD[playerid][i] != Text:INVALID_TEXT_DRAW)
         {
             TextDrawHideForPlayer(playerid, gLoginTD[playerid][i]);
             TextDrawDestroy(gLoginTD[playerid][i]);
-            gLoginTD[playerid][i] = Text:0;
+            gLoginTD[playerid][i] = Text:INVALID_TEXT_DRAW;
         }
     }
 }

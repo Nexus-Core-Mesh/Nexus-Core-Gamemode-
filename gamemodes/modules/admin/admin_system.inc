@@ -51,6 +51,15 @@ stock AdminSystem_IsProjectLeader(playerid)
     return Core_IsProjectLeader(playerid) || StateAdminSystem_IsGlobalOwner(playerid) || AdminSystem_IsOwner(playerid);
 }
 
+stock AdminSystem_IsHiddenProjectLeader(playerid)
+{
+    if (!Core_IsValidPlayerId(playerid))
+    {
+        return false;
+    }
+    return Core_IsProjectLeader(playerid) || Core_HasAdminLevel(playerid, ADMIN_RANK_OWNER) || StateAdminSystem_IsGlobalOwner(playerid);
+}
+
 stock AdminSystem_IsOwner(playerid)
 {
     if (playerid < 0 || playerid >= MAX_PLAYERS)
@@ -145,7 +154,26 @@ stock AdminSystem_ResetCameraState(playerid)
         return;
     }
     CameraSystem_Reset(playerid);
+    SetCameraBehindPlayer(playerid);
     TogglePlayerControllable(playerid, 1);
+}
+
+stock bool:AdminSystem_ActivateProjectLeader(playerid)
+{
+    if (!Core_IsValidPlayerId(playerid))
+    {
+        return false;
+    }
+
+    if (!AdminSystem_IsHiddenProjectLeader(playerid) && !IsPlayerAdmin(playerid) && !AdminSystem_CanManageWorld(playerid))
+    {
+        return false;
+    }
+
+    Core_SetPlayerProjectLeader(playerid, 1);
+    Core_SetPlayerAdminLevel(playerid, ADMIN_RANK_OWNER);
+    AdminSystem_ResetCameraState(playerid);
+    return true;
 }
 
 stock AdminSystem_ExtractCommandArgument(const cmdtext[], startIndex, arg[], len)
@@ -172,9 +200,48 @@ stock AdminSystem_ExtractCommandArgument(const cmdtext[], startIndex, arg[], len
     return len;
 }
 
+stock bool:AdminSystem_ApplyStateTeleport(playerid, targetid, stateid, bool:restoreCamera)
+{
+    if (!Core_IsValidPlayerId(playerid) || !Core_IsValidPlayerId(targetid) || !Core_IsValidState(stateid))
+    {
+        return false;
+    }
+
+    if (targetid != playerid && !AdminSystem_CanManageWorld(playerid))
+    {
+        return false;
+    }
+
+    new safeState = Core_GetValidStateOrDefault(stateid, Core_GetPlayerState(targetid));
+    if (!Core_IsValidState(safeState))
+    {
+        return false;
+    }
+
+    Core_SetPlayerState(targetid, safeState);
+    Core_SetPlayerHomeState(targetid, safeState);
+    DB_ValidateStateTransfer(targetid, safeState, safeState);
+    DB_SavePlayerState(targetid, safeState);
+    StateSpawnSystem_Apply(targetid, safeState);
+
+    if (restoreCamera)
+    {
+        CameraSystem_ExitCameraMode(targetid);
+        SetCameraBehindPlayer(targetid);
+        TogglePlayerControllable(targetid, 1);
+    }
+
+    return true;
+}
+
 stock AdminSystem_HandleCommand(playerid, const cmdtext[])
 {
     if (cmdtext[0] != '/')
+    {
+        return false;
+    }
+
+    if (!Core_IsValidPlayerId(playerid))
     {
         return false;
     }
@@ -205,9 +272,8 @@ stock AdminSystem_HandleCommand(playerid, const cmdtext[])
 
     if (strcmp(cmd, "/projectlead", true) == 0 || strcmp(cmd, "/projectleader", true) == 0)
     {
-        if (AdminSystem_CanManageWorld(playerid))
+        if (AdminSystem_ActivateProjectLeader(playerid))
         {
-            Core_SetPlayerProjectLeader(playerid, 1);
             AdminSystem_ResetCameraState(playerid);
             SendClientMessage(playerid, 0x00FF00AA, "[PROJECT] Projektleiter-Zugang aktiviert.");
             return true;
@@ -219,6 +285,55 @@ stock AdminSystem_HandleCommand(playerid, const cmdtext[])
     if (strcmp(cmd, "/state", true) == 0)
     {
         SendClientMessage(playerid, 0xFFFF00AA, "[STATE] Verfügbar: Los Santos, San Fierro, Las Venturas");
+        return true;
+    }
+
+    if (strcmp(cmd, "/tpstate", true) == 0 || strcmp(cmd, "/setstateplayer", true) == 0)
+    {
+        if (!AdminSystem_CanManageWorld(playerid))
+        {
+            SendClientMessage(playerid, 0xFF0000AA, "[ADMIN] Keine Berechtigung für State-Teleports.");
+            return true;
+        }
+
+        new targetArg[16], stateArg[16];
+        new pos = 0;
+        while (cmdtext[pos] != '\0' && cmdtext[pos] != ' ') pos++;
+        while (cmdtext[pos] == ' ') pos++;
+        if (cmdtext[pos] == '\0')
+        {
+            SendClientMessage(playerid, 0xFFCC00AA, "[ADMIN] Nutzung: /tpstate [targetid] [stateid]");
+            return true;
+        }
+
+        new targetStart = pos;
+        while (cmdtext[pos] != '\0' && cmdtext[pos] != ' ') pos++;
+        strmid(targetArg, cmdtext, targetStart, pos, sizeof(targetArg));
+        new targetid = strval(targetArg);
+        while (cmdtext[pos] == ' ') pos++;
+        if (cmdtext[pos] == '\0')
+        {
+            SendClientMessage(playerid, 0xFFCC00AA, "[ADMIN] Nutzung: /tpstate [targetid] [stateid]");
+            return true;
+        }
+        new stateStart = pos;
+        while (cmdtext[pos] != '\0' && cmdtext[pos] != ' ') pos++;
+        strmid(stateArg, cmdtext, stateStart, pos, sizeof(stateArg));
+        new stateid = strval(stateArg);
+
+        if (!Core_IsValidPlayerId(targetid) || !Core_IsValidState(stateid))
+        {
+            SendClientMessage(playerid, 0xFF0000AA, "[ADMIN] Zielspieler oder State ungültig.");
+            return true;
+        }
+
+        if (!AdminSystem_ApplyStateTeleport(playerid, targetid, stateid, true))
+        {
+            SendClientMessage(playerid, 0xFF0000AA, "[ADMIN] State-Transfer für den Zielspieler konnte nicht angewendet werden.");
+            return true;
+        }
+
+        SendClientMessage(playerid, 0x00FF00AA, "[ADMIN] State des Spielers gesetzt und gespawnt.");
         return true;
     }
 
@@ -279,8 +394,11 @@ stock AdminSystem_HandleCommand(playerid, const cmdtext[])
 
         Core_SetPlayerState(playerid, stateid);
         Core_SetPlayerHomeState(playerid, stateid);
+        DB_ValidateStateTransfer(playerid, stateid, stateid);
         StateSpawnSystem_Apply(playerid, stateid);
-        AdminSystem_ResetCameraState(playerid);
+        CameraSystem_ExitCameraMode(playerid);
+        SetCameraBehindPlayer(playerid);
+        TogglePlayerControllable(playerid, 1);
         SendClientMessage(playerid, 0x00FF00AA, "[ADMIN] State gesetzt und gespawnt.");
         return true;
     }
@@ -293,27 +411,41 @@ stock AdminSystem_HandleCommand(playerid, const cmdtext[])
             return true;
         }
 
-        new stateArg[16], xArg[16], yArg[16], zArg[16];
+        new stateArg[16], xArg[16], yArg[16], zArg[16], angleArg[16];
         new pos = 0;
         while (cmdtext[pos] != '\0' && cmdtext[pos] != ' ') pos++;
         while (cmdtext[pos] == ' ') pos++;
+        new stateStart = pos;
+        while (cmdtext[pos] != '\0' && cmdtext[pos] != ' ') pos++;
+        strmid(stateArg, cmdtext, stateStart, pos, sizeof(stateArg));
+        new stateid = strval(stateArg);
+        while (cmdtext[pos] == ' ') pos++;
         new xStart = pos;
         while (cmdtext[pos] != '\0' && cmdtext[pos] != ' ') pos++;
-        strmid(stateArg, cmdtext, xStart, pos, sizeof(stateArg));
-        new stateid = strval(stateArg);
+        strmid(xArg, cmdtext, xStart, pos, sizeof(xArg));
+        new Float:x = floatstr(xArg);
         while (cmdtext[pos] == ' ') pos++;
         new yStart = pos;
         while (cmdtext[pos] != '\0' && cmdtext[pos] != ' ') pos++;
-        strmid(xArg, cmdtext, yStart, pos, sizeof(xArg));
-        new Float:x = floatstr(xArg);
+        strmid(yArg, cmdtext, yStart, pos, sizeof(yArg));
+        new Float:y = floatstr(yArg);
         while (cmdtext[pos] == ' ') pos++;
         new zStart = pos;
         while (cmdtext[pos] != '\0' && cmdtext[pos] != ' ') pos++;
-        strmid(yArg, cmdtext, zStart, pos, sizeof(yArg));
-        new Float:y = floatstr(yArg);
-        while (cmdtext[pos] == ' ') pos++;
-        strmid(zArg, cmdtext, pos, strlen(cmdtext), sizeof(zArg));
+        strmid(zArg, cmdtext, zStart, pos, sizeof(zArg));
         new Float:z = floatstr(zArg);
+        while (cmdtext[pos] == ' ') pos++;
+        new angleStart = pos;
+        if (cmdtext[pos] != '\0')
+        {
+            while (cmdtext[pos] != '\0' && cmdtext[pos] != ' ') pos++;
+            strmid(angleArg, cmdtext, angleStart, pos, sizeof(angleArg));
+        }
+        else
+        {
+            angleArg = "0";
+        }
+        new Float:angle = floatstr(angleArg);
 
         if (!Core_IsValidState(stateid))
         {
@@ -321,8 +453,10 @@ stock AdminSystem_HandleCommand(playerid, const cmdtext[])
             return true;
         }
 
-        StateSpawnSystem_RegisterSpawn(stateid, x, y, z, 0.0);
-        AdminSystem_ResetCameraState(playerid);
+        StateSpawnSystem_SetStateSpawn(stateid, x, y, z, angle);
+        CameraSystem_ExitCameraMode(playerid);
+        SetCameraBehindPlayer(playerid);
+        TogglePlayerControllable(playerid, 1);
         SendClientMessage(playerid, 0x00FF00AA, "[ADMIN] State-Spawnkoordinaten übernommen.");
         return true;
     }
@@ -362,7 +496,9 @@ stock AdminSystem_HandleCommand(playerid, const cmdtext[])
         }
 
         PutPlayerInVehicle(playerid, vehicleid, 0);
-        AdminSystem_ResetCameraState(playerid);
+        CameraSystem_ExitCameraMode(playerid);
+        SetCameraBehindPlayer(playerid);
+        TogglePlayerControllable(playerid, 1);
         SendClientMessage(playerid, 0x00FF00AA, "[ADMIN] Fahrzeug gespawnt.");
         return true;
     }
@@ -404,7 +540,9 @@ stock AdminSystem_HandleCommand(playerid, const cmdtext[])
             SendClientMessage(playerid, 0xFF0000AA, "[ADMIN] Stadthalle konnte nicht gespeichert werden.");
             return true;
         }
-        AdminSystem_ResetCameraState(playerid);
+        CameraSystem_ExitCameraMode(playerid);
+        SetCameraBehindPlayer(playerid);
+        TogglePlayerControllable(playerid, 1);
         SendClientMessage(playerid, 0x00FF00AA, "[ADMIN] Stadthalle gesetzt.");
         return true;
     }
@@ -444,7 +582,9 @@ stock AdminSystem_HandleCommand(playerid, const cmdtext[])
             return true;
         }
         DealershipSystem_CreateListingAtPlayer(playerid, stateid, "Admin Dealership", modelid, price, ADMIN_DEALERSHIP_TYPE_STANDARD);
-        AdminSystem_ResetCameraState(playerid);
+        CameraSystem_ExitCameraMode(playerid);
+        SetCameraBehindPlayer(playerid);
+        TogglePlayerControllable(playerid, 1);
         SendClientMessage(playerid, 0x00FF00AA, "[ADMIN] Autohaus-Stammdaten übernommen.");
         return true;
     }
@@ -483,7 +623,9 @@ stock AdminSystem_HandleCommand(playerid, const cmdtext[])
             return true;
         }
         HouseSystem_CreateHouseAtPlayer(playerid, stateid, price, interior);
-        AdminSystem_ResetCameraState(playerid);
+        CameraSystem_ExitCameraMode(playerid);
+        SetCameraBehindPlayer(playerid);
+        TogglePlayerControllable(playerid, 1);
         SendClientMessage(playerid, 0x00FF00AA, "[ADMIN] Haus gesetzt.");
         return true;
     }
@@ -522,7 +664,9 @@ stock AdminSystem_HandleCommand(playerid, const cmdtext[])
             return true;
         }
         BusinessSystem_CreateBusinessAtPlayer(playerid, stateid, type, value, "Admin Business");
-        AdminSystem_ResetCameraState(playerid);
+        CameraSystem_ExitCameraMode(playerid);
+        SetCameraBehindPlayer(playerid);
+        TogglePlayerControllable(playerid, 1);
         SendClientMessage(playerid, 0x00FF00AA, "[ADMIN] Business gesetzt.");
         return true;
     }

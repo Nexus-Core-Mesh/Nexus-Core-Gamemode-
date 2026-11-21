@@ -111,7 +111,7 @@ stock DrugSystem_ShowMarket(playerid, stateid)
 
     for (new i = 0; i < 6; i++)
     {
-        if (gDrugTD[playerid][i] != Text:0)
+        if (gDrugTD[playerid][i] != Text:INVALID_TEXT_DRAW)
         {
             TextDrawShowForPlayer(playerid, gDrugTD[playerid][i]);
         }
@@ -122,11 +122,11 @@ stock DrugSystem_HideMarket(playerid)
 {
     for (new i = 0; i < 8; i++)
     {
-        if (gDrugTD[playerid][i] != Text:0)
+        if (gDrugTD[playerid][i] != Text:INVALID_TEXT_DRAW)
         {
             TextDrawHideForPlayer(playerid, gDrugTD[playerid][i]);
             TextDrawDestroy(gDrugTD[playerid][i]);
-            gDrugTD[playerid][i] = Text:0;
+            gDrugTD[playerid][i] = Text:INVALID_TEXT_DRAW;
         }
     }
 }

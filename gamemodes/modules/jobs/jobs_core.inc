@@ -143,13 +143,19 @@ stock JobsCore_CompleteTask(playerid, basePay, xp, rep, itemid = 0, itemQty = 0)
         return -1;
     }
 
-    new gross = basePay * StateJobs_GetPayMultiplier(stateid) / 100;
-    new tax = gross * StateSystem_GetTaxRate(stateid) / 100;
+    new stateSafe = Core_GetValidStateOrDefault(stateid, STATE_LOS_SANTOS);
+    if (!Core_IsValidState(stateSafe))
+    {
+        return -1;
+    }
+
+    new gross = basePay * StateJobs_GetPayMultiplier(stateSafe) / 100;
+    new tax = gross * StateSystem_GetTaxRate(stateSafe) / 100;
     new net = gross - tax;
 
     if (JobsCore_IsPublicJob(gPlayerJob[playerid]))
     {
-        if (!StateSystem_ApplyTreasuryDelta(stateid, -net))
+        if (!StateSystem_ApplyTreasuryDelta(stateSafe, -net))
         {
             SendClientMessage(playerid, 0xFF6666AA, "[JOBS] Die Staatskasse kann den Lohn aktuell nicht zahlen.");
             return -1;
@@ -157,14 +163,17 @@ stock JobsCore_CompleteTask(playerid, basePay, xp, rep, itemid = 0, itemQty = 0)
     }
     else if (tax > 0)
     {
-        StateSystem_ApplyTreasuryDelta(stateid, tax);
+        if (!StateLedgerSystem_Transfer(stateSafe, tax, "job_tax", "jobs_core"))
+        {
+            tax = 0;
+        }
     }
 
     if (net > 0 && !JobsCore_PayPlayerJob(playerid, net))
     {
         if (JobsCore_IsPublicJob(gPlayerJob[playerid]))
         {
-            StateSystem_ApplyTreasuryDelta(stateid, net);
+            StateSystem_ApplyTreasuryDelta(stateSafe, net);
         }
         return -1;
     }

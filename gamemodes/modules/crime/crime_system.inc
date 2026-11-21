@@ -43,13 +43,21 @@ stock CrimeSystem_StartRobbery(playerid, stateid)
         return;
     }
 
+    new safeState = Core_GetValidStateOrDefault(stateid, Core_GetPlayerState(playerid));
+    if (!Core_IsValidState(safeState))
+    {
+        SendClientMessage(playerid, 0xFF6666AA, "[CRIME] Ungültiger Staatskontext für den Raubüberfall.");
+        return;
+    }
+
     gPlayerCrimeState[playerid] = 1;
     gCrimeProgress[playerid] = 25;
     gLastCrimeType[playerid] = CRIME_TYPE_ROBBERY;
 
-    if (stateid >= 0 && stateid <= 2)
+    gCrimeHeat[playerid] += 5;
+    if (gCrimeHeat[playerid] > 100)
     {
-        gCrimeHeat[playerid] += 5;
+        gCrimeHeat[playerid] = 100;
     }
 
     SendClientMessage(playerid, 0xFF6666AA, "[CRIME] Raubüberfall gestartet. Die Polizei ist aufmerksam.");
@@ -126,7 +134,7 @@ stock CrimeSystem_ShowCrimeInfo(playerid)
 
     for (new i = 0; i < 3; i++)
     {
-        if (gCrimeTD[playerid][i] != Text:0)
+        if (gCrimeTD[playerid][i] != Text:INVALID_TEXT_DRAW)
         {
             TextDrawShowForPlayer(playerid, gCrimeTD[playerid][i]);
         }
@@ -137,11 +145,11 @@ stock CrimeSystem_HideCrimeInfo(playerid)
 {
     for (new i = 0; i < 8; i++)
     {
-        if (gCrimeTD[playerid][i] != Text:0)
+        if (gCrimeTD[playerid][i] != Text:INVALID_TEXT_DRAW)
         {
             TextDrawHideForPlayer(playerid, gCrimeTD[playerid][i]);
             TextDrawDestroy(gCrimeTD[playerid][i]);
-            gCrimeTD[playerid][i] = Text:0;
+            gCrimeTD[playerid][i] = Text:INVALID_TEXT_DRAW;
         }
     }
 }

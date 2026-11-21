@@ -25,7 +25,7 @@ stock CameraSystem_Initialize()
 
 stock CameraSystem_Reset(playerid)
 {
-    if (playerid < 0 || playerid >= MAX_PLAYERS)
+    if (!Core_IsValidPlayerId(playerid))
     {
         return;
     }
@@ -123,9 +123,7 @@ stock CameraSystem_ToggleFreeCamera(playerid)
 {
     if (gCameraMode[playerid] == CAMERA_MODE_FREE && gCameraActive[playerid])
     {
-        CameraSystem_Reset(playerid);
-        SetCameraBehindPlayer(playerid);
-        TogglePlayerControllable(playerid, true);
+        CameraSystem_ExitCameraMode(playerid);
         SendClientMessage(playerid, 0x00D9FFFF, "[CAMERA] Freie Kamera beendet.");
         return;
     }
@@ -140,10 +138,13 @@ stock CameraSystem_ExitCameraMode(playerid)
         return;
     }
 
-    CameraSystem_Reset(playerid);
+    gCameraMode[playerid] = CAMERA_MODE_NONE;
+    gCameraActive[playerid] = false;
     SetCameraBehindPlayer(playerid);
     TogglePlayerControllable(playerid, true);
+    return;
 }
+
 stock CameraSystem_PlayIntroScene(playerid)
 {
     gCameraMode[playerid] = CAMERA_MODE_TUTORIAL;

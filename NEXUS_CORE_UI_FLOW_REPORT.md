@@ -123,6 +123,17 @@ Der Spielpfad ist klar auf ein menu-first Verhalten ausgerichtet:
 
 ### 1.5 Kamera-/Perspektiv-Basis
 
+#### Additive Korrigierung – 2026-11-21
+
+Der aktuelle State-/Spawn-Hardening-Lauf schloss die bekannte Kollision zwischen validem Home-State, Tutorial-/Intro-Start und veralteter Kamera ab:
+
+- `OnPlayerSpawn()` prüft jetzt vor dem Start von Tutorial-/State-Intro-Flow, ob `home_state` und `state_id` bereits gültig sind. Wenn ja, wird nicht erneut in die State-Tutorial-Kette gesprungen.
+- `StateSpawnSystem_Apply()` setzt den gewählten State als festen Spawn und stellt die Kamera sofort auf den Spieler zurück (`SetCameraBehindPlayer()` + `TogglePlayerControllable(playerid, 1)`).
+- So bleibt der feste Spawnpunkt nach Reconnect/Respawn konsistent, ohne neue Intro- oder Tutorial-Kamera-Overlay zu erzeugen.
+- Der Build-Pfad wurde erneut mit der 7780-Toolchain validiert; ein echter Live-Server-Start blieb nach wie vor aus.
+
+### 1.5 Kamera-/Perspektiv-Basis
+
 Die Kamera logischer Aufwand ist bewusst in eine zentrale, wiederverwendbare Funktionalität verschoben:
 
 - `CameraSystem_Reset()` bzw. `CameraSystem_SetMode()` als Kern der Wiederverwendung.
@@ -232,3 +243,15 @@ Die Umsetzung ist im Code klar weiterentwickelt, aber einzelne Punkte sind noch 
 Der Code steht insgesamt deutlich besser da: der Tutorial-/State-/Spawn-Flow ist im Gamemode-Quellcode sauberer und kontrollierter verknüpft, das HUD ist auf klarere Zonen ausgerichtet, die Kamera wurde zu einer flexiblen Basisfunktion entwickelt, und die Persistenzlogik schützt gültige State-Werte vor dem bekannten `0`-Reset.
 
 Der Build lief erfolgreich, aber die letzte Stufe ist die echte Laufzeit-Verifikation auf der 7780-Instanz mit `server_log.txt`, `tools/log_watcher.py`, `gtasa_reallife.db` und einem echten Client-Test. Ohne diese Live-Prüfung ist der Source-Stand nur als kompilierbar, aber noch nicht als vollständig runtime-validiert zu bewerten.
+
+---
+
+## Additive Abschluss-Validierung – 2026-11-21
+
+Diese Abschlussnotiz ergänzt den Flow-Report ohne bestehende Abschnitte zu löschen.
+
+- `LoginSystem_AutoResolveFlow()` erkennt Account-/Login-/Register-Pfad automatisch und lässt nur das Passwort als freie Texteingabe zu. Die anschließende Staat-/Home-State-Auswahl läuft über Menü-/Dialog-Optionen weiter.
+- `TutorialSystem_Next()` führt nach Tutorial-Abschluss direkt in den State-/Spawn-Pfad, setzt `home_state` und `state_id` über valide Fallbacks und ruft `StateSpawnSystem_Apply()` auf, bevor die Kamera und der UI-Context zurückgesetzt werden.
+- `OnPlayerSpawn()` hält den Tutorial-/State-Szene-Trigger bei gültigem `home_state` / `state_id` aktiv zurück und verhindert doppelte Szene-Starts bei bereits abgeschlossenem Onboarding.
+- `CameraSystem_ExitCameraMode()` und `CameraSystem_ToggleFreeCamera()` sichern den Kamera-Reset über `SetCameraBehindPlayer()` und `TogglePlayerControllable(playerid, 1)` ab, damit die Menü-/Dialogführung nicht in einem blockierten Kamerazustand hängen bleibt.
+- Der aktuelle Source-Stand wurde mit dem gezielten Single-Target-Build verifiziert; der Live-Server-Start bleibt separat freigegeben und wurde nicht durchgeführt.
