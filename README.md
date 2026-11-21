@@ -1,12 +1,33 @@
 # GTA:SA Reallife Modular Gamemode
 
-## Veröffentlichungsstatus
+> [!NOTE]
+> Diese Doku wurde optisch aufbereitet, ohne technische Fakten, Pfade, Ports oder Projektregeln zu verändern.
+> Fokus lag auf Lesbarkeit, Struktur, Übersichten und deutlicherer Orientierung.
+
+## ✅ Wichtig zu wissen
+
+- Technische Fakten, Befehle, Pfade und Projektregeln bleiben bewusst unverändert.
+- Port- und Systemtrennung bleiben konsistent, insbesondere für den 7780-Contract und den Dini-first-Pfad.
+- Die optische Aufwertung dient nur der Lesbarkeit, nicht der inhaltlichen Interpretation.
+
+---
+## 🧭 Schnellüberblick
+
+| Bereich | Inhalt |
+| --- | --- |
+| Dokument | `README.md` |
+| Typ | Projekt-Readme |
+| Fokus | Zugang, Überblick und Startpfad |
+| Wichtige Pfade | `gamemodes/`, `Compiler/samp03/`, `tools/` |
+
+---
+## 📊 Veröffentlichungsstatus
 
 Dieses Projekt ist als modularer, erweiterbarer GTA:SA-Reallife-Gamemode für einen 3-Staaten-Server dokumentiert. Der aktuelle Stand ist ein konsistenter Dini-first-/Fallback-Architektur- und Build-Validierungsstand, aber keine finale Live-Release-Freigabe für einen echten Ubuntu-VM-Produktionslauf. Der reale Freigabe-Gate bleibt erst dann erfüllt, wenn `pawncc`/`qemu-i386`, die vollständige `scriptfiles/`-Struktur, der echte Service-Start und die SQLite-/Control-Panel-Synchronisierung auf der Ziel-VM ohne offene Blocker bestanden sind.
 
 Die Kernidee ist bewusst: keine monolithische `gamemode.pwn`-Logik, sondern ein klares Modul- und Layer-System mit separaten Bereichen für Core, State, Government, Economy, Housing, Jobs, Factions, Vehicles, Inventory, Services und Web-Management.
 
-### Kerneigenschaften
+### 📘 Kerneigenschaften
 
 - 3-Staaten-System: Los Santos, San Fierro, Las Venturas
 - eigene Staatskasse pro Staat
@@ -21,7 +42,7 @@ Die Kernidee ist bewusst: keine monolithische `gamemode.pwn`-Logik, sondern ein 
 - Web-/Dashboard-Integration als separates Kontrollpanel mit SQLite-Read-Only-Lesezugriff
 - `c++`-Mirror (optional / falls vorhanden): strukturtreuer Projektspiegel als C++-sichtbare Projektebene für Audit, Überblick und Tooling
 
-### Control-Panel-Setup und gemeinsamer Start
+### 🔧 Control-Panel-Setup und gemeinsamer Start
 
 Das Projekt enthält zusätzlich ein separates, Node.js-basiertes Control Panel unter `control-panel/`. Der Startpfad ist bewusst nicht an den Live-SAMP-Server gebunden: Das Panel kann im Quellbaum ohne 7780-Serverzugriff vorbereitet und gestartet werden, solange `node`/`npm` auf dem Zielsystem verfügbar sind. Der durchgängige Quell- und Deploy-Pfad ist:
 
@@ -49,13 +70,13 @@ Wichtige Regeln:
 - Ein fehlendes `node`/`npm` oder eine unvollständige `npm install` blockiert das Panel nicht mehr den Gamemode-Start, sondern erzeugt nur eine Warnung und lässt den Server-Deploy weiterlaufen.
 - Der Server-Deploy bleibt auf einen einzelnen Build-Target ausgerichtet: `Compiler/samp03/gamemodes/gtasa_reallife.amx`.
 
-## Aktueller Entwicklungsstand
+## 📊 Aktueller Entwicklungsstand
 
 Das Projekt hat einen vollständigen modularen RP-Framework-Stand erreicht und ist als robuste Basis für reale SA:MP-Entwicklung dokumentiert. Wenn ein `c++`-Spiegel im Repository vorhanden ist, dient er als strukturtreuer Projektspiegel für Audit, Überblick und Tooling; er ist kein Laufzeitbestandteil des SA:MP-Servers. Die wichtigsten Systembereiche sind bereits als eigenständige Module angelegt und an die Haupt-Architektur angehängt. Der aktuelle Härtungsstand bezieht sich jedoch auf den aktuellen Code-/Build-Stand und die Architektur-Validierung; ein echter Live-Server-Start auf Ubuntu-VM bleibt noch als separate Produktionsprüfung auszuführen.
 
 Zusätzlich wurden im Offline-/Audit-Pfad mehrere manuelle `python3`-Werkzeuge ergänzt, die ausschließlich auf CLI-Aufruf und ohne Serverstart funktionieren. Diese Hilfsprogramme sind bewusst schlank und standardbibliotheksbasiert: `log_code_bridge.py`, `code_line_extractor.py`, `log_guided_autocorrect.py` und `debug_trace_collector.py` dienen zur Zuordnung von Log-Ereignissen zu Quellcode, Zeilen-/NL-Extrakten, sicheren Dry-Run-Korrekturen und kompakten Diagnose-Exports.
 
-### Umgesetzte Kernmodule
+### 🏗️ Umgesetzte Kernmodule
 
 - `core/` – zentrale Spielerdaten, State-Logik, Admin-Status, Validierung, Bank-/Cash-Bridge
 - `db/` – SQLite/MySQL-Abstraktionsschicht, Schema-Initialisierung, Transaktions-Wrapper, Save/Load-APIs
@@ -76,7 +97,7 @@ Zusätzlich wurden im Offline-/Audit-Pfad mehrere manuelle `python3`-Werkzeuge e
 - `social/` – Rolle, Beziehungen, RP-Kommandos und sozialer Flow
 - `web/` – externe Web-Bridge und Dashboard-Integration
 
-### Additiv ergänzte Systemausbau-Module
+### 🏗️ Additiv ergänzte Systemausbau-Module
 
 - `jobs/dynamic_job_system.inc` – dynamische Jobs je Staat mit state-gebundener Zuweisung, Aktiv-Status und Job-Bridge zu `JobsCore_*`.
 - `missions/mission_system.inc` – staatlich gebundene Missionen mit Ablauf, Auszahlungslogik, aktiver Mission-Liste und validierter Belohnungsfluss in Bank-/Treasury-Pfade.
@@ -86,11 +107,11 @@ Zusätzlich wurden im Offline-/Audit-Pfad mehrere manuelle `python3`-Werkzeuge e
 - `jobs/jobs_core.inc` – zentrale Aufgaben-/Lohn-Pipeline mit staatlicher Kassenfinanzierung und steuerbarer Verteilung.
 - `premium/premium_system.inc` – Premium-/VIP-System mit Laufzeiten 30/90/300 Tage sowie Permanent, validem Ablauf-Check, zentraler Core-Integration und Dini-first/Persistence-Bridge ohne parallele State-Shadow-Quelle.
 
-## Produktionsrelevante Stabilitätsbasis
+## 📘 Produktionsrelevante Stabilitätsbasis
 
 Die letzte Erweiterungsphase war bewusst auf echte Produktionsrelevanz ausgerichtet. Dabei wurden die kritischen Übergabepunkte zwischen Kernmodulen, DB-Abstraktion, Inventar, Haussafes und Fahrzeugsystemen systematisch überarbeitet.
 
-### Zusätzlicher Schutz für State-/Home-State-Transfers
+### 📘 Zusätzlicher Schutz für State-/Home-State-Transfers
 
 Seit dem letzten Lauf wurden die angrenzenden Übergänge in `core.inc`, `login_system.inc`, `state_system.inc` und `db_interface.inc` zusätzlich auf den stabilen Pfad `Core_GetValidStateOrDefault()` + `DB_ValidateStateTransfer()` verdrahtet. Dadurch werden zwar gültige `state_id`/`home_state`-Werte nicht mehr mit `0` verworfen, aber sichere Fallbacks bleiben weiterhin auf `LS`/`SF`/`LV`-Zahlen validiert.
 
@@ -102,7 +123,7 @@ Die Transfer- und Rehydrate-Pfade bleiben jetzt in der Reihenfolge:
 
 Damit bleiben die kritischen Pfade für Login/Disconnect/Spawn/Rehydrate, State-Transfers und Treasury-Aktualisierung konsistent und ohne parallelen Schatten-Status.
 
-### Korrigierte Kernprinzipien
+### ✅ Korrigierte Kernprinzipien
 
 0. Valid-state-Guards bleiben harte Architekturregeln.
    - `login_system.inc` und andere Disconnect-/Reset-Pfade dürfen gültige `state_id`/`home_state`-Werte nicht mehr mit `0` zurücksetzen.
@@ -133,7 +154,7 @@ Damit bleiben die kritischen Pfade für Login/Disconnect/Spawn/Rehydrate, State-
 6. Für kritische Systeme gibt es Guard-Checks gegen ungültige Werte.
    - Arrayslots, Item-Quantitäten und Fahrzeug-/Safe-Operationen prüfen explizit Grenzen und Zustände.
 
-## Scriptfiles-/Dini-Laufzeitstruktur und 7780-Ordner
+## 🏗️ Scriptfiles-/Dini-Laufzeitstruktur und 7780-Ordner
 
 Neben den modularen Source-Dateien wurde die physische Laufzeitstruktur unter `Compiler/samp03/scriptfiles/` vollständig ergänzt, damit der Dini-first-Write-Pfad nicht an fehlenden Verzeichnissen scheitert. Die aktuelle Struktur umfasst die kritischen Speicherpfade für Spieler, Häuser, House-Storage, Safes, Fahrzeuge, UBB-Fahrzeuge, Staatskassen, Business-, Faction- und Inventardaten sowie temporäre und Backup-Dateien:
 
@@ -154,7 +175,7 @@ Neben den modularen Source-Dateien wurde die physische Laufzeitstruktur unter `C
 
 Die Verzeichnisse wurden als echte Ordner mit `.gitkeep`-Markern im Git angelegt, damit leere Laufzeitordner auch auf dem Repository-Branch persistent bleiben, ohne dass `__pycache__/` oder `*.pyc` eingecheckt werden.
 
-## 3-Staaten-Architektur
+## 🏗️ 3-Staaten-Architektur
 
 Die wirtschaftliche und politische Logik ist auf drei Bundesstaaten verteilt:
 
@@ -170,7 +191,7 @@ Jeder Staat besitzt:
 - eigene Wirtschaft- und City-Identität
 - eigene Verwaltungslayer und lokale RP-Features
 
-## Architektur-Regeln
+## 🏗️ Architektur-Regeln
 
 1. `core.inc` ist die Single Source of Truth für Spielerstatus, Bank, Home-State und Admin-Level.
 2. Neue Module dürfen keine zweite, parallele Player-Status-Quelle einführen.
@@ -179,9 +200,9 @@ Jeder Staat besitzt:
 5. Include-Reihenfolge in `gamemode.pwn` bleibt bindend: Core → DB → State → Admin → Auth → Economy → Jobs → Laws → Housing/Vehicle → Leisure/Web.
 6. Neue Systeme müssen in `README.md` und in `TO-DO.md` dokumentiert werden.
 
-## Modulübersicht
+## 📘 Modulübersicht
 
-### Staat und Verwaltung
+### 📘 Staat und Verwaltung
 
 - `state_system.inc`
 - `state_identity_system.inc`
@@ -195,7 +216,7 @@ Jeder Staat besitzt:
 - `district_system.inc`
 - `district_economy.inc`
 
-### Wirtschaft und Kasse
+### 📘 Wirtschaft und Kasse
 
 - `state_bank_system.inc`
 - `state_tax_system.inc`
@@ -207,7 +228,7 @@ Jeder Staat besitzt:
 - `dealership_system.inc`
 - `ammu_system.inc`
 
-### Jobs, soziale und RP-Systeme
+### 🏗️ Jobs, soziale und RP-Systeme
 
 - `jobs_core.inc`
 - `state_jobs.inc`
@@ -220,7 +241,7 @@ Jeder Staat besitzt:
 - `social_system.inc`
 - `roleplay_command_system.inc`
 
-### Besitz, Fahrzeuge und Inventar
+### 📘 Besitz, Fahrzeuge und Inventar
 
 - `inventory_system.inc`
 - `house_system.inc`
@@ -232,7 +253,7 @@ Jeder Staat besitzt:
 - `ubb_vehicle_system.inc`
 - `fuel_station_system.inc`
 
-### Sicherheit, Justiz und Notfall
+### 📘 Sicherheit, Justiz und Notfall
 
 - `law_system.inc`
 - `jail_system.inc`
@@ -243,24 +264,24 @@ Jeder Staat besitzt:
 - `dispatch_system.inc`
 - `ems_hospital.inc`
 
-### State-Ledger und Treasury-Integrität
+### 📘 State-Ledger und Treasury-Integrität
 
 - `state_ledger_system.inc`
 - zentrale State-/Treasury- und Budget-Transfers mit konsistenter Protokollierung pro Staat
 - `StateLedgerSystem_Transfer()` und `StateLedgerSystem_ShowSummary()` als gemeinsame Treasury-API
 
-## Control Panel und Web-Management
+## 🧩 Control Panel und Web-Management
 
 Das separate Control Panel ist ein eigenes Web-Modul außerhalb des SA:MP-Gamemodes. Es liest dieselbe SQLite-Datenbasis und ist für Monitoring, Status-Checks, Admin-Übersicht und Betriebsdaten ausgelegt.
 
-### Verfügbar
+### 📘 Verfügbar
 
 - `control-panel/server.js`
 - `control-panel/public/index.html`
 - `control-panel/public/app.js`
 - `control-panel/README.md`
 
-### Ziel
+### 🧭 Ziel
 
 - Live-Status des Servers
 - Übersicht der Staatskassen
@@ -268,7 +289,7 @@ Das separate Control Panel ist ein eigenes Web-Modul außerhalb des SA:MP-Gamemo
 - Business-, Vehicle- und House-Übersichten
 - spätere UCP-/Admin-Aktionen ohne Pawn-Blockade
 
-## Plugins und Includes
+## 🖥️ Plugins und Includes
 
 Die Projektbasis ist bewusst auf moderne SA:MP-Plugins gesetzt. Die empfohlene Grundstruktur richtet sich nach modularem Design, Stabilität und Skalierbarkeit.
 
@@ -284,11 +305,11 @@ Empfohlener Stack:
 - `MapAndreas`
 - `pawn-plus` / kompatible Helper-Includes
 
-## Live-Betrieb auf Ubuntu-VM: Übergabepunkte und harte Regeln
+## ✅ Live-Betrieb auf Ubuntu-VM: Übergabepunkte und harte Regeln
 
 Die reale Produktionsvalidierung muss auf der Ubuntu-VM erfolgen, nicht im Container. Dort stehen die echten Laufzeitbestandteile zur Verfügung: `pawncc`, `qemu-i386`, `samp.service` / `omp-server.service`, `Compiler/samp03/scriptfiles/` und `control-panel/server.js`.
 
-### Manueller Offline-Workflow der Tools
+### 📘 Manueller Offline-Workflow der Tools
 
 Die neuen `tools/*.py`-Helfer sind bewusst auf keinen Hintergrundbetrieb oder Daemon-Start ausgelegt. Sie dienen ausschließlich der manuellen Analyse im Kontext des Repo-Standes und bleiben dabei strikt offline:
 
@@ -297,7 +318,7 @@ Die neuen `tools/*.py`-Helfer sind bewusst auf keinen Hintergrundbetrieb oder Da
 - `tools/log_guided_autocorrect.py` arbeitet standardmäßig im `--dry-run`-Modus und zeigt Vorschau/Diff, bevor mit `--apply` echte Backups und Korrekturen geschrieben werden.
 - `tools/debug_trace_collector.py` sammelt kompakten Diagnose-Auszug aus Logs, `tools/*.py`-Ausgaben, SQLite-Dateien (read-only) und `Compiler/samp03/`-Artefakten ohne Serverstart.
 
-### Kritische Übergangspunkte
+### 📘 Kritische Übergangspunkte
 
 1. Dini-first vs. Control Panel
    - Das Web-Dashboard ist offiziell als SQLite-Read-Only-Lesezugriff konzipiert.
@@ -319,7 +340,7 @@ Die neuen `tools/*.py`-Helfer sind bewusst auf keinen Hintergrundbetrieb oder Da
    - Vor dem Start der SAMP-/OMP-Daemons müssen alle erwarteten Ordner in `Compiler/samp03/scriptfiles/` physisch existieren, etwa für Spieler, Häuser, Safes, UBB-Fahrzeuge und die Staatskassen LS/SF/LV.
    - Schreibrechte und Dateierstellung müssen sauber auf den Servernutzer passen.
 
-### Ubuntu-VM-Verifikation
+### 📊 Ubuntu-VM-Verifikation
 
 Realer Live-Check auf der Ubuntu-VM:
 
@@ -345,7 +366,7 @@ Danach wird verifiziert:
 - `samp.service`, `samp2.service` oder `omp-server.service` startet ohne Runtime-Fehler
 - `control-panel/server.js` zeigt denselben Stand wie die Dini-Dateien bzw. liest dieselben Daten synchronisiert
 
-### Abnahme-/Erfolgs-Kriterien
+### 📘 Abnahme-/Erfolgs-Kriterien
 
 Die Übergabe gilt als erfüllt, wenn alle folgenden Kriterien in der echten Ubuntu-VM gleichzeitig erfüllt sind:
 
@@ -354,7 +375,7 @@ Die Übergabe gilt als erfüllt, wenn alle folgenden Kriterien in der echten Ubu
 - Autosync & Control Panel: Nach einem Dini-Write landet der gleiche Stand in SQLite bzw. wird im Panel lesend konsistent dargestellt, ohne falsche Annahmen über Schreibrechte.
 - Mirror & Doku: Änderungen an Modulen, c++-Spiegeln und Dokumentation bleiben zueinander synchronisiert; veraltete Pfade und tote Verweise sind nicht mehr enthalten.
 
-## Verifikation und Einschränkungen
+## 📊 Verifikation und Einschränkungen
 
 Dieser Container ist nicht die reale Produktionsumgebung; dort müssen die echten Ubuntu-VM-Checks laufen. Die Verifikation im aktuellen Container ist daher nur Teil-Validierung und keine endgültige Live-Bestätigung. Die inhaltliche Prüfung erfolgte über:
 
@@ -368,7 +389,7 @@ Dieser Container ist nicht die reale Produktionsumgebung; dort müssen die echte
 
 Ergebnis: Die Build- und Architektur-Validierung ist sauber, aber die vollständige Live-Prüfung auf der Ubuntu-VM mit `pawncc`, `qemu-i386`, `samp.service` und den realen Dini-Pfaden ist der entscheidende letzte Gate.
 
-## Stabilisierung und Release-Status
+## 📊 Stabilisierung und Release-Status
 
 Die Projektbasis wurde auf einen konsistenten, überprüfbaren Build-/Architektur-Stand gehoben. Nach der letzten Review- und Stabilisierungslauf wurde eine zentrale Korrektur durchgesetzt: gemeinsame Grenzwerte für Inventar, House-Storage und UBB-Fahrzeuge werden jetzt zentral in `core.inc` und `production_guard.inc` definiert, um Include-Reihenfolge- und Präprozessor-Konflikte zu vermeiden.
 
@@ -382,22 +403,22 @@ Zusätzlich wurden die kritischen Übergänge auf einen konsistenten Datenfluss 
 
 Damit bleibt das Projekt als modularer, erweiterbarer Ausgangspunkt für ein reales 3-Staaten-Reallife-System nachvollziehbar, sauber strukturiert und für die letzte reale Ubuntu-VM-Validierung vorbereitet. Ein formeller Release-Status gilt erst mit erfolgreichem Live-Start, sauberem `pawncc`-Build und erfolgreichem Dini-/SQLite-/Control-Panel-Check auf der Ziel-VM.
 
-## Projekt-Dokumentation
+## 📘 Projekt-Dokumentation
 
 - `SEASON.md` – vollständige Season- und World-Progression-Konzeption für das RP-System
 - `HowToSetup.md` – komplette Setup-, Server-, V-Server- und Deployment-Anleitung
 - `Compiler/samp03/plugins/README.md` – dokumentiertes Plugin-Layout für den 7780-Contract mit transparentem Hinweis auf echte VM-/Host-Binaries und ohne erfundene Placeholder-Dateien
 
-## Nächste Entwicklungsstufen
+## 📘 Nächste Entwicklungsstufen
 
-### Phase 1 – Production-safe persistence (architektonisch umgesetzt)
+### 📘 Phase 1 – Production-safe persistence (architektonisch umgesetzt)
 
 - vollständige DB-Load-/Save-Interfaces für Spieler-, House-Storage-, Inventory- und UBB-Fahrzeugpfade eingebaut
 - zentrale Repair-/Validation- und Transaction-Guards für kritische Tabellen etabliert
 - konsistente Cash-/State-/Bank-Bridge zwischen Core-, State- und DB-Layer ergänzt
 - Backup-/Restore-Snapshot-Pfade als strukturierte Scaffold- und Operations-API definiert
 
-### Phase 2 – Live-Gamemode-Validierung
+### 🖥️ Phase 2 – Live-Gamemode-Validierung
 
 - SA:MP/Pawn-Toolchain einrichten
 - echtes Kompilieren des Gamemodes auf einem lokalen Server
@@ -405,24 +426,24 @@ Damit bleibt das Projekt als modularer, erweiterbarer Ausgangspunkt für ein rea
 - echte DB- und State-Integration mit Live-Serverdaten verifizieren
 - Datensynchronisation zwischen State-Logik und SQLite prüfen
 
-### Phase 3 – Erweiterung des RP-Ökosystems
+### 🏗️ Phase 3 – Erweiterung des RP-Ökosystems
 
 - tieferes Job- und Fraktions-Gameplay
 - politische Entscheidungssysteme
 - zusätzliche Events, Stadtinteraktionen und Dienstleistungs-Module
 - noch stärkere Unterscheidung zwischen LS/SF/LV pro System
 
-## Abschluss
+## 📘 Abschluss
 
 Die Projektbasis ist jetzt als konsistenter modularer RP-Framework-Stand dokumentiert und für den aktuellen Build-/Architektur-Abschnitt verifiziert. Die Dokumentation ist breit genug für echtes Reallife-Gameplay, stabil genug für produktionsnahe Architekturreflexionen und modular genug, um künftig einzelne Komponenten ohne kompletten Rewrite zu erweitern. Eine formelle Live-Release-Freigabe bleibt jedoch explizit offen, bis der echte Ubuntu-VM-Produktionslauf mit Kompilierung, Dini-Persistenz, Autosync, Panel-Validierung und Server-Daemonen bestanden ist. Der im Repository gültige Runtime-Contract bleibt der 7780-Tree unter `Compiler/samp03/`, nicht Port 7777.
 
 ---
 
-## Finaler Stand des Projekts
+## 📊 Finaler Stand des Projekts
 
 Der aktuelle Stand des Repositorys ist bewusst auf Stabilität, Source-Validity und realistische Runtime-Governance ausgerichtet. Es gilt weiterhin das harte Build-Contract: nur `Compiler/samp03/gamemodes/gtasa_reallife.amx` ist die gültige Ausgabe, der Build läuft über die lokale 32-Bit-Toolchain mit `qemu-i386`, und `core.inc` bleibt die zentrale Quelle für State-/Home-State-/Admin-/Project-Leader-Informationen.
 
-### Verifiziertes Source-Level
+### 📘 Verifiziertes Source-Level
 
 - Single-Target-Output und Build-Sync mit `server.cfg`
 - Lifecycle- und Include-Reihenfolge in `gamemode.pwn` unverändert eingehalten
@@ -432,17 +453,17 @@ Der aktuelle Stand des Repositorys ist bewusst auf Stabilität, Source-Validity 
 - Dini-first-Temp/Validate/Rename-Pfade für kritische Transfers sowie SQLite-Read-Only-Sicht konsistent dokumentiert
 - qemu-i386-Hotpath-Guards für `TextWars_Tick`, `UBBVehicleSystem_Connect` und ähnliche Laufzeit-Sensiblitäten beibehalten
 
-### Offener, aber klar definierter Status
+### 📊 Offener, aber klar definierter Status
 
 Der Code ist auf den aktuellen Standards des Projekts stabil und konsistent, aber der reale Live-Start bleibt ein separates Freigabe-Gate auf der Ubuntu-VM. Es wurde kein echter Serverstart auf Port 7780 oder 7777 unter Live-Betrieb durchgeführt, und genau dieser Zustand bleibt ausdrücklich gültig, bis die reale Runtime-Validierung freigegeben wird.
 
-### Kurzfazit
+### 📘 Kurzfazit
 
 Damit ist das Repository in einen sauberen, dokumentierten und architektonisch verständlichen Zwischenstand gebracht worden: Build-Kontrakt erfüllt, Hardening-Muster erhalten, Persistenzstrategie vorgezeichnet und der Proof-Point für die nächsten Live-Checks eindeutig definiert. Die endgültige Produktionsfreigabe bleibt weiterhin an den echten Live-Test gebunden.
 
 ---
 
-## Additive Verifikationsnotiz – Q4 Source-Härtung
+## 📊 Additive Verifikationsnotiz – Q4 Source-Härtung
 
 Diese Notiz ergänzt die bisherigen Dokumentationsabschnitte ohne sie zu überschreiben.
 
@@ -455,7 +476,7 @@ Diese Notiz ergänzt die bisherigen Dokumentationsabschnitte ohne sie zu übersc
 
 ---
 
-## Additive Ist-Analyse – Gesamtprojekt 2026-11-20
+## 📘 Additive Ist-Analyse – Gesamtprojekt 2026-11-20
 
 Diese Ergänzung erweitert die vorhandene Dokumentation ohne bestehende Abschnitte zu überschreiben.
 
@@ -470,7 +491,7 @@ Diese Ergänzung erweitert die vorhandene Dokumentation ohne bestehende Abschnit
 
 ---
 
-## Additive Validierungsnotiz – 2026-11-20
+## 📘 Additive Validierungsnotiz – 2026-11-20
 
 Diese Ergänzung erweitert den vorhandenen Status ohne bestehende Abschnitte zu verändern.
 
@@ -482,7 +503,7 @@ Diese Ergänzung erweitert den vorhandenen Status ohne bestehende Abschnitte zu 
 
 ---
 
-## Additive Abschluss-Validierung – 2026-11-21
+## 📘 Additive Abschluss-Validierung – 2026-11-21
 
 Diese Ergänzung schließt den aktuellen Source-/Build-Lauf ab, ohne bestehende Abschnitte zu entfernen.
 

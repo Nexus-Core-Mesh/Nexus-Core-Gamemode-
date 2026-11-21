@@ -1,6 +1,27 @@
 # Architektur — Nexus-Core-Gamemode
 
-## 1. Überblick und Ziel der Systemarchitektur
+> [!NOTE]
+> Diese Doku wurde optisch aufbereitet, ohne technische Fakten, Pfade, Ports oder Projektregeln zu verändern.
+> Fokus lag auf Lesbarkeit, Struktur, Übersichten und deutlicherer Orientierung.
+
+## ✅ Wichtig zu wissen
+
+- Technische Fakten, Befehle, Pfade und Projektregeln bleiben bewusst unverändert.
+- Port- und Systemtrennung bleiben konsistent, insbesondere für den 7780-Contract und den Dini-first-Pfad.
+- Die optische Aufwertung dient nur der Lesbarkeit, nicht der inhaltlichen Interpretation.
+
+---
+## 🧭 Schnellüberblick
+
+| Bereich | Inhalt |
+| --- | --- |
+| Dokument | `ARCHITECTURE.md` |
+| Typ | Architektur-Doku |
+| Fokus | Systemaufbau, Module und Persistenzstruktur |
+| Wichtige Pfade | `gamemodes/modules/`, `Compiler/samp03/scriptfiles/`, `data/db/` |
+
+---
+## 🧭 1. Überblick und Ziel der Systemarchitektur
 
 Nexus-Core-Gamemode ist ein modularer GTA:SA-Reallife-Gamemode für SA:MP, der bewusst nicht als eine einzelne monolithische `gamemode.pwn`-Datei aufgebaut ist. Stattdessen basiert das Projekt auf einer klaren mehrschichtigen Architektur mit eigenständigen Bereichen für Core, State, Auth, Economy, Jobs, Factions, Housing, Inventory, UI, Vehicles, Law, World, Kommunikation und Web-Management.
 
@@ -20,7 +41,7 @@ Das wichtigste Designprinzip lautet: Der Quellcode wird im Root entwickelt, geba
 
 ---
 
-## 2. Verzeichnisstruktur und Dateizuordnung
+## 🏗️ 2. Verzeichnisstruktur und Dateizuordnung
 
 ```text
 Nexus-Core-Gamemode/
@@ -108,7 +129,7 @@ Nexus-Core-Gamemode/
 └── ...
 ```
 
-### 2.1 Master-Entry-Point: `gamemodes/gamemode.pwn`
+### 📘 2.1 Master-Entry-Point: `gamemodes/gamemode.pwn`
 
 `gamemodes/gamemode.pwn` ist das Herz des Projekts. Dort werden die wichtigsten Module in einer klaren Initialisierungsreihenfolge eingebunden und gestartet. Die relevante Struktur im Code zeigt den kompletten Boot-Stack:
 
@@ -126,7 +147,7 @@ Nexus-Core-Gamemode/
 
 Das `OnGameModeInit()`-Bootsystem ist die zentrale Initialisierung, die entscheidet, in welcher Reihenfolge die wichtigsten Subsysteme geladen werden. Dazu gehört auch die Module-Contract-Registrierung, die den Zustand der Server-Initialisierung kontrolliert und die Systemstufen sauber hält.
 
-### 2.2 Modulstruktur der eigentlichen Funktionalität
+### 🏗️ 2.2 Modulstruktur der eigentlichen Funktionalität
 
 `gamemodes/modules/` bildet das im Projekt am stärksten ausgeprägte Designprinzip. Jede große Funktionalität ist isoliert und klar benannt.
 
@@ -189,7 +210,7 @@ Diese Module bilden die Grundlage für Besitz, Lagerung und mobile Spielmechanik
 - Dialoge, Textdraws und Menüs
 - Web-Bridge für Auswertungen und Monitoring
 
-### 2.3 Includes und Hilfsbibliotheken
+### 📘 2.3 Includes und Hilfsbibliotheken
 
 Die Includes sind nicht nur Nebensache, sondern Teil der Spiel- und Compiler-Architektur. Das Projekt nutzt SA:MP-Standardincludes sowie projektspezifische Hilfsbibliotheken. Diese Datei- und Codeebene macht den Quellcode lesbar, stark typisiert und teils modular aufgeteilt.
 
@@ -203,7 +224,7 @@ Wichtige. Aspekte:
 
 Im Build-Workflow werden these Includes über `-iincludes` und `-iCompiler/samp03/include` eingebunden, damit die Pawn-Compiler-Ausführung den kompletten Build-Kontext kennt.
 
-### 2.4 Compiler- und Toolchain-Schicht
+### 📘 2.4 Compiler- und Toolchain-Schicht
 
 `Compiler/` ist die lokale Build-Umgebung. Sie ist bewusst physisch im Projekt enthalten, damit das Projekt reproduzierbar gebaut werden kann. Die beiden kritischen Bestandteile sind:
 
@@ -234,7 +255,7 @@ LD_LIBRARY_PATH="$PWD/Compiler/pawncc${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" qemu
 
 Damit bleibt die Toolchain konkret und unabhängig von externen Installationen. Der echte Single-Target-Build pflegt nur diese eine AMX-Ausgabe; keine Duplikate unter `Compiler/samp03/gamemodes/` oder im Projektroot bleiben stehen.
 
-### 2.5 Offline-Tooling und manuelle Diagnose-Pfade
+### 📘 2.5 Offline-Tooling und manuelle Diagnose-Pfade
 
 Das Repository enthält zusätzlich schlanke, standardbibliotheksbasierte Python-Helfer unter `tools/`, die ohne Live-Serverstart und ohne Hintergrundprozess arbeiten. Sie sind gezielt für die Offline-Analyse konzipiert und decken die wichtigsten auditierbaren Bereiche ab:
 
@@ -245,7 +266,7 @@ Das Repository enthält zusätzlich schlanke, standardbibliotheksbasierte Python
 
 Diese Werkzeuge nutzen nur die Standardbibliothek, sind manuell per CLI aufrufbar und bleiben bewusst außerhalb eines autostartenden oder daemonisierten Betriebs.
 
-### 2.5 Laufzeit- und Kantenfall-Guardrails
+### 📘 2.5 Laufzeit- und Kantenfall-Guardrails
 
 Im aktuellen Stand wurden die früheren Runtime-Risiken nicht bloß dokumentiert, sondern in den geeigneten Funktionspfaden direkt abgesichert:
 
@@ -256,7 +277,7 @@ Im aktuellen Stand wurden die früheren Runtime-Risiken nicht bloß dokumentiert
 
 Diese Vereinbarungen sind absichtlich kein „Wiederverschieben“ apt-ähnlicher Änderungen, sondern eine direkte Sicherheitsschicht für den Connect-/Spawn-/HUD-Flow.
 
-### 2.5 Admin-/Projektleiter-Workflow und runtime contract
+### 🖥️ 2.5 Admin-/Projektleiter-Workflow und runtime contract
 
 Im laufenden Spielbetrieb wurde der Administrations- und Projektleiter-Export bewusst als separater, nicht-öffentlich sichtbarer Zugriff ergänzt. Die Kernidee ist: normale Spieler-Hilfen und Standardmenüs bleiben unverändert, während autorisierte Admins und Projektleiter im System über eine identische Core-Prüfung und einen zentralen State-/Spawn-Flow Zugang erhalten.
 
@@ -271,7 +292,7 @@ Die relevanten Sicherheits- und Runtime-Regeln lauten:
 
 Diese Regeln sind bewusst zusammen mit dem vordefinierten Core-Contract in der Architektur verankert, damit spätere Module denselben Single-Source-of-Truth- und Hardening-Pfad verwenden.
 
-### 2.5 Live-Server-Root und runtime contract
+### 🔧 2.5 Live-Server-Root und runtime contract
 
 `Compiler/samp03/` ist das aktive SA:MP-Laufzeit-Root. In diesem Ordner liegt
 a real laufende Serverumgebung:
@@ -297,7 +318,7 @@ gamemode0 gtasa_reallife 1
 
 Diese beiden Einträge müssen identisch zusammenpassen. Jede Abweichung führt zu Laufzeitproblemen wie falschem Modus- oder Spawnfluss.
 
-### 2.6 Dini-Persistenz und Fallback-Model
+### 📘 2.6 Dini-Persistenz und Fallback-Model
 
 Das Projekt bootet jetzt Dini-first und nutzt den Pfad:
 
@@ -321,7 +342,7 @@ Wichtiger Produktionshinweis für Ubuntu-VM/Linux:
 - Dini schreibt zeilenweise in Textdateien; es gibt keine SQL-Transaktions-Atomicity. Deshalb müssen kritische Transfers als atomare Datei-Operationen umgesetzt werden: write-temp → validate → rename.
 - Der optional Sync zu SQLite/MySQL darf nicht als alleinige Datenquelle dienen, weil `control-panel/server.js` laut Spezifikation read-only auf SQLite arbeitet und deshalb veraltete oder leere Werte anzeigen kann, wenn Dini-Änderungen nicht auch mit einem konsistenten Upsert propagiert werden.
 
-### 2.7 Produktions-Checkliste für echte Live-Umgebungen
+### 🖥️ 2.7 Produktions-Checkliste für echte Live-Umgebungen
 
 Vor dem Start von `samp.service`, `samp2.service` oder `omp-server.service` auf der Ubuntu-VM müssen diese Voraussetzungen erfüllt sein:
 
@@ -355,7 +376,7 @@ Danach gilt:
 - `control-panel/server.js` muss dieselben Live-Daten wie Dini/INI lesen oder den SQLite-Upsert-Pfad synchron halten
 - Spieler-, House-, Safe-, Fahrzeug- und State-Transfers müssen nach einem Crash nicht in halben Zuständen stehen
 
-### 2.8 Atomicity- und Recovery-Regeln für Dini-Schreibpfade
+### ✅ 2.8 Atomicity- und Recovery-Regeln für Dini-Schreibpfade
 
 Dini arbeitet ohne SQL-Transaktions-Logik. Für kritische Pfade gilt deshalb eine explizite Datei-Atomicity-Policy:
 
@@ -367,10 +388,9 @@ Dini arbeitet ohne SQL-Transaktions-Logik. Für kritische Pfade gilt deshalb ein
 
 Damit bleibt die Datenbasis zwischen Dini-first-Storage und SQLite-Read-Only-Panel in einem konsistenten, prüfbaren Zyklus: Save → validate → atomic rename → optional SQLite upsert → panel read.
 
-
 ---
 
-## 3. Modul- und Lifecycle-Architektur
+## 🏗️ 3. Modul- und Lifecycle-Architektur
 
 Die Bootreihenfolge des Gamemodes ist nicht randomisiert. Sie ist bewusst aufgebaut und folgt den systematischen Lifecycle-Stufen im Code:
 
@@ -398,9 +418,9 @@ Diese Reihenfolge sorgt dafür, dass alle Module mit gültigen, vorbereiteten Da
 
 ---
 
-## 4. Build-, CI/CD- und Deployment-Pipeline
+## 🔧 4. Build-, CI/CD- und Deployment-Pipeline
 
-### 4.1 Lokaler Build
+### 🔧 4.1 Lokaler Build
 
 Der lokale Build folgt genau dieser Logik:
 
@@ -422,7 +442,7 @@ Wesentlich ist hier:
 - nur eine Datei im Server-Ordner
 - keine Doppelnutzung oder Alias-Dateien
 
-### 4.2 GitHub Actions Workflow
+### 📘 4.2 GitHub Actions Workflow
 
 Die CI-Logik in `.github/workflows/build.yml` folgt dem gleichen Single-Target-Prinzip:
 
@@ -433,7 +453,7 @@ Die CI-Logik in `.github/workflows/build.yml` folgt dem gleichen Single-Target-P
 
 Der CI-Workflow ist damit synchron zum lokalen Build und verhindert ein Nicht-Match zwischen Build- und Runtime-Konfiguration.
 
-### 4.3 Serverdeployment
+### 🔧 4.3 Serverdeployment
 
 `scripts/deploy_server.sh` setzt die Laufzeitkonfiguration und startet den Server mit korrektem `LD_LIBRARY_PATH`:
 
@@ -450,7 +470,7 @@ LD_LIBRARY_PATH=.:./plugins:/usr/lib32:/usr/lib/i386-linux-gnu ./samp03svr
 
 Damit ist die Laufzeitumgebung vollständig auf den aktiven Gamemode abgestimmt.
 
-### 4.4 Saubere Single-Target-Staging-Logik
+### 📘 4.4 Saubere Single-Target-Staging-Logik
 
 Das Projekt verwendet bewusst ein Single-Target-Staging ohne Duplicate:
 
@@ -471,7 +491,7 @@ Es gibt keine zweite akzeptierte Staging-Stufe wie `gamemode.amx` oder `gtasa_re
 
 ---
 
-## 5. Plugin-Reihenfolge und Runtime-Umgebung
+## 🖥️ 5. Plugin-Reihenfolge und Runtime-Umgebung
 
 Die Serverkonfiguration reflektiert die benötigten SA:MP-Plugins und deren Reihenfolge. Die zentrale `server.cfg` enthält typischerweise die Einträge:
 
@@ -492,7 +512,7 @@ Diese Plug-ins bilden die Grundlage für Reallife-Workflows wie Jobs, Inventory,
 
 ---
 
-## 6. Datenfluss und Spielsystem-Kopplung
+## 🏗️ 6. Datenfluss und Spielsystem-Kopplung
 
 Das Projekt ist modular, aber eng gekoppelt. Beispiel:
 
@@ -509,7 +529,7 @@ Das bedeutet: Die Datenflüsse sind nicht verloren, sondern durch zentrale Inter
 
 ---
 
-## 7. Sicherheits- und Stabilitätsprinzipien
+## ✅ 7. Sicherheits- und Stabilitätsprinzipien
 
 Die Codebasis enthält mehrere grundlegende Stabilitätsmechanismen:
 
@@ -523,7 +543,7 @@ Das Projekt ist damit nicht nur aus funktionaler Sicht modular, sondern auch aus
 
 ---
 
-## 8. Verifikations- und Troubleshooting-Regeln
+## ✅ 8. Verifikations- und Troubleshooting-Regeln
 
 Ein sauberer Build gilt als erfolgreich, wenn:
 
@@ -543,7 +563,7 @@ Typische Fehlerquellen:
 
 ---
 
-## 9. Fazit
+## 📘 9. Fazit
 
 Nexus-Core-Gamemode ist als modularer, klar strukturierter, langlebiger SA:MP-Gamemode entworfen. Die Kernarchitektur basiert auf:
 
@@ -562,7 +582,7 @@ Das sichert die korrekte Initialisierung von:
 data/db/gtasa_reallife.db
 ```
 
-### Schritt 3: Gamemode kompilieren
+### 📘 Schritt 3: Gamemode kompilieren
 
 Der Compiler muss exakt den korrekten Modusnamen schreiben:
 
@@ -584,7 +604,7 @@ Das Ergebnis muss genau hier liegen:
 Compiler/samp03/gamemodes/gtasa_reallife.amx
 ```
 
-### Schritt 4: Serverkonfiguration prüfen
+### 🔧 Schritt 4: Serverkonfiguration prüfen
 
 Die Serverkonfiguration muss mit dem Modusnamen übereinstimmen:
 
@@ -598,7 +618,7 @@ Beispiel für die passende Plugin-Reihenfolge:
 plugins crashdetect streamer sscanf2 sqlite mysql zcmd
 ```
 
-### Schritt 5: SA:MP-Server starten
+### 🔧 Schritt 5: SA:MP-Server starten
 
 In den Server-Root wechseln und mit korrektem `LD_LIBRARY_PATH` starten:
 
@@ -609,9 +629,9 @@ LD_LIBRARY_PATH=.:./plugins:/usr/lib32:/usr/lib/i386-linux-gnu ./samp03svr
 
 ---
 
-## 5. Fehlerbehebung und Verifikation
+## 📊 5. Fehlerbehebung und Verifikation
 
-### 5.1 Wie man erfolgreichen Start erkennt
+### 🔧 5.1 Wie man erfolgreichen Start erkennt
 
 Wenn alles korrekt initialisiert wurde, zeigt die Konsole typischerweise an:
 
@@ -628,7 +648,7 @@ Typische Erfolgszeilen:
 [gamemode] GameModeInit finished
 ```
 
-### 5.2 Häufige Probleme
+### 📘 5.2 Häufige Probleme
 
 #### Fehlende Bibliotheks-Pfade für den Compiler
 
@@ -703,7 +723,7 @@ Der Build gilt als erfolgreich, wenn die Kompilierung ohne fatalen Abbruch durch
 
 ---
 
-## 6. Schlussfazit der Architektur
+## 🏗️ 6. Schlussfazit der Architektur
 
 Das Projekt ist bewusst in klare Schichten aufgebaut:
 
@@ -727,11 +747,11 @@ Damit wird der gewünschte Gamemode zuverlässig geladen und ein veralteter Defa
 
 ---
 
-## 7. Finaler Systemstand und Release-Guardrails
+## 🏗️ 7. Finaler Systemstand und Release-Guardrails
 
 Der aktuelle Architektur-Stand ist bewusst auf Stabilität, Wiederholbarkeit und Single-Source-of-Truth ausgelegt. Im Kern bleibt `core.inc` die zentrale Quelle für Spielerstatus, Home-State, Projektleiter-/Admin-Rechte und State-Validierung. Jede andere Stelle, die denselben Datensatz verwaltet, muss als Fallback oder ausgehender Leser fungieren und darf keine eigene, unabhängige Schattensicht etablieren.
 
-### 7.1 Build- und Runtime-Vertrag im Detail
+### 🔧 7.1 Build- und Runtime-Vertrag im Detail
 
 1. Single Target
    - Die einzige gültige AMX-Ausgabe bleibt `Compiler/samp03/gamemodes/gtasa_reallife.amx`.
@@ -754,7 +774,7 @@ Der aktuelle Architektur-Stand ist bewusst auf Stabilität, Wiederholbarkeit und
    - `strmid`-basierte Token-Extraktion bleibt der bevorzugte Parsing-Pfad, insbesondere für Passwörter, Befehls-Input und Dialog-Parameter.
    - `INVALID_TEXT_DRAW` und SetCameraBehindPlayer() bleiben die Muster für sauberes Reset- und Cleanup-Verhalten.
 
-### 7.2 Persistenz- und State-Sicherungsstrategie
+### 📘 7.2 Persistenz- und State-Sicherungsstrategie
 
 Die Persistenzarchitektur basiert auf einem doppelt abgestützten Modell:
 
@@ -772,7 +792,7 @@ Wesentliche kritische Transfers bleiben daher auf einen konsistenten Ablauf fest
 
 Das Muster ist explizit für Haus-Safes, Inventar, Fahrzeuge, Player-States und Ledger-Transfers vorgesehen.
 
-### 7.3 UI-, Tutorial- und Spawn-Sicherheit
+### 🧩 7.3 UI-, Tutorial- und Spawn-Sicherheit
 
 Der komplette Start-/Onboarding-/Spawn-Lebenszyklus muss in diesem Projekt als eine zusammenhängende Zustandsmaschine verstanden werden:
 
@@ -787,7 +807,7 @@ Dabei gilt:
 
 Wichtig ist, dass die Sicherung nicht nur im Einzelfall, sondern im Gesamtpfad wirkt: Der Login/Spawn/Reset-/Disconnect-Zyklus darf keine Default-Werte wieder in die aktive Session injizieren.
 
-### 7.4 Welt-, Admin- und Wirtschafts-Integration
+### 📘 7.4 Welt-, Admin- und Wirtschafts-Integration
 
 Die modularen Subsysteme sind im Relation-Design aufeinander abgestimmt:
 
@@ -800,7 +820,7 @@ Die modularen Subsysteme sind im Relation-Design aufeinander abgestimmt:
 
 Das zentrale Prinzip ist die Lückenlosigkeit: Jeder Modulaufruf muss seine Existenz und Berechtigung durch die tatsächliche API verifizieren, keine indirekten, losen oder mehrfach shadowed Zustände verwenden und keine halben Transaktionen zulassen.
 
-### 7.5 Laufzeit-Guardrails unter qemu-i386
+### 📘 7.5 Laufzeit-Guardrails unter qemu-i386
 
 Die Laufzeit ist bewusst auf ein begrenztes Ressourcenszenario ausgelegt:
 
@@ -812,7 +832,7 @@ Die Laufzeit ist bewusst auf ein begrenztes Ressourcenszenario ausgelegt:
 
 Die Kriterien gelten als Architektur-Anforderung, nicht als Option. Sie sind Teil der Stabilität der kompletten Laufzeitumgebung unter QEMU/32-Bit-Pawn.
 
-### 7.6 Offline-Tooling und Code-Audits
+### 📊 7.6 Offline-Tooling und Code-Audits
 
 Um die Laufzeitarchitektur mit Architektur- und Persistenz-Sicherheit zu verifizieren, ohne einen Live-Server zu starten, wurden zusätzliche Python-Tools als schlanke Offline-Checks eingeführt:
 
@@ -827,13 +847,13 @@ Um die Laufzeitarchitektur mit Architektur- und Persistenz-Sicherheit zu verifiz
 
 Diese Skripte ergänzen die bestehende `tools/`-Sammlung und sollen den Verlauf zwischen Build, Persistenz und systemweiterem Quellcheck dokumentieren, ohne den Laufzeitbetrieb zu provozieren.
 
-### 7.7 Release-Status
+### 📊 7.7 Release-Status
 
 Die Codebasis ist als source-validiert und architektonisch konsistent einzuordnen, aber die final reale Freigabe bleibt weiterhin ein Live-Release-Gate auf der Ubuntu-VM. Eine reine Compile-Sicherheit genügt nicht, um den Server als produktiv freigegeben zu betrachten. Entscheidend sind tatsächlicher Serverstart, echte Log-Prüfung und Client-/State-/DB-Verifikation im realen Laufzeitkontext.
 
 ---
 
-## 8. Schlussfazit der Architektur
+## 🏗️ 8. Schlussfazit der Architektur
 
 Das Projekt bleibt modular, konsistent und auf den Single-Target-Build ausgerichtet. Die Kernprinzipien lauten:
 
@@ -849,7 +869,7 @@ Damit ist die Projektarchitektur für den nächsten echten Live-Check vorbereite
 
 ---
 
-## Additive Architektur-Notiz: Source-Blocker und Build-Konsistenz
+## 🔧 Additive Architektur-Notiz: Source-Blocker und Build-Konsistenz
 
 Diese Ergänzung dokumentiert die echten Quellbaum-Funde ohne bestehende Abschnitte zu verändern.
 

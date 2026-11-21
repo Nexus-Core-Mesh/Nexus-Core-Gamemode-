@@ -1,10 +1,31 @@
 # Nexus Core UI Flow Report
 
-## 1) Aktueller Stand der Umsetzung
+> [!NOTE]
+> Diese Doku wurde optisch aufbereitet, ohne technische Fakten, Pfade, Ports oder Projektregeln zu verändern.
+> Fokus lag auf Lesbarkeit, Struktur, Übersichten und deutlicherer Orientierung.
+
+## ✅ Wichtig zu wissen
+
+- Technische Fakten, Befehle, Pfade und Projektregeln bleiben bewusst unverändert.
+- Port- und Systemtrennung bleiben konsistent, insbesondere für den 7780-Contract und den Dini-first-Pfad.
+- Die optische Aufwertung dient nur der Lesbarkeit, nicht der inhaltlichen Interpretation.
+
+---
+## 🧭 Schnellüberblick
+
+| Bereich | Inhalt |
+| --- | --- |
+| Dokument | `NEXUS_CORE_UI_FLOW_REPORT.md` |
+| Typ | Prüf-/Statusbericht |
+| Fokus | Validierung, Audit und dokumentierter Stand |
+| Wichtige Pfade | `gamemodes/`, `Compiler/samp03/`, `tools/` |
+
+---
+## 📊 1) Aktueller Stand der Umsetzung
 
 Dieser Bericht fasst den aktuellen Code- und Build-Stand für das Nexus-Core-Gamemode zusammen, mit Fokus auf den onboarding-/tutorial-basierten Übergang zum festen Spawnpunkt, das button-/menü-gesteuerte UI und die Kamera-/Perspektiv-Logik.
 
-### 1.1 Kernarbeit und Zielbild
+### 🧭 1.1 Kernarbeit und Zielbild
 
 Das System läuft in der 7780-Sandbox grundsätzlich stabiler, und der Fokus lag auf einem klaren, menu-first Flow:
 
@@ -16,7 +37,7 @@ Das System läuft in der 7780-Sandbox grundsätzlich stabiler, und der Fokus lag
 - Danach wird der Spieler direkt an seinen festen Spawnpunkt gesetzt.
 - Die Kamera wird sauber auf den Spieler zurückgesetzt, sobald der Auswahlpfad endet oder ein Wechsel/Reset erforderlich ist.
 
-### 1.2 Geänderte Module und Funktionen
+### 🏗️ 1.2 Geänderte Module und Funktionen
 
 #### `gamemodes/modules/ui/roleplay_ui_system.inc`
 
@@ -95,7 +116,7 @@ Wichtige Aspekte:
 - Tutorial-/Login-/State-/Spawn-Pfaden sind an denselben Core-Flow angebunden.
 - Die Kette ist auf den festen Spawnpunkt nach der Auswahl ausgelegt, statt auf ein einfaches „spawnen in default state 0“.
 
-### 1.3 4-Zonen-HUD-Layout
+### 📘 1.3 4-Zonen-HUD-Layout
 
 Das HSO-/HUD-Konzept wurde weiter auf ein 4-Zonen-Layout ausgerichtet, das die Sichtbarkeit und den Informationsfluss für Spieler auf mobilen Clients besser handhabbar macht.
 
@@ -112,7 +133,7 @@ Ziel:
 - TextDraws in klaren Ankerbereich verlegen.
 - Keine unkontrollierten Überlagerungen im oberen linken Bereich, die den Wechsel zwischen Login/Register/Tutorial und Spawn-UI blockieren.
 
-### 1.4 Button- und Menü-Einstieg
+### 📘 1.4 Button- und Menü-Einstieg
 
 Der Spielpfad ist klar auf ein menu-first Verhalten ausgerichtet:
 
@@ -121,7 +142,7 @@ Der Spielpfad ist klar auf ein menu-first Verhalten ausgerichtet:
 - Der Tutorial läuft ebenfalls über feste Auswahl-/Next-Schritte und nicht durch Chat-Kommandos.
 - Die Entscheidung „Geburts-/Spawnpunkt bzw. Staat“ wird während bzw. direkt nach dem Tutorial getroffen, und der ausgewählte Wert wird wieder verwendet, auch beim nächsten Login oder Spawn.
 
-### 1.5 Kamera-/Perspektiv-Basis
+### 📘 1.5 Kamera-/Perspektiv-Basis
 
 #### Additive Korrigierung – 2026-11-21
 
@@ -132,7 +153,7 @@ Der aktuelle State-/Spawn-Hardening-Lauf schloss die bekannte Kollision zwischen
 - So bleibt der feste Spawnpunkt nach Reconnect/Respawn konsistent, ohne neue Intro- oder Tutorial-Kamera-Overlay zu erzeugen.
 - Der Build-Pfad wurde erneut mit der 7780-Toolchain validiert; ein echter Live-Server-Start blieb nach wie vor aus.
 
-### 1.5 Kamera-/Perspektiv-Basis
+### 📘 1.5 Kamera-/Perspektiv-Basis
 
 Die Kamera logischer Aufwand ist bewusst in eine zentrale, wiederverwendbare Funktionalität verschoben:
 
@@ -141,9 +162,9 @@ Die Kamera logischer Aufwand ist bewusst in eine zentrale, wiederverwendbare Fun
 - Reuse in Tutorial-, Spawnpunkt-, allgemeiner UI-/Überblicks- und Event-/Drohnenperspektive.
 - Kein starrer Hardcode auf nur eine Kamera-Variante; dieselbe Basis kann für freie Kameras, Sicht-/Event-Modi, Späher-/Fokus-Ansichten und Überblicksmodi wiederverwendet werden.
 
-## 2) Erhaltene Hardening- und Persistenz-Maßnahmen
+## 📘 2) Erhaltene Hardening- und Persistenz-Maßnahmen
 
-### 2.1 `INSERT OR IGNORE` bei `player_state`
+### 📘 2.1 `INSERT OR IGNORE` bei `player_state`
 
 Wichtige Maßnahme, die im bisherigen Lauf stabilisierend wirkte:
 
@@ -151,7 +172,7 @@ Wichtige Maßnahme, die im bisherigen Lauf stabilisierend wirkte:
 - Wenn `player_state` oder verwandte State-/Home-State-Werte bereits gesetzt sind, wird ein ungültiger Lese-/Schreib-Overwrite vermieden.
 - Das ist zentral für den festen Spawnpunkt nach Tutorial-/State-Auswahl.
 
-### 2.2 Sichere Token-Extraktion statt fragiler `sscanf`-Pufferlogik
+### 📘 2.2 Sichere Token-Extraktion statt fragiler `sscanf`-Pufferlogik
 
 Das Projekt wurde in kritischen Eingabe- und Befehls-pfaden vor unkontrollierten Pufferüberläufen geschützt:
 
@@ -159,7 +180,7 @@ Das Projekt wurde in kritischen Eingabe- und Befehls-pfaden vor unkontrollierten
 - Damit werden längere Befehle wie `register ...` und state-spezifische Befehle robust gegen Buffer-Overflows.
 - Die Befehls- und Dialoglogik ist damit deutlich robuster unter mobilen Client-/Input-Variationen.
 
-### 2.3 Entlastete Timer-/Callbacks
+### 📘 2.3 Entlastete Timer-/Callbacks
 
 Unter `qemu-i386` war die Emulationslast der zentrale Risikofaktor. Daher wurden die betroffenen Bereiche bewusst entlastet:
 
@@ -167,7 +188,7 @@ Unter `qemu-i386` war die Emulationslast der zentrale Risikofaktor. Daher wurden
 - Keine unnötige Tick-Spitze im Tutorial-/State-/Kamera-Flow.
 - Fokus auf saubere, gezielte Trigger statt massiver Hintergrundschleifen.
 
-### 2.4 `INVALID_TEXT_DRAW`-Prüfungen und sauberes Aufräumen
+### 📘 2.4 `INVALID_TEXT_DRAW`-Prüfungen und sauberes Aufräumen
 
 Die UI-/Camera-Integration wurde mit defensiven Prüfungen ergänzt:
 
@@ -175,7 +196,7 @@ Die UI-/Camera-Integration wurde mit defensiven Prüfungen ergänzt:
 - Replay-/Reset-Mechanik ist gezielt auf Cleanups und Reset-Bereiche ausgerichtet.
 - Disconnect/Exit-/Reset-Pfade wurden berücksichtigt, damit keine veraltete Kamera oder TextDraw-Referenz hängen bleibt.
 
-### 2.5 Erfolgreicher Build
+### 🔧 2.5 Erfolgreicher Build
 
 Der Build wurde erfolgreich ausgeführt:
 
@@ -185,9 +206,9 @@ Der Build wurde erfolgreich ausgeführt:
 
 Das ist ein wichtiger Nachweis, dass der aktuelle Source-Stand kompilierbar und in der Sandbox-Umgebung konsistent ist.
 
-## 3) Offene Punkte und konkrete Live-Prüfungen
+## 🖥️ 3) Offene Punkte und konkrete Live-Prüfungen
 
-### 3.1 Offene Punkte
+### 📘 3.1 Offene Punkte
 
 Die Umsetzung ist im Code klar weiterentwickelt, aber einzelne Punkte sind noch nicht vollständig live validiert:
 
@@ -197,7 +218,7 @@ Die Umsetzung ist im Code klar weiterentwickelt, aber einzelne Punkte sind noch 
 4. Verifikation, dass keine Kamera-/UI-Überlagerungen oder TextDraw-Reste nach Tutorial-/State-Ende hängen bleiben.
 5. Prüfung der tatsächlichen Spiel- und Parse-Performance im realen `qemu-i386`-Runtime-Fenster.
 
-### 3.2 Konkrete Live-Prüfsschritte
+### 🖥️ 3.2 Konkrete Live-Prüfsschritte
 
 #### `server_log.txt`
 
@@ -238,7 +259,7 @@ Die Umsetzung ist im Code klar weiterentwickelt, aber einzelne Punkte sind noch 
   - Kamera-Reset ohne Hängen oder Überlagerung
   - spätere Login-/Spawn-Wiederholungen mit unverändertem State
 
-## 4) Kurzfazit
+## 📘 4) Kurzfazit
 
 Der Code steht insgesamt deutlich besser da: der Tutorial-/State-/Spawn-Flow ist im Gamemode-Quellcode sauberer und kontrollierter verknüpft, das HUD ist auf klarere Zonen ausgerichtet, die Kamera wurde zu einer flexiblen Basisfunktion entwickelt, und die Persistenzlogik schützt gültige State-Werte vor dem bekannten `0`-Reset.
 
@@ -246,7 +267,7 @@ Der Build lief erfolgreich, aber die letzte Stufe ist die echte Laufzeit-Verifik
 
 ---
 
-## Additive Abschluss-Validierung – 2026-11-21
+## 📘 Additive Abschluss-Validierung – 2026-11-21
 
 Diese Abschlussnotiz ergänzt den Flow-Report ohne bestehende Abschnitte zu löschen.
 

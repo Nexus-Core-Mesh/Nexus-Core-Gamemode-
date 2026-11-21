@@ -1,12 +1,33 @@
 # Nexus Core Gamemode – Erweiterungs-TO-DO
 
-## Ziel
+> [!NOTE]
+> Diese Doku wurde optisch aufbereitet, ohne technische Fakten, Pfade, Ports oder Projektregeln zu verändern.
+> Fokus lag auf Lesbarkeit, Struktur, Übersichten und deutlicherer Orientierung.
+
+## ✅ Wichtig zu wissen
+
+- Technische Fakten, Befehle, Pfade und Projektregeln bleiben bewusst unverändert.
+- Port- und Systemtrennung bleiben konsistent, insbesondere für den 7780-Contract und den Dini-first-Pfad.
+- Die optische Aufwertung dient nur der Lesbarkeit, nicht der inhaltlichen Interpretation.
+
+---
+## 🧭 Schnellüberblick
+
+| Bereich | Inhalt |
+| --- | --- |
+| Dokument | `TO-DO.md` |
+| Typ | Projekt-Doku |
+| Fokus | Dokumentierter Projektbereich |
+| Wichtige Pfade | `gamemodes/`, `Compiler/samp03/`, `tools/` |
+
+---
+## 🧭 Ziel
 
 Das Projekt als modularen, erweiterbaren GTA:SA-Reallife-Gamemode mit 3-Staaten-Architektur, persistenten Spielerdaten und modernem State-/Economy-/Management-Stack weiterführen.
 
-## Statusübersicht
+## 📊 Statusübersicht
 
-### P0 – Kernsysteme und Stabilität
+### 🏗️ P0 – Kernsysteme und Stabilität
 - [x] Projektstruktur auf modularen Layern aufbauen
 - [x] Core-State-/Player-Modelle definieren
 - [x] DB-Abstraktionsschicht mit Dini-first Fallback und optionaler SQLite/MySQL-Autosync etabliert
@@ -14,7 +35,7 @@ Das Projekt als modularen, erweiterbaren GTA:SA-Reallife-Gamemode mit 3-Staaten-
 - [x] kritische Übergabepunkte zwischen DB, Inventar, Safe und UBB-Fahrzeugen abschirmen
 - [x] zentrale Treasury-/Bank-/State-APIs anlegen
 
-### P1 – Reallife-Gameplay
+### 📘 P1 – Reallife-Gameplay
 - [x] Auth-/Login-/Tutorial-/Home-State-Flow
 - [x] Fahrzeug- und Zugangslogik
 - [x] Tankstellen-/Garage- und Reparaturlogik
@@ -22,25 +43,25 @@ Das Projekt als modularen, erweiterbaren GTA:SA-Reallife-Gamemode mit 3-Staaten-
 - [x] Shop-/Arsenal-/Business- und Wirtschaftslogik
 - [x] Social-/RP-Kommandos und Event-Flow
 
-### P2 – Staat, Regierung und Verwaltung
+### 📘 P2 – Staat, Regierung und Verwaltung
 - [x] States LS/SF/LV mit eigener Kasse und Steuerlogik
 - [x] State-Governance und Budget-Management
 - [x] Fraktions-, Gang- und Business-Logik je Staat
 - [x] Admin-/Support-/State-Admin-Architektur
 
-### P3 – Häuser, Biz und Immobilien
+### 📘 P3 – Häuser, Biz und Immobilien
 - [x] Haus- und Ownership-Struktur
 - [x] House-Safe-/Lagerlogik
 - [x] Business-/Firma-/Bizz-System
 - [x] staatlich getrennte Investitionslogik
 
-### P4 – Progression, Social und Long-Term Loop
+### 📘 P4 – Progression, Social und Long-Term Loop
 - [x] Level-, XP- und Reputationslogik
 - [x] Job- und War-/Fight-Systeme
 - [x] Tutorial-, Intro- und RP-Startspuren
 - [x] Beziehungssysteme und soziale RP-Module
 
-### P5 – Control Panel und Management
+### 🧩 P5 – Control Panel und Management
 - [x] Web-Dashboard mit SQLite-Anbindung
 - [x] Overview-/Summary-/State- und Admin-APIs
 - [x] Projektstatus und Web-Bridge dokumentiert
@@ -50,21 +71,21 @@ Das Projekt als modularen, erweiterbaren GTA:SA-Reallife-Gamemode mit 3-Staaten-
 - [x] Repo-gebundene Offline-TUI-/Autofix-Integration ergänzt: `tools/nexus_hub_tui.py`, `tools/nexus_tools_tui.py`, `tools/nexus_autofix.py`, `tools/samp_tui.py` sowie die Root-Wrapper `nexus_hub_tui.py`, `nexus_tools_tui.py`, `nexus_autofix.py`, `samp_tui.py`
 - [x] Repo-gebundene Pfadauflösung ohne feste `/home`-Argumente, `7780`-Live-Abhängigkeiten oder Server-Start in den TUI/Autofix-Workflows
 
-## Nächste releaseorientierte Aufgaben
+## 📘 Nächste releaseorientierte Aufgaben
 
-### Release-Milestone A – Production-safe backend
+### 📘 Release-Milestone A – Production-safe backend
 - [x] zentrale Load-/Save-Interfaces für `players`, `house_storage`, `player_inventory`, `ubb_vehicles` ergänzt
 - [x] DB-Repair- und Validation-Pfade für kritische Tabellen formalisiert
 - [x] atomare Transaction- und Guard-Mechaniken für kritische Write-Pfade etabliert
 - [x] Backup-/Restore-Scaffold und Snapshot-Hooks als operationales Design eingebaut
 
-### Release-Milestone B – Gameplay-Stress-Test
+### 📘 Release-Milestone B – Gameplay-Stress-Test
 - [x] SA:MP/Pawn-Toolchain aufsetzen
 - [x] compile-check + server-start test (lokaler `qemu-i386`-Build auf `Compiler/samp03/gamemodes/gtasa_reallife.amx` erfolgreich)
 - [ ] sozialer und wirtschaftlicher Load-Test mit mehreren Spielern
 - [ ] Kassen-/State-Transaktionen gegen realen Spielbetrieb validieren
 
-### Release-Milestone B1 – State Rehydration & Menu-First Onboarding
+### 📘 Release-Milestone B1 – State Rehydration & Menu-First Onboarding
 
 - [x] Grundstruktur für `Compiler/samp03/scriptfiles/` ergänzt: `players/`, `houses/`, `house_storage/`, `safes/`, `vehicles/`, `ubb_vehicles/`, `state/LS|SF|LV`, `state_kasse/LS|SF|LV`, `business/`, `factions/`, `inventory/`, `temp/`, `backup/`, `logs/` angelegt und als `.gitkeep`-Markierung im Git gesichert.
 - [x] Valid-state-Reset-Schutz verstärkt: Disconnect-/Login-Pfade dürfen existente `state_id`/`home_state`-Werte nicht durch `0`-Resets zerstören; sie normalisieren auf gültige Standardwerte statt zu invalidieren.
@@ -81,7 +102,7 @@ Das Projekt als modularen, erweiterbaren GTA:SA-Reallife-Gamemode mit 3-Staaten-
 - [x] Übergang `Connect -> Auto-Detect Login/Register -> Tutorial -> Heimatstaat (LS/SF/LV) -> StateSpawnSystem_Apply() -> CameraSystem_Reset() -> fester Spawnpunkt` als menu-first flow stabilisiert; die Zustände werden nicht bei Respawn/Reconnect erneut durch Chatbefehle ausgelöst.
 - [x] Single-Target-Build-Pfad auf `Compiler/samp03/gamemodes/gtasa_reallife.amx` konsolidiert; alte `gamemode.amx`-Duplikate und Legacy-Aliase werden im Build und im Serverordner bereinigt.
 
-### Release-Milestone B2 – Admin / Projektleiter-System
+### 🏗️ Release-Milestone B2 – Admin / Projektleiter-System
 
 #### Additive 7780-Härtung – 2026-11-21
 
@@ -91,7 +112,7 @@ Das Projekt als modularen, erweiterbaren GTA:SA-Reallife-Gamemode mit 3-Staaten-
 - [x] Single-Target-Build auf `Compiler/samp03/gamemodes/gtasa_reallife.amx` mit `qemu-i386`-Toolchain und Exit-Code `0` bestätigt; Port `7777` bleibt tabu.
 - [x] Offline-Checks auf `tools/*.py`, `scripts/*.sh` und Build-Path laufen ohne Serverstart durch; Live-Server- und Client-Tests bleiben bewusst aus.
 
-### Release-Milestone B2 – Admin / Projektleiter-System
+### 🏗️ Release-Milestone B2 – Admin / Projektleiter-System
 - [x] Projektleiter-/Owner-Zugang als versteckter Spezialzugang in `core.inc` und `admin_system.inc` ergänzt; `Core_IsProjectLeader()` und `AdminSystem_IsProjectLeader()` sichern Zugriff ohne normale Spieler-Hilfen.
 - [x] Disconnect-/Reset-/Menüwechselpfade auf saubere Camera- und HUD-Cleanup erweitert: `CameraSystem_ExitCameraMode()`, `CameraSystem_Reset()`, `RoleplayUI_Hide()` und `TutorialSystem_HideStage()` werden vor Disconnect/Reset und beim Öffnen von Haupt-/Quick-Action-/State-Menüs aufgerufen, um doppelte 4-Zonen-HUD-Renderings oder veraltete Kamerazustände zu verhindern.
 - [x] State-Setzen, Teleport und Spawnen über `StateSpawnSystem_Apply()`/`CameraSystem_Reset()` eingebaut; `Core_SetPlayerState()` und `Core_SetPlayerHomeState()` bleiben auf gültige State-IDs beschränkt.
@@ -100,7 +121,7 @@ Das Projekt als modularen, erweiterbaren GTA:SA-Reallife-Gamemode mit 3-Staaten-
 - [x] Aufbau und Dokumentation des Admin-/Projektleiter-Workflows im Code und Architektur-Report berücksichtigt; bestehende Abschnitte bleiben unverändert und die Erweiterung wird als neuer Release-Block ergänzt.
 - [x] Zusätzliche Schleifen-/Leistungs-Guardrails eingebaut: `TextWars_Tick()` prüft vor jedem Refresh nun aktivierte Gangfights und sichtbare Player-Widgets und springt bei Inaktivität früh mit `return 1;` aus, um Long-callback-Execution unter der qemu-i386-Umgebung zu vermeiden.
 
-### Release-Milestone UI – Dialog-/Textdraw-First
+### 🧩 Release-Milestone UI – Dialog-/Textdraw-First
 - [x] Hauptmenü (`/menu`, Taste Y) mit Inventar, Handy, Business, Ammu-Nation, Mission-Board, Garage, Tuning (`ui_hub.inc`)
 - [x] Job-Zentrum (`job_center.inc`) mit Annahme, Checkpoint-Aufgaben, XP/Lohn/Staatskasse/Inventar-Kopplung
 - [x] Text-Wars-Widget (`text_wars.inc`, Taste N) für Gangwar, Gangfight und Territorien
@@ -113,13 +134,13 @@ Das Projekt als modularen, erweiterbaren GTA:SA-Reallife-Gamemode mit 3-Staaten-
 - [x] frühe Connect-/Disconnect-Guards für gültige `state_id`/`home_state`-Werte in `core.inc` und `auth/login_system.inc` verschärft; keine 0-Default-Resets durch vorzeitige Reset-Pfade mehr
 - [x] Offline-Readiness-/Guard-Audits auf `tools/qemu_7780_readiness_check.py` und `tools/audit_modules_and_guards.py` erfolgreich ausgeführt; Build bleibt `qemu-i386`-bedingt blockiert in der aktuellen Umgebung
 
-### Release-Milestone C – RP-Expansion
+### 📘 Release-Milestone C – RP-Expansion
 - [ ] Mission-Board mit verknüpfter Staatspolitik erweitern
 - [ ] Bizz-/Gangs-/Administration-Ausbau mit Rollen- und Besitzlogik
 - [ ] zusätzliches Map-/World- und District-Content je Staat
 - [ ] Events, Loot, Exclusive-Services und Region-Specials
 
-## Modulplan
+## 📌 Modulplan
 
 - [x] `core/`
 - [x] `db/`
@@ -140,13 +161,13 @@ Das Projekt als modularen, erweiterbaren GTA:SA-Reallife-Gamemode mit 3-Staaten-
 - [x] `vehicles/`
 - [x] `control-panel/`
 
-## Hinweis
+## ✅ Hinweis
 
 Die Architektur bleibt bewusst modular. Jedes neue System wird in einem passenden Modul ergänzt und nicht monolithisch in `gamemode.pwn` gebaut. Die Dokumentation bleibt Teil der Entwicklung. Jede System-Erweiterung muss als Release-Rückblick in README/TO-DO verankert sein.
 
 ---
 
-## Offline-Tooling- und Audit-Status (ergänzt)
+## 📊 Offline-Tooling- und Audit-Status (ergänzt)
 
 Zusätzlich zu den bestehenden Analyse-Helfern unter `tools/` wurden weitere schlanke Python-Tooling-Module ergänzt, die ohne Serverstart, ohne Live-Test und ohne externe Abhängigkeiten arbeiten:
 
@@ -166,11 +187,11 @@ Diese Werkzeuge sind bewusst auf 1,5 GB RAM / 2 CPU-Kerne und den Offline-Pfad u
 
 ---
 
-## Finaler Projektstand (ergänzt)
+## 📊 Finaler Projektstand (ergänzt)
 
 Der aktuelle Repository-Stand ist technisch auf den Single-Target-Contract und die Laufzeit-Architektur des Gamemodes ausgerichtet. Im Mittelpunkt steht weiterhin die generische, aber harte Erwartung: nur `Compiler/samp03/gamemodes/gtasa_reallife.amx` ist das gültige Runtime-Ziel, und der Build muss mit der lokalen 32-Bit-Pawn-Toolchain über `qemu-i386` erfolgen.
 
-### Verifiziert im Source-Stand
+### 📊 Verifiziert im Source-Stand
 
 - Single-Target-Build: `Compiler/samp03/gamemodes/gtasa_reallife.amx` bleibt die einzige gültige Ausgabe.
 - Build-Kommando: `LD_LIBRARY_PATH="$PWD/Compiler/pawncc${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" qemu-i386 Compiler/pawncc/pawncc -o"$PWD/Compiler/samp03/gamemodes/gtasa_reallife.amx" gamemodes/gamemode.pwn -iincludes -iCompiler/samp03/include -d3`
@@ -178,26 +199,26 @@ Der aktuelle Repository-Stand ist technisch auf den Single-Target-Contract und d
 - `core.inc` bleibt die alleinige Quelle für `state`, `home_state` und Projektleiter-/Admin-Rechte. Keine parallelen Schatten-State-Quellen wurden erneut eingeführt.
 - Die vorhandenen Hardening-Guards bleiben erhalten: `INSERT OR IGNORE`, Null-/0-Schutz bei gültigen `state_id` und `home_state`, sichere `strmid`-Token-Extraktion statt unsicherer `sscanf`-Puffer, `INVALID_TEXT_DRAW` statt unsicherem `Text:0`-Vergleich, entzerrte Hotpaths in `TextWars_Tick` und `UBBVehicleSystem_Connect`.
 
-### Zustandsstatus des Projekts
+### 📊 Zustandsstatus des Projekts
 
 - UI- und Tutorial-Flow sind auf den menu-first-Workflow mit Auto-Login/Register-Detektion, Home-State-Auswahl LS/SF/LV und einmaligen Spawn-/Tutorial-Pfad fokussiert.
 - Camera/Reset-Guards bleiben auf `SetCameraBehindPlayer()` + `TogglePlayerControllable(playerid, 1)` ausgelegt.
 - Dini-first-Persistenz unter `Compiler/samp03/scriptfiles/` bleibt als primäre Sicherungsstrategie im Fokus; SQLite-Propagation bildet die konsistente Nebenebene für laufende Statusabgleiche.
 - Die אפgepferten Zustände für Häuser, Inventar, Fahrzeuge, Safes und State-Transfers bleiben auf atomare Write-Temp/Validate/Rename-Muster ausgerichtet.
 
-### Offener, aber klar definierter Status
+### 📊 Offener, aber klar definierter Status
 
 - Kein Server-Start auf Port 7780 oder 7777 wurde durchgeführt, solange keine ausdrückliche Freigabe vorliegt.
 - Live-Validierung bleibt ein separates Release-Gate, das erst nach dem echten Runtime-Test auf der Ubuntu-VM mit Logs, DB-Checks und Client-Flow erfolgen darf.
 - Der aktuelle Stand ist als source-validiert, build-sicher und Architektur-konform anzusehen, aber nicht als Live-Server-freigegeben.
 
-### Abschluss
+### 📘 Abschluss
 
 Der Projekt-Tracker bleibt daher in einem klaren Zustand: technische Stabilität, single-target Build-Validität, Dini-/SQLite-Persistenzsicherung und Lifecycle-Konsistenz sind vollständig dokumentiert und im Code verankert. Die nächste Freigabe erfolgt nur durch echte Live-Validierung auf der Ubuntu-VM und nicht durch reine Compile-Sicherheit allein.
 
 ---
 
-## Additive Härtungsnotiz – Verhalten im Quellbaum
+## 📘 Additive Härtungsnotiz – Verhalten im Quellbaum
 
 Diese Eintragung ergänzt die vorhandenen Milestones ohne einen bestehenden Abschnitt zu löschen.
 
@@ -208,7 +229,7 @@ Diese Eintragung ergänzt die vorhandenen Milestones ohne einen bestehenden Absc
 
 ---
 
-## Additive Abschluss-Validierung – 2026-11-21
+## 📘 Additive Abschluss-Validierung – 2026-11-21
 
 Diese Abschlussnotiz ergänzt den Projekttracker, ohne frühere Einträge zu entfernen.
 
@@ -219,7 +240,7 @@ Diese Abschlussnotiz ergänzt den Projekttracker, ohne frühere Einträge zu ent
 - Build-Status: Der gezielte AMX-Build auf `Compiler/samp03/gamemodes/gtasa_reallife.amx` lief erfolgreich und hat Exit-Code `0` zurückgegeben; ein echter Live-Serverstart unter Port 7780 blieb bewusst aus, da die Freigabe dafür ausdrücklich offen bleibt.
 - Zusätzlicher Admin-/State-Integrationsschritt: `AdminSystem_ApplyStateTeleport()` und `/tpstate`-/`/setstateplayer`-Commands wurden ergänzt, damit Projektleiter-/Admin-Pfade gültige State-Transfers mit Reset- und Camera-Guard absichern, ohne andere Spielerrechte zu überschreiten.
 
-### Saison-Endstand – 2026-11-21
+### 📊 Saison-Endstand – 2026-11-21
 
 - Source-Status: Architektur-, Lifecycle-, Kamera- und State-Guardrails sind im aktuellen Quellbaum stabil und konsistent im 7780-Target verankert.
 - Build-Status: `LD_LIBRARY_PATH="$PWD/Compiler/pawncc${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" qemu-i386 Compiler/pawncc/pawncc -o"$PWD/Compiler/samp03/gamemodes/gtasa_reallife.amx" gamemodes/gamemode.pwn -iincludes -iCompiler/samp03/include -d3` liefert `Exit-Code 0`.
@@ -227,4 +248,3 @@ Diese Abschlussnotiz ergänzt den Projekttracker, ohne frühere Einträge zu ent
 - Abgeschlossen: State-Transfer, Tutorial-/Spawn-Guards, Kamera-/HUD-Reset und Single-Target-Build wurden erneut verifiziert.
 - Offen für späteren Live-Check auf Port 7780: echter Serverstart, Client-Loop, DB-Live-Sync und Gameplay-Validierung. Diese Schritte bleiben bewusst auf ausdrückliche Freigabe verschoben.
 - Haus- und Business-API wurden konsistent erweitert: `HouseSystem_SetState()` und `HouseSystem_SetPrice()` sichern gültige State-/Preiswerte beim dynamischen Haus-Editor, während `BusinessSystem_*`-Pfade weiterhin auf gültige State-IDs und atomare Treasury-/Bank-Checks ausgerichtet bleiben.
-

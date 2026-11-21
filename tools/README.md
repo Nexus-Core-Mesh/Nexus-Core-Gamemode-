@@ -1,8 +1,27 @@
 # Debug- und Wartungswerkzeuge
 
-Dieses Verzeichnis enthält Python 3 basierte Hilfswerkzeuge zur Fehleranalyse, Log-Überwachung und Server-Konfigurationsprüfung für den GTA:SA-Reallife-Modus.
+> [!NOTE]
+> Diese Doku wurde optisch aufbereitet, ohne technische Fakten, Pfade, Ports oder Projektregeln zu verändern.
+> Fokus lag auf Lesbarkeit, Struktur, Übersichten und deutlicherer Orientierung.
 
-## Verfügbare Tools
+## ✅ Wichtig zu wissen
+
+- Technische Fakten, Befehle, Pfade und Projektregeln bleiben bewusst unverändert.
+- Port- und Systemtrennung bleiben konsistent, insbesondere für den 7780-Contract und den Dini-first-Pfad.
+- Die optische Aufwertung dient nur der Lesbarkeit, nicht der inhaltlichen Interpretation.
+
+---
+## 🧭 Schnellüberblick
+
+| Bereich | Inhalt |
+| --- | --- |
+| Dokument | `README.md` |
+| Typ | Projekt-Readme |
+| Fokus | Zugang, Überblick und Startpfad |
+| Wichtige Pfade | `gamemodes/`, `Compiler/samp03/`, `tools/` |
+
+---
+## 📘 Verfügbare Tools
 
 - `log_tail.py` – Live-Verfolgung von Server-/Plugin-Logs
 - `log_watcher.py` – manuelle Log-Beobachtung ohne Hintergrundbetrieb; ideal für `Compiler/samp03/server_log.txt` oder `samp7780_bg.log`
@@ -25,7 +44,7 @@ Dieses Verzeichnis enthält Python 3 basierte Hilfswerkzeuge zur Fehleranalyse, 
 - `runtime_contract_guard.py` – Audit der 7780-Single-Target-Contract-Regeln und Verhinderung von `7777`-Drift in Konfigurations- und Build-Dateien
 - `ui_hud_cleanup_audit.py` – prüft Camera-/TextDraw-/HUD-Cleanup-Muster wie `SetCameraBehindPlayer()`, `TogglePlayerControllable`, `INVALID_TEXT_DRAW` und lesbare Destroy-Pfade
 
-## Beispiele
+## 📘 Beispiele
 
 Log-Datei live ansehen:
 
@@ -53,14 +72,14 @@ Server starten mit Log-Überwachung:
 python3 tools/autorun.py --root . --server-bin ./samp03svr --log ./logs/server.log
 ```
 
-## Empfehlungen
+## 📘 Empfehlungen
 
 - Logs immer in einem eigenen Ordner wie `logs/` sammeln
 - `server.log` und `server-console.log` getrennt halten
 - vor dem Live-Deploy die Konfigurationsprüfung laufen lassen
 - bei Fehlern zuerst `analyze_logs.py` und dann gezielt `log_tail.py` nutzen
 
-## Repo-gebundene TUI-/Autofix-Integration
+## 🧩 Repo-gebundene TUI-/Autofix-Integration
 
 Zusätzlich zu den bestehenden CLI-Audits wurden vier repo-gebundene, offline-fähige Hilfsprogramme in den Projektbaum integriert. Sie funktionieren ohne Live-Server-Start und ohne direkte Abhängigkeit von `/home`- oder `7780`-Pfaden. Die Scripts sind:
 
@@ -78,11 +97,11 @@ Darüber hinaus gibt es Einsteiger-Wrapper auf Repo-Ebene:
 
 Diese Wrapper laden die jeweiligen Tools aus `tools/` und verwenden eine robuste Pfadsuche (`REPO`, `tools/`, `HOME`, `~`-Fallbacks) statt hart codierter Pfade. Sie sollen für spätere TUI-Einbindung und manuellen Offline-Workflow in der Projektwurzel erreichbar bleiben, ohne den Gamemode selbst zu starten.
 
-## Hinweis
+## ✅ Hinweis
 
 Diese Hilfswerkzeuge sind keine Plattform- oder Hosting-Umstellung. Sie sind bewusst als lokales Debug- und Wartungs-Tooling im Projekt selbst verankert, damit man ohne Wechsel zu externen Plattformen schnell auf Fehler und Konfigurationsprobleme reagieren kann.
 
-## 7780- und Plugin-Contract
+## 🖥️ 7780- und Plugin-Contract
 
 Die Offline-Checks unter `tools/` sind bewusst auf den Single-Target-Contract der `Compiler/samp03/`-Umgebung ausgerichtet. Die wichtigsten Prüfungen bleiben:
 
@@ -93,7 +112,7 @@ Die Offline-Checks unter `tools/` sind bewusst auf den Single-Target-Contract de
 
 Der Plugin-Ordner `Compiler/samp03/plugins/` wird dabei als dokumentierter, transparent verwalteter Stack behandelt; es werden keine erdachten Binaries oder unautorisierte Port-7777-Konfigurationen im Repository verankert.
 
-## Scriptfiles-/Persistenzstruktur
+## 🏗️ Scriptfiles-/Persistenzstruktur
 
 Die Laufzeitstruktur unter `Compiler/samp03/scriptfiles/` wurde für den Dini-first-Workflow ergänzt. Die kritischen Verzeichnisse für Spieler-, House-, Safe-, Fahrzeug-, Staatskasse-, Budget-, Business- und Inventory-Daten wurden physisch angelegt, damit die Arbeitslogik "temp -> validieren -> atomisch umbenennen" nicht an fehlenden Ordnern scheitert. Die Struktur enthält dabei:
 

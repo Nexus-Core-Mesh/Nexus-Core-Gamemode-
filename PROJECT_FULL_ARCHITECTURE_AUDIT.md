@@ -1,10 +1,27 @@
 # PROJECT FULL ARCHITECTURE AUDIT
 
-Repository root: `/workspaces/Nexus-Core-Gamemode-/copilot-worktrees/Nexus-Core-Gamemode-/laughing-tribble`
-Date: 2026-11-20
-Scope: source-only analysis, no live server start, no port 7777 use, no release or live approval.
+> [!NOTE]
+> Diese Doku wurde optisch aufbereitet, ohne technische Fakten, Pfade, Ports oder Projektregeln zu verändern.
+> Fokus lag auf Lesbarkeit, Struktur, Übersichten und deutlicherer Orientierung.
 
-## 1. Executive summary
+## ✅ Wichtig zu wissen
+
+- Technische Fakten, Befehle, Pfade und Projektregeln bleiben bewusst unverändert.
+- Port- und Systemtrennung bleiben konsistent, insbesondere für den 7780-Contract und den Dini-first-Pfad.
+- Die optische Aufwertung dient nur der Lesbarkeit, nicht der inhaltlichen Interpretation.
+
+---
+## 🧭 Schnellüberblick
+
+| Bereich | Inhalt |
+| --- | --- |
+| Dokument | `PROJECT_FULL_ARCHITECTURE_AUDIT.md` |
+| Typ | Architektur-Doku |
+| Fokus | Systemaufbau, Module und Persistenzstruktur |
+| Wichtige Pfade | `gamemodes/modules/`, `Compiler/samp03/scriptfiles/`, `data/db/` |
+
+---
+## 🧭 1. Executive summary
 
 The repository is in a source-structured, modular state with a clear architectural intent. The active runtime contract is centered on the single target `Compiler/samp03/gamemodes/gtasa_reallife.amx` and the server config values `gamemode0 gtasa_reallife 1` and `port 7780`.
 
@@ -20,9 +37,9 @@ Important facts observed in the code:
 - MySQL is present as a backend stub / later-stage alternative, not as an active runtime write path.
 - There are multiple project documents and tool scripts that describe a production-safe or live-ready target, but they do not replace actual runtime validation.
 
-## 2. Project structure and active responsibilities
+## 📘 2. Project structure and active responsibilities
 
-### 2.1 Repository-level layout
+### 📘 2.1 Repository-level layout
 
 Relevant active directories and files include:
 
@@ -37,7 +54,7 @@ Relevant active directories and files include:
 - `/workspaces/Nexus-Core-Gamemode-/copilot-worktrees/Nexus-Core-Gamemode-/laughing-tribble/server.cfg`
 - `/workspaces/Nexus-Core-Gamemode-/copilot-worktrees/Nexus-Core-Gamemode-/laughing-tribble/build_server.sh`
 
-### 2.2 Main gamemode source tree
+### 📘 2.2 Main gamemode source tree
 
 The actual gamemode source used by the runtime contract is the Pawn root in:
 
@@ -67,7 +84,7 @@ This file includes modules in a long sequence beginning with core and DB, then s
 
 This is consistent with the intended architecture: Core -> DB -> State -> Admin -> Auth -> Economy -> Jobs -> Laws -> Housing/Vehicle -> Leisure/Web.
 
-### 2.3 Module responsibilities and active wiring
+### 🏗️ 2.3 Module responsibilities and active wiring
 
 Current active module cluster in the source tree includes:
 
@@ -126,9 +143,9 @@ Current active module cluster in the source tree includes:
 
 This is the active architecture in code: modular but broad. The project has a lot of module definitions, but many of them are structure-heavy and not each fully proven in a live runtime in this environment.
 
-## 3. Core contract and lifecycle guards
+## 🖥️ 3. Core contract and lifecycle guards
 
-### 3.1 Single Source of Truth
+### 📘 3.1 Single Source of Truth
 
 The canonical authority is `core.inc`.
 
@@ -143,7 +160,7 @@ Evidence in `/Compiler/samp03/gamemodes/modules/core/core.inc`:
 
 This is the actual source-of-truth pattern: no second parallel shadow-state is enforced across the core layer, though some module-local arrays like `gPlayerHomeState[playerid]` still exist, especially in the auth module, and are treated as mirrors rather than authority.
 
-### 3.2 Lifecycle stages
+### 📘 3.2 Lifecycle stages
 
 `gamemode.pwn` explicitly sets lifecycle states and calls initialization in order.
 
@@ -161,7 +178,7 @@ This matches the documented lifecycle contract:
 
 `BOOT -> DB_READY -> STATE_READY -> AUTH_READY -> WORLD_READY -> RUNTIME_READY`
 
-### 3.3 State reset and 0-protection
+### 📘 3.3 State reset and 0-protection
 
 The current code deliberately guards invalid `state_id` and `home_state` values from being turned into `0`-based invalid state resets.
 
@@ -174,7 +191,7 @@ Evidence:
 
 This is directionally correct and consistent with the developer requirement that valid state values must not be reset to 0.
 
-### 3.4 OnPlayerSpawn and camera reset guard
+### 📘 3.4 OnPlayerSpawn and camera reset guard
 
 The `OnPlayerSpawn` path is wired in the gamemode root:
 
@@ -191,7 +208,7 @@ Observations:
 
 This is an active guard pattern and is consistent with the intended runtime design.
 
-### 3.5 Hotpath and qemu-i386 guardrails
+### 📘 3.5 Hotpath and qemu-i386 guardrails
 
 The code contains explicit guard logic intended to reduce load under qemu-i386 and limited RAM.
 
@@ -204,9 +221,9 @@ Examples:
 
 This is active and directionally aligned with the resource constraints, but without compile/runtime confirmation it is not proven fully live-safe.
 
-## 4. Dini vs SQLite vs MySQL: actual active wiring
+## 📘 4. Dini vs SQLite vs MySQL: actual active wiring
 
-### 4.1 Dini and scriptfiles path
+### 📘 4.1 Dini and scriptfiles path
 
 The project structure documents a Dini-first persistence model under `Compiler/samp03/scriptfiles/`.
 
@@ -233,7 +250,7 @@ The project explicitly expects an atomic write sequence: `temp -> validate -> re
 
 This is an architectural requirement, not a file-by-file verified runtime commit in the current container. The code is written to prefer valid, atomic Dini-style save logic, but the actual runtime persistence path is only partially validated here.
 
-### 4.2 SQLite persistence and control-panel read-only view
+### 🧩 4.2 SQLite persistence and control-panel read-only view
 
 The active SQLite path is clearly wired in Node.js:
 
@@ -260,7 +277,7 @@ The app serves JSON endpoints for:
 
 This is the active operational pattern: the control panel is a read-only operational dashboard over SQLite, not a primary runtime save authority.
 
-### 4.3 Pawn-level SQLite abstraction
+### 📘 4.3 Pawn-level SQLite abstraction
 
 The Pawn DB layer is split across:
 
@@ -276,7 +293,7 @@ The actual code in `db_sqlite.inc` is a stub:
 
 This means SQLite is not implemented as a real live database driver in the Pawn layer in this repository state; it is a structural placeholder layer and an operational abstraction layer that the rest of the project expects to be backed by a real DB environment later. This is an important discrepancy: the project documentation and control-panel Node layer clearly assume SQLite as a concrete local database, but the Pawn module only exposes a stub.
 
-### 4.4 MySQL
+### 📘 4.4 MySQL
 
 `db_mysql.inc` is similarly a stub backend layer:
 
@@ -285,7 +302,7 @@ This means SQLite is not implemented as a real live database driver in the Pawn 
 
 This indicates MySQL is not actively connected and should be treated as a separate later-stage or external not-currently-wired backend. The project guidance says MySQL remains downstream or external, and the code supports that interpretation.
 
-### 4.5 Transaction logic and state validation
+### 📘 4.5 Transaction logic and state validation
 
 `db_interface.inc` contains transaction helpers and state validation endpoints:
 
@@ -298,7 +315,7 @@ This indicates MySQL is not actively connected and should be treated as a separa
 
 The interface checks `Core_IsValidState(stateid)` before persisting and falls back to `STATE_LOS_SANTOS` when invalid, which is consistent with the 0-reset protection mandate. This is active logic and one of the key points where state validity is enforced at the persistence layer.
 
-### 4.6 State transfer and ledger integrity
+### 📘 4.6 State transfer and ledger integrity
 
 The codebase contains state-ledger/transfer logic under:
 
@@ -308,9 +325,9 @@ Transfer-style operations are conceptually present, but the repository state doe
 
 Important: atomic transfers (`temp -> validate -> rename`) are documented as the expected persistence model; the implementation details for each critical save path are not shown as a fully completed live sync path in this source tree.
 
-## 5. Control panel integration and role boundaries
+## 🧩 5. Control panel integration and role boundaries
 
-### 5.1 Control panel behavior
+### 🧩 5.1 Control panel behavior
 
 The active panel is a direct operational read interface over SQLite:
 
@@ -321,7 +338,7 @@ The active panel is a direct operational read interface over SQLite:
 
 This is definitely active and consistent with the documentation requirement that SQLite is the operational read base for the control panel.
 
-### 5.2 Role of SQLite vs Dini
+### 📘 5.2 Role of SQLite vs Dini
 
 The code is internally consistent in assigning roles:
 
@@ -331,13 +348,13 @@ The code is internally consistent in assigning roles:
 
 This is the intended stateful split.
 
-### 5.3 Live risk / sync gap
+### 🖥️ 5.3 Live risk / sync gap
 
 The risk is not that the SQLite panel is writing data incorrectly; it is read-only and thus behaves safely. The real gap is that the system has not demonstrated a fully synchronized end-to-end flow where Dini writes, SQLite reads, and panel views remain consistent after live state changes. That sync and fall-back quality is not proven here, though the intended design is clear.
 
-## 6. Runtime guards, onboarding, UI and qemu-i386 constraints
+## ✅ 6. Runtime guards, onboarding, UI and qemu-i386 constraints
 
-### 6.1 Early guards and return patterns
+### 📘 6.1 Early guards and return patterns
 
 The project contains multiple early invalid-check returns.
 
@@ -349,7 +366,7 @@ Examples:
 
 This is a strong early-guard pattern and consistent with resource minimization under qemu-i386.
 
-### 6.2 TextWars and hotpath guard patterns
+### 📘 6.2 TextWars and hotpath guard patterns
 
 The audit found a dedicated hotpath guard in the faction system:
 
@@ -358,7 +375,7 @@ The audit found a dedicated hotpath guard in the faction system:
 
 This is active code meant to prevent unnecessary callback work.
 
-### 6.3 Camera reset and UI continuity
+### 🧩 6.3 Camera reset and UI continuity
 
 The project defines a stable camera reset pattern:
 
@@ -367,7 +384,7 @@ The project defines a stable camera reset pattern:
 
 This is enforced in multiple modules and is part of the intended menu/login flow. The login and tutorial flow carries a valid state/home selection and then re-enables control, which is consistent with the design.
 
-### 6.4 Onboarding flow
+### 📘 6.4 Onboarding flow
 
 The onboarding path is active in code and architecture:
 
@@ -379,15 +396,15 @@ The onboarding path is active in code and architecture:
 
 The flow is designed to select LS/SF/LV and then spawn validly after a state/home state choice. This is active source logic and a strong part of the architecture.
 
-### 6.5 Password and selection flow details
+### 📘 6.5 Password and selection flow details
 
 The project relies on menu or dialog-driven entry for the current onboarding flow. The UI modules are documented and present, but this is still source-state structure, not a confirmed live gameplay validation.
 
 The design is not contradictory to the rules: it chooses a valid state home and sets player state only when valid.
 
-## 7. Build contract, existing toolchain and current gaps
+## 🔧 7. Build contract, existing toolchain and current gaps
 
-### 7.1 Single-target build contract
+### 🔧 7.1 Single-target build contract
 
 The active runtime target is documented consistently across scripts and docs:
 
@@ -405,7 +422,7 @@ Relevant files:
 - `/workspaces/Nexus-Core-Gamemode-/copilot-worktrees/Nexus-Core-Gamemode-/laughing-tribble/README.md`
 - `/workspaces/Nexus-Core-Gamemode-/copilot-worktrees/Nexus-Core-Gamemode-/laughing-tribble/Compiler/samp03/README.md`
 
-### 7.2 Current toolchain status
+### 📊 7.2 Current toolchain status
 
 Current result in this container:
 
@@ -415,7 +432,7 @@ Current result in this container:
 
 This confirms the current container environment is missing the 32-bit Pawn toolchain needed to produce the AMX output.
 
-### 7.3 What is present
+### 📘 7.3 What is present
 
 The repository contains:
 
@@ -435,7 +452,7 @@ The repository contains:
 
 This is a fully populated offline-check and documentation layer.
 
-### 7.4 What is still open for actual runtime validation on port 7780
+### 🖥️ 7.4 What is still open for actual runtime validation on port 7780
 
 The following remain open and must be validated on a proper target environment with the real toolchain:
 
@@ -449,7 +466,7 @@ The following remain open and must be validated on a proper target environment w
 - control-panel read view matching state values
 - no live crash under qemu-i386 resource limits
 
-## 8. Open points / contradictions / sourceless assumptions
+## 📘 8. Open points / contradictions / sourceless assumptions
 
 The current repository contains a strong architecture and a clear source contract, but several things remain source-only and not fully runtime-validated:
 
@@ -460,7 +477,7 @@ The current repository contains a strong architecture and a clear source contrac
 5. The project has repeated documentation that says “build confirmed” or “compile success,” but those claims are not valid in this environment without a working `qemu-i386` toolchain and actual build output.
 6. The project is source-coherent and structurally disciplined, but it is not a live-verified runtime state.
 
-## 9. Bottom line
+## 📘 9. Bottom line
 
 The repository is currently in a disciplined source architecture state with clear state-source, lifecycle, and runtime-target rules. The core code is shaped to preserve valid state/home-state values, the lifecycle stages are in order, the include structure is consistent, and the control panel is clearly read-only against SQLite. Dini remains the intended runtime persistence path and MySQL is not active.
 

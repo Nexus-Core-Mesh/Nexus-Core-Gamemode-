@@ -1,12 +1,33 @@
 # Season-System für Nexus-Core-Gamemode
 
-## Überblick
+> [!NOTE]
+> Diese Doku wurde optisch aufbereitet, ohne technische Fakten, Pfade, Ports oder Projektregeln zu verändern.
+> Fokus lag auf Lesbarkeit, Struktur, Übersichten und deutlicherer Orientierung.
+
+## ✅ Wichtig zu wissen
+
+- Technische Fakten, Befehle, Pfade und Projektregeln bleiben bewusst unverändert.
+- Port- und Systemtrennung bleiben konsistent, insbesondere für den 7780-Contract und den Dini-first-Pfad.
+- Die optische Aufwertung dient nur der Lesbarkeit, nicht der inhaltlichen Interpretation.
+
+---
+## 🧭 Schnellüberblick
+
+| Bereich | Inhalt |
+| --- | --- |
+| Dokument | `SEASON.md` |
+| Typ | Season-/Eventsystem |
+| Fokus | Zyklus, Wirtschaft und Spielereignisse |
+| Wichtige Pfade | `gamemodes/`, `Compiler/samp03/`, `tools/` |
+
+---
+## 🧭 Überblick
 
 Das Season-System ergänzt den Gamemode um einen zyklischen Jahreszeiten-Loop, der die Welt, die Wirtschaft, das Gameplay und die sozialen Events über längere Zeiträume hinweg verändert. Es soll nicht nur ein visueller Wechsel sein, sondern ein echtes Spielsystem mit Auswirkungen auf Wetter, Jobs, Produktion, Fraktionsaktivitäten, Item-Verfügbarkeit, NPC-Verhalten, Fahrzeugnutzung und saisonale Ereignisse.
 
 Die Idee ist bewusst modular: Die Saison selbst ist kein isoliertes Feature, sondern ein übergeordnetes Layer-System, das mit Core-, State-, Economy-, Job- und Faction-Logik interagiert. Dadurch kann die Welt des Servers über mehrere Wochen oder Monate dynamisch „reifen“, ohne dass der Gamemode in monolithische Speziallogik ausartet.
 
-## Ziel des Systems
+## 🧭 Ziel des Systems
 
 Das Season-System verfolgt fünf Kernziele:
 
@@ -28,7 +49,7 @@ Das Season-System verfolgt fünf Kernziele:
 5. Server-Identität
    - Ein klarer Season-Zyklus macht den Server spürbar „lebendig“ und unterscheidet ihn von reinem Sandbox-Gameplay.
 
-## Grundprinzip
+## ✅ Grundprinzip
 
 Die Saison ist ein globaler Zustand des Servers. Sie umfasst:
 
@@ -42,11 +63,11 @@ Die Saison ist ein globaler Zustand des Servers. Sie umfasst:
 
 Diese Daten sollten zentral im Core- oder State-Layer verwaltet werden und dann von betroffenen Modulen abgefragt werden.
 
-## Saisonzyklus
+## 📘 Saisonzyklus
 
 Ein sinnvoller Serverzyklus umfasst vier Jahreszeiten:
 
-### 1. Frühling
+### 📘 1. Frühling
 
 **Ziel:** Erneuerung, Aktivität, Wachstum und erste Nachsaisonphase.
 
@@ -67,7 +88,7 @@ Ein sinnvoller Serverzyklus umfasst vier Jahreszeiten:
 
 ---
 
-### 2. Sommer
+### 📘 2. Sommer
 
 **Ziel:** Hochsaison, Tourismus, Aktivität und ein stärkeres öffentliches Leben.
 
@@ -87,7 +108,7 @@ Ein sinnvoller Serverzyklus umfasst vier Jahreszeiten:
 
 ---
 
-### 3. Herbst
+### 📘 3. Herbst
 
 **Ziel:** Übergang, Vorbereitung, Rückzug, Stabilisierung, saisonale Kürzungen.
 
@@ -108,7 +129,7 @@ Ein sinnvoller Serverzyklus umfasst vier Jahreszeiten:
 
 ---
 
-### 4. Winter
+### 📘 4. Winter
 
 **Ziel:** Härte, Stabilität, Eskalation, Sicherheits- und Überlebensgefühl.
 
@@ -127,7 +148,7 @@ Ein sinnvoller Serverzyklus umfasst vier Jahreszeiten:
 - Preise für bestimmte Outdoor- und Luxus-Services sinken
 - Sicherheits-, EMS- und Logistikmodule bekommen saisonale Priorität
 
-## Saison-Definition
+## 📘 Saison-Definition
 
 Eine Saison sollte als struktureller Zustand modelliert werden, nicht als bloßes String-Feld. Ein gutes Datenmodell sieht ungefähr so aus:
 
@@ -163,7 +184,7 @@ enum E_SEASON_STATE
 
 Die genaue Struktur hängt davon ab, ob die Saison einfach ein Serverstatus ist oder ein richtiges Progressionssystem mit Manager, Belohnungen und Datenbankpersistenz.
 
-## Zeitlicher Ablauf
+## 📘 Zeitlicher Ablauf
 
 Eine praxisnahe Umsetzung ist ein Server-Zyklus mit fixer Dauer, etwa:
 
@@ -180,36 +201,36 @@ Alternativ kann die Dauer auch durch eine konfigurierbare Einstellung gesteuert 
 
 Diese Dauer kann je nach Server-Tempo angepasst werden. Wichtig ist, dass der Verlauf für Spieler nachvollziehbar ist und nicht zufällig wirkt.
 
-## Globale Effekt-Mechanik
+## 📘 Globale Effekt-Mechanik
 
 Das Season-System sollte nicht nur den Zustand ändern, sondern auch die Modullogik beeinflussen. Beispiele:
 
-### 1. Wetter
+### 📘 1. Wetter
 - Winter: Schnee, kältere Luft, trübe Tage
 - Sommer: klare Tage, starke Sonne, mehr externe Events
 
-### 2. Job-Balance
+### 📘 2. Job-Balance
 - Frühling/Sommer: mehr Outdoor-, Delivery-, Tourismus- und Event-Jobs
 - Herbst/Winter: mehr Logistik-, Reparatur-, Sicherheit- und Instandhaltungsjobs
 
-### 3. Item- und Ressourcenlogik
+### 📘 3. Item- und Ressourcenlogik
 - Winter: Heizmaterialien, Schutzkleidung, Energieverbrauch relevant
 - Sommer: Getränke, Sommerartikel, Reisen, Outdoor-Items
 - Herbst: Materialien, Reparaturen, Verbrauch, Lagerung
 - Frühling: Pflanzen, Nahrungsmittel, Recycling, Bewässerung
 
-### 4. Fraktionslogik
+### 📘 4. Fraktionslogik
 - Fraktionen können saisonale Bonusziele oder temporäre Events bekommen:
   - Police: Winter-Notfälle, Straßenverhältnisse, Verkehrskontrollen
   - EMS: Kälte- und Hitzeschutz, mehr medizinische Events
   - Government: Steuer- oder Budget-Jahreszyklus
   - Businesses: saisonale Drifts, Produkt-Sets, Tourismus-Angebote
 
-## Auswirkung auf die Economy
+## 📘 Auswirkung auf die Economy
 
 Die Season beeinflusst das Wirtschaftssystem systematisch, nicht nur dekorativ.
 
-### Beispielkonzept
+### 📘 Beispielkonzept
 
 - Sommer: Preise für Luxuskonsumwaren +10%
 - Winter: Preise für Versorgungsgüter +8%
@@ -244,11 +265,11 @@ stock Float:Season_GetPriceModifier()
 }
 ```
 
-## Event-System
+## 🏗️ Event-System
 
 Die Saison sollte Events einbinden, die nur zu bestimmten Zeiten aktiv sind.
 
-### Typen von Season-Events
+### 📘 Typen von Season-Events
 
 - Festival-Event
 - Stadtweihnacht / Winterfestival
@@ -259,7 +280,7 @@ Die Saison sollte Events einbinden, die nur zu bestimmten Zeiten aktiv sind.
 - Tourismus-Wettbewerb
 - Natur-/Umwelt-Event
 
-### Event-Architektur
+### 🏗️ Event-Architektur
 
 Ein Event sollte in folgenden Schritten laufen:
 
@@ -284,11 +305,11 @@ enum E_SEASON_EVENT
 
 Die konkrete Eventlogik sollte in einem separaten Modul liegen, um das Hauptsystem sauber zu halten.
 
-## Integration in das bestehende Modul-System
+## 🏗️ Integration in das bestehende Modul-System
 
 Das Season-System passt elegant in die vorhandene modularisierte Architektur.
 
-### Mögliche Modulaufteilung
+### 📘 Mögliche Modulaufteilung
 
 - `core/` – globale Saison-Flags und zentrale API
 - `state/` – staatlich relevante Auswirkungen und Treasury-Logik
@@ -299,7 +320,7 @@ Das Season-System passt elegant in die vorhandene modularisierte Architektur.
 - `ui/` – Anzeige der aktuellen Saison im HUD/Info-Panel
 - `admin/` – manuelle Saison-Übergänge und Debug-Steuerung
 
-### Beispiel-API
+### 📘 Beispiel-API
 
 ```pawn
 stock Season_SetCurrentSeason(seasonid)
@@ -314,11 +335,11 @@ stock Season_IsSeasonActive(seasonid)
 
 Diese API ist wichtig, damit verschiedene Module unabhängig voneinander auf den aktuellen Zustand reagieren können.
 
-## Datenhaltung / Persistenz
+## 📘 Datenhaltung / Persistenz
 
 Damit die Saison nicht nach Neustart „verloren“ geht, sollte sie persistent gespeichert werden.
 
-### Beispiel für persistente Werte
+### 📘 Beispiel für persistente Werte
 
 - current_season
 - season_started_at
@@ -343,11 +364,11 @@ CREATE TABLE IF NOT EXISTS season_state (
 
 Dadurch bleibt der Spielzustand über Server-Reboots konsistent und wird durch den Core-/DB-Layer sauber verwaltet.
 
-## UI- und Präsentationslogik
+## 🧩 UI- und Präsentationslogik
 
 Die Saison sollte dem Spieler nicht nur indirekt spürbar sein, sondern auch sichtbar werden.
 
-### Mögliche Anzeigen
+### 📘 Mögliche Anzeigen
 
 - Widget im HUD: "Aktuelle Saison: Sommer"
 - State-Info: "Sommerfest aktiv in Los Santos"
@@ -355,7 +376,7 @@ Die Saison sollte dem Spieler nicht nur indirekt spürbar sein, sondern auch sic
 - Server-Announcement: "Frühling beginnt – neue Jobs und Preise aktiv"
 - Logbuch: "Winter-Event gestartet. Sicherheitsaufträge gestiegen."
 
-### Beispieltext
+### 📘 Beispieltext
 
 ```pawn
 new msg[128];
@@ -365,18 +386,18 @@ TextDrawSetString(g_SeasonTD, msg);
 
 Das UI darf aber nicht zu „copy-paste-UI“ werden. Es sollte nur die wichtigsten Informationen anzeigen und die eigentliche Logik im System selbst liegen.
 
-## Belohnungen und Progression
+## 📘 Belohnungen und Progression
 
 Saisonale Fortschritte können zusätzlich als echten Progression-Prozess dienen.
 
-### Beispiele
+### 📘 Beispiele
 
 - Spieler erhalten Belohnungen für bestimmte Event-Teilnahmen
 - Fraktionen erhalten saisonale Event-Punkte
 - Businesses erhalten saisonal gesteigerte Gewinnmodifikatoren
 - Spieler können saisonale Trophäen, Outfits, Accessoires oder Titel verdienen
 
-### Reward-Stufen
+### 📘 Reward-Stufen
 
 ```pawn
 enum E_SEASON_REWARD_TIER
@@ -391,7 +412,7 @@ enum E_SEASON_REWARD_TIER
 
 Das macht das System strategisch und nachvollziehbar, ohne eine komplette separate Meta-Progression aufbauen zu müssen.
 
-## Balance- und Designrichtlinien
+## ✅ Balance- und Designrichtlinien
 
 Ein gutes Season-System sollte niemals die Kernspielmechanik ersetzen oder unplanbar machen. Die Regeln dafür sind:
 
@@ -401,7 +422,7 @@ Ein gutes Season-System sollte niemals die Kernspielmechanik ersetzen oder unpla
 4. Core- und Economy-Logik müssen konsistent bleiben.
 5. Die Season darf keine separate „Meta-Welt“ erzeugen, die außerhalb des Server-Systems steht.
 
-## Beispiel-Flow
+## 📘 Beispiel-Flow
 
 Ein typischer Lauf sieht so aus:
 
@@ -415,7 +436,7 @@ Ein typischer Lauf sieht so aus:
 8. neue Modifikatoren aktivieren sich
 9. neue Events und Rewards werden erzeugt
 
-## Empfehlung für die Umsetzung im Projekt
+## 📘 Empfehlung für die Umsetzung im Projekt
 
 Für dieses Projekt ist die saubere Umsetzung am sinnvollsten als:
 
@@ -435,35 +456,35 @@ Die optimale Architektur lautet daher:
 - `ui/` = Anzeige im HUD und Servernachrichten
 - `db/` = Saison-Storage + Persistenz
 
-## Roadmap
+## 📌 Roadmap
 
-### Phase 1 – Core-Season
+### 📘 Phase 1 – Core-Season
 - Saison-Enum und zentrale API
 - Persistenz und Ladepfad
 - UI-Anzeige und Server-Announcements
 
-### Phase 2 – Wirtschaftseffekte
+### 📘 Phase 2 – Wirtschaftseffekte
 - Preismodifikatoren pro Saison
 - saisonale Lieferketten und Job-Balance
 - Event-Start-/Ende-Logik
 
-### Phase 3 – Lebenswelt-Events
+### 📘 Phase 3 – Lebenswelt-Events
 - Fraktions-, Business- und Tourismusevents
 - Bräuche und saisonale Szenarien
 - erweiterte Reward- und Ranking-Logik
 
-### Phase 4 – Long-Term-Progression
+### 📘 Phase 4 – Long-Term-Progression
 - jährliche Saison-Historie
 - Persistente Weltveränderungen
 - Saison-Stats, Leaderboards und Saison-Abschlüsse
 
-## Fazit
+## 📘 Fazit
 
 Das Season-System ist ein essenzieller Bestandteil für einen langfristig lebendigen GTA:SA-Reallife-Gamemode. Es schafft nicht nur „bessere Optik“, sondern echtes RP- und Progressionsgefühl. Wenn es sauber im Core-, State-, Economy- und Job-Layer integriert wird, verstärkt es die Spielwelt ohne sie zu destabilisieren. Gerade in einem modularen Gamemode ist die Season ein idealer Brückenknoten zwischen Weltgefühl, wirtschaftlicher Logik und langfristiger Motivation.
 
 Es ist die Art von System, das den Server von einer reinen Spielumgebung zu einer echten, sich entwickelnden Welt macht.
 
-## Umsetzung 2026-11-20 (additiv)
+## 📘 Umsetzung 2026-11-20 (additiv)
 
 Die folgende Ausbaustufe wurde direkt im Quellbaum ergänzt und ist bewusst als additiver, quellbasiert umsetzbarer Schritt gehalten:
 

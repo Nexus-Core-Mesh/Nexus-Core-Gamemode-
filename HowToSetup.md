@@ -1,6 +1,27 @@
 # HowToSetup – Der ultimative Einstieg für Einsteiger
 
-## 1. Was hier genau passiert
+> [!NOTE]
+> Diese Doku wurde optisch aufbereitet, ohne technische Fakten, Pfade, Ports oder Projektregeln zu verändern.
+> Fokus lag auf Lesbarkeit, Struktur, Übersichten und deutlicherer Orientierung.
+
+## ✅ Wichtig zu wissen
+
+- Technische Fakten, Befehle, Pfade und Projektregeln bleiben bewusst unverändert.
+- Port- und Systemtrennung bleiben konsistent, insbesondere für den 7780-Contract und den Dini-first-Pfad.
+- Die optische Aufwertung dient nur der Lesbarkeit, nicht der inhaltlichen Interpretation.
+
+---
+## 🧭 Schnellüberblick
+
+| Bereich | Inhalt |
+| --- | --- |
+| Dokument | `HowToSetup.md` |
+| Typ | Setup-Guide |
+| Fokus | Einrichtung, Build und Laufzeitkonfiguration |
+| Wichtige Pfade | `gamemodes/gamemode.pwn`, `Compiler/samp03/gamemodes/gtasa_reallife.amx`, `data/db/` |
+
+---
+## 📘 1. Was hier genau passiert
 
 Dieses Projekt ist kein normales „einfach nur Server-Ordner anlegen“-Setup. Es ist ein sauberes Source-to-Server-Deployment mit klarer Trennung zwischen:
 
@@ -22,7 +43,7 @@ Wenn dieser Ablauf nicht eingehalten wird, kann der Server einen falschen Modus 
 
 ---
 
-## 2. So sieht das Projekt nach dem Entpacken aus
+## 📘 2. So sieht das Projekt nach dem Entpacken aus
 
 Wenn du die ZIP-Datei entpackst, solltest du ungefähr diese Struktur sehen:
 
@@ -76,7 +97,7 @@ Wichtige Einzelheiten:
 
 ---
 
-## 3. Warum der Quellcode im Root liegt
+## 📘 3. Warum der Quellcode im Root liegt
 
 Die wichtigste Mentalität im Projekt lautet:
 
@@ -111,7 +132,7 @@ Das ist ein Fehler, weil der SA:MP-Server den Modusnamen in `server.cfg` mit dem
 
 ---
 
-## 4. Was bedeutet „Single-Target“-Modell?
+## 📘 4. Was bedeutet „Single-Target“-Modell?
 
 Das Projekt arbeitet mit einem einzigen gültigen Runtime-Ziel:
 
@@ -145,11 +166,11 @@ Compiler/samp03/gamemodes/gtasa_reallife.amx
 
 ---
 
-## 5. Vorbereitungen: Ordner anlegen
+## 🔧 5. Vorbereitungen: Ordner anlegen
 
 Als Erstes solltest du den Server- und Datenbank-Pfad sauber vorbereiten.
 
-### 5.1 In das Projekt wechseln
+### 📘 5.1 In das Projekt wechseln
 
 ```bash
 cd ~/Nexus-Core-Gamemode
@@ -159,7 +180,7 @@ ls -la
 
 Du solltest den Root des Projekts sehen, inklusive Ordnern wie `gamemodes`, `includes`, `Compiler`, `scripts`, `config` und `data`.
 
-### 5.2 Erforderliche Ordner erzeugen
+### 📘 5.2 Erforderliche Ordner erzeugen
 
 ```bash
 mkdir -p data/db \
@@ -180,7 +201,7 @@ Was diese Befehle tun:
 
 ---
 
-## 6. Der Build-Schritt: Warum `qemu-i386` nötig ist
+## 🔧 6. Der Build-Schritt: Warum `qemu-i386` nötig ist
 
 Auf einem 64-Bit-Host kann der Pawn-Compiler aus `Compiler/pawncc/pawncc` nicht direkt als normales 32-Bit-Binary ausgeführt werden. Deshalb wird er über `qemu-i386` gestartet.
 
@@ -222,7 +243,7 @@ Nicht `gamemode.amx`, nicht `reallife.amx`, nicht irgendeine Kopie. Nur `gtasa_r
 
 ---
 
-## 7. Der genaue komplette Build-Befehl, copy-paste-fertig
+## 🔧 7. Der genaue komplette Build-Befehl, copy-paste-fertig
 
 Wenn du das Projekt sauber neu bauen willst, benutze genau diesen Block:
 
@@ -255,7 +276,7 @@ Was dieser Block macht:
 
 ---
 
-## 8. Nach dem Build automatisch prüfen
+## 🔧 8. Nach dem Build automatisch prüfen
 
 Direkt nach dem Kompilieren prüfst du, ob wirklich genau die richtige Datei entstanden ist:
 
@@ -285,7 +306,7 @@ Wenn dort etwas anderes oder zusätzliches auftaucht, ist die Build-Logik nicht 
 
 ---
 
-## 9. Wichtige Regeln: nie im Serverordner editieren
+## 🔧 9. Wichtige Regeln: nie im Serverordner editieren
 
 Das ist ein absoluter No-Go:
 
@@ -305,7 +326,7 @@ Das ist der offizielle und sichere Workflow.
 
 ---
 
-## 10. Konfiguration: `server.cfg` und der Modusname
+## 🔧 10. Konfiguration: `server.cfg` und der Modusname
 
 Die Serverkonfiguration muss exakt denselben Namen verwenden wie die Kompilierausgabe.
 
@@ -338,11 +359,11 @@ Deshalb muss die Datei immer genau den Namen `gtasa_reallife.amx` tragen.
 
 ---
 
-## 11. SQLite-Datenbank vorbereiten
+## 📘 11. SQLite-Datenbank vorbereiten
 
 Das Projekt nutzt eine lokale Dini-/INI-Base als primäre Persistenz, die im Laufzeitroot unter `Compiler/samp03/scriptfiles/` liegen soll. Optional kann weiterhin eine lokale SQLite-Datenbank unter `data/db/` existieren, aber sie darf den Bootstrap nicht erzwingen.
 
-### 11.1 Verzeichnis anlegen
+### 📘 11.1 Verzeichnis anlegen
 
 ```bash
 mkdir -p data/db
@@ -357,7 +378,7 @@ data/db/gtasa_reallife.db
 
 Diese Datei bleibt für Laufzeit- und Persistenzdaten relevant.
 
-### 11.2 Wichtig für den Runtime-Server
+### 🔧 11.2 Wichtig für den Runtime-Server
 
 Zusätzlich sollte der Server-Root einen entsprechenden Laufzeitpfad besitzen:
 
@@ -369,7 +390,7 @@ Damit ist die Umgebung für den Server-Start sauber vorbereitet und die SQLite-I
 
 ---
 
-## 12. Server starten: vollständiger Ablauf
+## 🔧 12. Server starten: vollständiger Ablauf
 
 Wenn alles gebaut und vorbereitet ist, startest du den SA:MP-Server so:
 
@@ -388,7 +409,7 @@ Das ist die empfohlene Startform, damit der Server die benötigten 32-Bit- und P
 
 ---
 
-## 13. Vollständiger End-to-End-Workflow für Einsteiger
+## 📘 13. Vollständiger End-to-End-Workflow für Einsteiger
 
 Wenn du alles in einem Schritt ausführen willst, nutze diesen Block:
 
@@ -420,7 +441,7 @@ Das ist der komplette und saubere Ablauf.
 
 ---
 
-## 14. Erfolgsprüfung: Wie erkenne ich, dass alles korrekt ist?
+## 📘 14. Erfolgsprüfung: Wie erkenne ich, dass alles korrekt ist?
 
 Wenn der Build und der Start sauber liefen, siehst du in der Serverkonsole typischerweise folgende Merkmale:
 
@@ -442,9 +463,9 @@ Wenn du diese Meldungen siehst, ist der Source-Flow sauber und der Server nutzt 
 
 ---
 
-## 15. Häufige Fehler und wie man sie vermeidet
+## 📘 15. Häufige Fehler und wie man sie vermeidet
 
-### Fehler 1: Falsche AMX-Datei im Serverordner
+### 🔧 Fehler 1: Falsche AMX-Datei im Serverordner
 
 Symptom:
 
@@ -459,7 +480,7 @@ find Compiler/samp03/gamemodes -maxdepth 1 -type f -name '*.amx' -print
 
 Wenn dort mehr als eine Datei steht, entferne alle Aliase außer `gtasa_reallife.amx`.
 
-### Fehler 2: Server.cfg stimmt nicht mit dem AMX-Name überein
+### 🔧 Fehler 2: Server.cfg stimmt nicht mit dem AMX-Name überein
 
 Symptom:
 
@@ -472,7 +493,7 @@ Lösung:
 gamemode0 gtasa_reallife 1
 ```
 
-### Fehler 3: SQLite-Pfad fehlt
+### 📘 Fehler 3: SQLite-Pfad fehlt
 
 Symptom:
 
@@ -485,7 +506,7 @@ Lösung:
 mkdir -p data/db Compiler/samp03/data/db
 ```
 
-### Fehler 4: Compiler auf 64-Bit-System ohne qemu
+### 🏗️ Fehler 4: Compiler auf 64-Bit-System ohne qemu
 
 Symptom:
 
@@ -502,7 +523,7 @@ sudo apt-get install -y qemu-user libc6-i386 lib32gcc-s1 lib32stdc++6
 
 ---
 
-## 16. Die Kurzfassung, die man immer wieder braucht
+## 📘 16. Die Kurzfassung, die man immer wieder braucht
 
 Wenn du alles in einem Satz zusammenfassen willst:
 
@@ -518,7 +539,7 @@ Das ist die Grundregel des gesamten Projekts.
 
 # HowToSetup – Nexus-Core-Gamemode
 
-## Überblick
+## 🧭 Überblick
 
 Dieses Repository ist ein modularer GTA:SA-Reallife-Gamemode für SA:MP. Es ist bewusst nicht als ein einziges monolithisches `gamemode.pwn` gebaut, sondern als Mehrschichten-Projekt mit getrennten Bereichen für Core, State, Economy, Jobs, Factions, Housing, Inventory, UI, Auth und Web-Management.
 
@@ -536,7 +557,7 @@ Wichtige Grundidee:
 
 ---
 
-## 1. Ordnerstruktur verstehen
+## 🏗️ 1. Ordnerstruktur verstehen
 
 Im Root des Projekts liegen diese Hauptbereiche:
 
@@ -577,9 +598,9 @@ Im Root des Projekts liegen diese Hauptbereiche:
 
 ---
 
-## 2. Was genau ist wo?
+## 📘 2. Was genau ist wo?
 
-### 2.1 Gamemode-Logik
+### 📘 2.1 Gamemode-Logik
 
 Pfad:
 
@@ -595,7 +616,7 @@ Das ist die zentrale Einstiegspunkt-Datei, die den Server initialisiert und die 
 
 Wenn man das Projekt auf einem Server laufen lassen will, ist diese Datei der wichtige Einstiegspunkt.
 
-### 2.2 Module
+### 🏗️ 2.2 Module
 
 Pfad:
 
@@ -620,7 +641,7 @@ Hier sind die einzelnen Spielsysteme untergebracht. Beispielbereiche:
 
 Die modulares Struktur ist wichtig, weil jedes System unabhängig entwickelt und später erweitert werden kann.
 
-### 2.3 Includes
+### 📘 2.3 Includes
 
 Pfad:
 
@@ -646,7 +667,7 @@ Beispiele aus dem Projekt:
 
 Diese Dateien müssen korrekt in der Projektstruktur und Compiler-Umgebung vorhanden sein, sonst schlägt die Kompilierung fehl.
 
-### 2.4 Konfiguration
+### 📘 2.4 Konfiguration
 
 Pfad:
 
@@ -665,7 +686,7 @@ Dort werden die wichtigsten Laufzeitwerte definiert:
 - Datenbankpfad
 - Login-/DB-Parameter
 
-### 2.5 Datenbank
+### 📘 2.5 Datenbank
 
 Pfad:
 
@@ -679,7 +700,7 @@ Typische Dateien:
 - `data/db/gtasa_reallife.db`
 - SQL-Skripte in `data/sql/`
 
-### 2.6 Control Panel
+### 🧩 2.6 Control Panel
 
 Pfad:
 
@@ -694,7 +715,7 @@ Wichtige Dateien:
 - `control-panel/public/index.html`
 - `control-panel/public/app.js`
 
-### 2.7 Compiler / Toolchain
+### 📘 2.7 Compiler / Toolchain
 
 Pfad:
 
@@ -706,7 +727,7 @@ Dort liegen die kompilierten bzw. lokal mitgelieferten Builder- und Pawn-Tools. 
 
 ---
 
-## 3. Was du für einen V-Server brauchst
+## 🔧 3. Was du für einen V-Server brauchst
 
 Wenn du das Projekt auf einem V-Server betreiben willst, brauchst du normalerweise diese Dinge:
 
@@ -718,7 +739,7 @@ Wenn du das Projekt auf einem V-Server betreiben willst, brauchst du normalerwei
 6. SQLite / MySQL je nach Setup
 7. Systemd- oder Screen-Startskripte für den Server
 
-### Empfohlene Grundstruktur auf dem V-Server
+### 🔧 Empfohlene Grundstruktur auf dem V-Server
 
 ```bash
 /home/youruser/
@@ -745,9 +766,9 @@ Das Projekt selbst kann direkt im Server-Verzeichnis liegen oder als Quellrepo i
 
 ---
 
-## 4. Server-Config richtig einrichten
+## 🔧 4. Server-Config richtig einrichten
 
-### 4.1 `server.cfg`
+### 🔧 4.1 `server.cfg`
 
 Das Projekt enthält eine Standard-Datei:
 
@@ -782,7 +803,7 @@ Das ist die Basis. Für einen echten V-Server musst du das an deine Infrastruktu
 - `gamemode0 gtasa_reallife 1` muss auf den tatsächlich kompilierten Modus passen
 - Plugins je nach Serverumgebung aktivieren oder entfernen
 
-### 4.2 `config/server.cfg`
+### 🔧 4.2 `config/server.cfg`
 
 Im `config/`-Ordner liegt eine Projekt-Variante mit einer etwas moderneren Struktur. Das ist eher die Projektkonfiguration als die reine Server-Startdatei.
 
@@ -806,15 +827,15 @@ rcon_password "changeme"
 - Wenn du den Server produktiv aufsetzt, nimm die Datei aus `config/` als Vorlage.
 - Kopiere sie an den richtigen SA:MP-Serverort und passe sie für deinen Host an.
 
-### 4.3 `sql.cfg`
+### 📘 4.3 `sql.cfg`
 
 Diese Datei ist für SQL-spezifische Optionen bzw. das Anpassen der Datenbank-Verbindung vorgesehen. In vielen SA:MP-Setups wird sie zusammen mit Plugins genutzt. Für dieses Projekt ist die Nutzung von SQLite als Standard vorgesehen, weshalb die `database.ini` im `config/`-Ordner die jeweils maßgebliche Konfiguration ist.
 
 ---
 
-## 5. Datenbank einrichten
+## 📘 5. Datenbank einrichten
 
-### 5.1 SQLite-Setup
+### 🔧 5.1 SQLite-Setup
 
 Die Standard-Konfiguration im Projekt ist SQLite:
 
@@ -840,7 +861,7 @@ Das bedeutet:
 - wenn die Datei nicht existiert, braucht das Projekt beim Start eine Initialisierung
 - die Datenbank sollte auf dem V-Server persistent sein
 
-### 5.2 Verzeichnis vorbereiten
+### 📘 5.2 Verzeichnis vorbereiten
 
 Auf dem Server musst du sicherstellen, dass das Datenbank-Verzeichnis existiert:
 
@@ -849,7 +870,7 @@ mkdir -p /home/youruser/sampserver/data/db
 chmod -R 755 /home/youruser/sampserver/data
 ```
 
-### 5.3 Datenbankdatei anlegen
+### 📘 5.3 Datenbankdatei anlegen
 
 Wenn das Projekt SQL-Skripte für Initialisierung enthält, siehst du sie im `data/sql`-Ordner. Dann kannst du den Server mit initialer DB-Erstellung starten oder die Skripte manuell ausführen.
 
@@ -863,9 +884,9 @@ Wenn keine SQL-Datei vorhanden ist, startest du den Gamemode mit aktivierter SQL
 
 ---
 
-## 6. Projekt kompilieren
+## 📘 6. Projekt kompilieren
 
-### 6.1 Voraussetzungen
+### 📘 6.1 Voraussetzungen
 
 Du brauchst eine funktionierende Pawn-Toolchain. Das Repository enthält Ordner unter `Compiler/`, aber der genaue Buildpfad hängt davon ab, ob der Server mit einer lokal bereitgestellten Toolchain kompiliert werden soll.
 
@@ -878,7 +899,7 @@ Dazu gehören typischerweise:
 
 Schau in `Compiler/pawncc` und `Compiler/samp03` nach, ob dort die lokalen Compiler-Artefakte liegen.
 
-### 6.2 Beispiel für Kompilierung
+### 📘 6.2 Beispiel für Kompilierung
 
 Eine typische Pawn-Kompilierung sieht so aus:
 
@@ -895,7 +916,7 @@ Je nach Projekt-Setup kann der Befehl leicht variieren. Das Wichtigste ist:
 
 Wenn du mit der lokalen Repo-Toolchain arbeitest, nutze die im Projekt vorhandenen Pfade und nicht einen globalen Linux-Pawn-Compiler, wenn der Projekt-Wrapper dafür vorgesehen ist.
 
-### 6.3 Ausgabe
+### 📘 6.3 Ausgabe
 
 Das Ergebnis ist normalerweise:
 
@@ -905,9 +926,9 @@ Die `.amx`-Datei wird direkt als der einzige akzeptierte Laufzeitmodus im Server
 
 ---
 
-## 7. Gamemode auf dem V-Server einsetzen
+## 🔧 7. Gamemode auf dem V-Server einsetzen
 
-### 7.1 SA:MP-Ordner vorbereiten
+### 📘 7.1 SA:MP-Ordner vorbereiten
 
 Beispiel:
 
@@ -925,19 +946,19 @@ Beispiel:
 └── server
 ```
 
-### 7.2 `.amx` bereitstellen
+### 📘 7.2 `.amx` bereitstellen
 
 ```bash
 cp /path/to/project/Compiler/samp03/gamemodes/gtasa_reallife.amx /home/youruser/sampserver/gamemodes/gtasa_reallife.amx
 ```
 
-### 7.3 Config kopieren
+### 📘 7.3 Config kopieren
 
 ```bash
 cp /path/to/project/server.cfg /home/youruser/sampserver/server.cfg
 ```
 
-### 7.4 Datenbankpfad prüfen
+### 📘 7.4 Datenbankpfad prüfen
 
 Stelle sicher, dass der Datenbankpfad auf dem Server wirklich so aussieht, wie die Script-Logik erwartet:
 
@@ -949,18 +970,18 @@ Wenn der Server im anderen Verzeichnis läuft, musst du den Pfad entsprechend an
 
 ---
 
-## 8. Control Panel einrichten
+## 🧩 8. Control Panel einrichten
 
 Das Web-Panel liegt in `control-panel/`.
 
-### 8.1 Abhängigkeiten installieren
+### 🔧 8.1 Abhängigkeiten installieren
 
 ```bash
 cd /path/to/project/control-panel
 npm install
 ```
 
-### 8.2 Starten
+### 🔧 8.2 Starten
 
 ```bash
 npm start
@@ -972,7 +993,7 @@ oder im Entwicklungsmodus:
 npm run dev
 ```
 
-### 8.3 Default-Endpoint
+### 📘 8.3 Default-Endpoint
 
 Das Panel läuft in der Regel auf:
 
@@ -982,7 +1003,7 @@ http://IP:PORT
 
 Je nach Serverkonfiguration und geöffneter Portfreigabe.
 
-### 8.4 Zweck des Panels
+### 🧩 8.4 Zweck des Panels
 
 Das Panel dient für:
 
@@ -994,11 +1015,11 @@ Das Panel dient für:
 
 ---
 
-## 9. Systemd- oder Service-Setup auf Linux
+## 🔧 9. Systemd- oder Service-Setup auf Linux
 
 Wenn du den SA:MP-Server permanent auf einem V-Server betreiben willst, ist ein Service sinnvoll.
 
-### 9.1 Beispiel-Service
+### 📘 9.1 Beispiel-Service
 
 Erstelle eine Datei wie `/etc/systemd/system/sampserver.service`:
 
@@ -1028,7 +1049,7 @@ sudo systemctl start sampserver
 sudo systemctl status sampserver
 ```
 
-### 9.2 Logfiles prüfen
+### 📘 9.2 Logfiles prüfen
 
 ```bash
 journalctl -u sampserver -f
@@ -1036,7 +1057,7 @@ journalctl -u sampserver -f
 
 ---
 
-## 10. Sicherheit und V-Server-Checklist
+## 🔧 10. Sicherheit und V-Server-Checklist
 
 Bei einem produktiven V-Server solltest du diese Punkte beachten:
 
@@ -1050,7 +1071,7 @@ Bei einem produktiven V-Server solltest du diese Punkte beachten:
 
 ---
 
-## 11. Empfohlene Standard-Setup-Reihenfolge
+## 🔧 11. Empfohlene Standard-Setup-Reihenfolge
 
 Wenn du das Projekt von null an auf einem V-Server einrichtest, gehst du so vor:
 
@@ -1069,9 +1090,9 @@ Wenn du das Projekt von null an auf einem V-Server einrichtest, gehst du so vor:
 
 ---
 
-## 12. Typische Fehler und Lösungen
+## 📘 12. Typische Fehler und Lösungen
 
-### Fehler: Gamemode wird nicht gefunden
+### 📘 Fehler: Gamemode wird nicht gefunden
 
 Ursache:
 
@@ -1083,7 +1104,7 @@ Lösung:
 - Name der `.amx` und der `server.cfg` divergieren
 - `.amx` richtig in `gamemodes/` verschieben
 
-### Fehler: Datenbank fehlt
+### 📘 Fehler: Datenbank fehlt
 
 Ursache:
 
@@ -1096,7 +1117,7 @@ Lösung:
 - Datenbank erzeugen
 - SQL-Skripte aus `data/sql/` ausführen
 
-### Fehler: Includes fehlen
+### 📘 Fehler: Includes fehlen
 
 Ursache:
 
@@ -1108,7 +1129,7 @@ Lösung:
 - Projektstruktur unverändert lassen
 - Include-Pfad im Compiler korrekt setzen
 
-### Fehler: Plugins fehlen
+### 🖥️ Fehler: Plugins fehlen
 
 Ursache:
 
@@ -1120,7 +1141,7 @@ Lösung:
 - Plugins installieren
 - Plugin-Liste mit dem tatsächlichen Ordner vergleichen
 
-### Fehler: RCON / Verbindung fehlschlägt
+### 📘 Fehler: RCON / Verbindung fehlschlägt
 
 Ursache:
 
@@ -1135,7 +1156,7 @@ Lösung:
 
 ---
 
-## 13. Praktische Server-Umgebung
+## 🔧 13. Praktische Server-Umgebung
 
 Für einen realen V-Server würde ich das so aufsetzen:
 
@@ -1148,7 +1169,7 @@ Für einen realen V-Server würde ich das so aufsetzen:
 
 ---
 
-## 14. Kurzfassung
+## 📘 14. Kurzfassung
 
 Wenn du dieses Projekt vollständig auf einem V-Server betreiben willst, dann:
 
@@ -1164,7 +1185,7 @@ Damit ist das Projekt vollständig als eigener, modularer Reallife-Gamemode auf 
 
 ---
 
-## 15. Empfehlung für dieses Projekt
+## 📘 15. Empfehlung für dieses Projekt
 
 Das Projekt ist bereits als modularer Basis-Gamemode angelegt und eignet sich gut für:
 
@@ -1183,7 +1204,7 @@ Wenn du es produktiv betreibst, solltest du bei einer echten Live-Umgebung zusä
 
 ---
 
-## 16. Abschluss
+## 📘 16. Abschluss
 
 Dieses Repository ist kein bloßer Prototyp, sondern eine modulare SA:MP-Serverbasis mit klaren Strukturprinzipien, deutlich getrennten Bereichen und sauberem Setup-Pfad. Wenn du die beschriebenen Ordner, Konfigurationen und Installationsschritte befolgst, kannst du das Projekt vollständig als Server-Setup für einen V-Server betreiben und später weiter ausbauen.
 

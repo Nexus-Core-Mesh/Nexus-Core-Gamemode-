@@ -1,12 +1,33 @@
 # Verifikationsbericht für das Repository Nexus-Core-Gamemode
 
-## 1. Ziel und Prüfumfang
+> [!NOTE]
+> Diese Doku wurde optisch aufbereitet, ohne technische Fakten, Pfade, Ports oder Projektregeln zu verändern.
+> Fokus lag auf Lesbarkeit, Struktur, Übersichten und deutlicherer Orientierung.
+
+## ✅ Wichtig zu wissen
+
+- Technische Fakten, Befehle, Pfade und Projektregeln bleiben bewusst unverändert.
+- Port- und Systemtrennung bleiben konsistent, insbesondere für den 7780-Contract und den Dini-first-Pfad.
+- Die optische Aufwertung dient nur der Lesbarkeit, nicht der inhaltlichen Interpretation.
+
+---
+## 🧭 Schnellüberblick
+
+| Bereich | Inhalt |
+| --- | --- |
+| Dokument | `VERIFICATION_REPORT.md` |
+| Typ | Prüf-/Statusbericht |
+| Fokus | Validierung, Audit und dokumentierter Stand |
+| Wichtige Pfade | `gamemodes/`, `Compiler/samp03/`, `tools/` |
+
+---
+## 🧭 1. Ziel und Prüfumfang
 
 Dieser Bericht dokumentiert die vollständige Selbstprüfung des Repositorys gemäß den festgelegten Prüfschritten. Dabei wurden die reale Build- und Laufzeitumgebung, die Build-Pipeline, die Konfiguration, die SQLite-Datenbank, die Skripte und der Startversuch des SA-MP-Servers im aktuellen System geprüft.
 
 Wichtigstes Ergebnis der Validierung: Die Single-Target-Build-Architektur ist technisch sauber und konsistent umgesetzt. Die Serverkonfiguration und das Buildziel stimmen mit dem erwarteten Produktivpfad überein. Der eigentliche Prozessstart des SA:MP-Servers konnte in dieser Sandbox-Umgebung nicht als produktiver Live-Start bestätigt werden, weil der Serverprozess hier beim Start fehlschlägt; die Ursache liegt dabei nicht in der Build- oder AMX-Target-Logik, sondern im Laufzeitkontext des Serverbinarys.
 
-### Abschluss-Check 2026-11-21
+### 📘 Abschluss-Check 2026-11-21
 
 - `python3 -m py_compile tools/*.py` ausgeführt und ohne Fehler durchgelaufen.
 - `bash -n build_server.sh` und die relevanten Shell-Skripte geprüft.
@@ -15,7 +36,7 @@ Wichtigstes Ergebnis der Validierung: Die Single-Target-Build-Architektur ist te
 - Live-Server-Start auf Port 7780 blieb bewusst aus und ist für spätere explizite Freigabe offen.
 ---
 
-## 2. Prüfmethodik
+## 📘 2. Prüfmethodik
 
 Die folgenden Prüfungen wurden real ausgeführt:
 
@@ -29,9 +50,9 @@ Für jede Prüfung wurden die realen Befehle im System ausgeführt, Exit-Codes d
 
 ---
 
-## 3. Umgebung & Abhängigkeiten
+## 📘 3. Umgebung & Abhängigkeiten
 
-### 3.1 Verifizierung der Skripte
+### 📘 3.1 Verifizierung der Skripte
 
 Ausgeführt:
 
@@ -60,7 +81,7 @@ Status: Bestanden
 
 Exit-Code: 0
 
-### 3.2 Verifizierung der 32-Bit-Compiler-Umgebung und qemu-i386
+### 📘 3.2 Verifizierung der 32-Bit-Compiler-Umgebung und qemu-i386
 
 Ausgeführt:
 
@@ -86,7 +107,7 @@ Status: Bestanden
 
 Exit-Code: 0
 
-### 3.3 Bewertung der Umgebung
+### 📘 3.3 Bewertung der Umgebung
 
 Die Umgebung erfüllt die Voraussetzungen für den lokalen 32-Bit-Build-Workflow auf einem 64-Bit-Host. Der Laufzeitkontext des Serverbinarys ist jedoch in dieser Sandbox nicht identisch mit einem echten SA-MP-Produktions-Host. Dadurch kann der Start des Serverprozesses hier unter Umständen nicht produktiv simuliert werden.
 
@@ -94,9 +115,9 @@ Status: Bestanden für Build- und Toolchain-Umgebung, aber nicht für produktive
 
 ---
 
-## 4. Build-Pipeline & Single-Target-Validierung
+## 🔧 4. Build-Pipeline & Single-Target-Validierung
 
-### 4.1 Build-Befehl (laufend aktualisiert)
+### 🔧 4.1 Build-Befehl (laufend aktualisiert)
 
 Ausgeführt:
 
@@ -123,7 +144,7 @@ Status: Bestanden
 - Der lokale 32-Bit-Build wurde mit der dokumentierten Toolchain und `gtasa_reallife.amx`-Ziel erneut erfolgreich ausgeführt.
 - Die sogenannte `gamemode.amx`-Alias-/Duplikat-Prüfung bleibt sauber: nur `Compiler/samp03/gamemodes/gtasa_reallife.amx` wird im Laufzeitpfad gehalten.
 
-### 4.2 Build-Safety / State-Workflow-Update (Code-Abgleich)
+### 🔧 4.2 Build-Safety / State-Workflow-Update (Code-Abgleich)
 
 Zusätzlich verifiziert an den Kernpfaden:
 
@@ -132,7 +153,7 @@ Zusätzlich verifiziert an den Kernpfaden:
 - `CameraSystem_StartFreeCamera()`, `CameraSystem_StartDroneCamera()` und `CameraSystem_ToggleFreeCamera()` gehen per Reset in den Zielmodus und schließen den Resetpfad mit `SetCameraBehindPlayer()` und `TogglePlayerControllable(playerid, 1)`.
 - Das HUD-Reset-/Cleanup bleibt über `INVALID_TEXT_DRAW` und damit ohne `!= Text:0`-Prüfung beim Delayed Reset sauber.
 
-### 4.1 Build-Befehl
+### 🔧 4.1 Build-Befehl
 
 Ausgeführt:
 
@@ -163,7 +184,7 @@ Status: Bestanden
 
 Exit-Code: 0
 
-### 4.2 Single-Target-Prüfung
+### 📘 4.2 Single-Target-Prüfung
 
 Ausgeführt:
 
@@ -183,7 +204,7 @@ Status: Bestanden
 - `gamemode.amx` oder andere Alias-/Duplikatdateien sind nicht vorhanden
 - Damit ist die Single-Target-Logik erfolgreich implementiert und validiert
 
-### 4.3 Bewertung der Build-Pipeline
+### 🔧 4.3 Bewertung der Build-Pipeline
 
 #### Additive finale Verifikation – 2026-11-21
 
@@ -193,7 +214,7 @@ Status: Bestanden
 - Erfasstes Ergebnis: `Exit-Code 0`, eine Warnung aus `includes/dini.inc` (`warning 224: indeterminate array size in "sizeof" expression (symbol "maxlength")`) und keine kritischen Buildfehler.
 - Der Source-/Build-Lauf blieb bewusst auf Quellvalidierung und AMX-Compile begrenzt; kein Start des SA:MP-Prozesses, kein Live-Test und kein Commit wurden in diesem Lauf ausgeführt.
 
-### 4.3 Bewertung der Build-Pipeline
+### 🔧 4.3 Bewertung der Build-Pipeline
 
 Die Build-Pipeline erfüllt die Vorgabe exakt:
 
@@ -204,7 +225,7 @@ Die Build-Pipeline erfüllt die Vorgabe exakt:
 
 Wenn die Build-Pipeline in einem echten Produktiv-Host verwendet wird, müssen nur die Regeln aus `scripts/build_gamemode.sh` beibehalten werden, damit dieser Single-Target-Vertrag nicht verloren geht.
 
-### 4.4 Saison-Endstand – 2026-11-21
+### 📊 4.4 Saison-Endstand – 2026-11-21
 
 - Build- und Hardening-Lauf: `LoginSystem_AutoResolveFlow()`, `LoginSystem_AdvanceToStateSelection()`, `TutorialSystem_Next()`, `OnPlayerSpawn()` und `CameraSystem_ExitCameraMode()` wurden erneut in der aktuellen 7780-Konfiguration geprüft.
 - State-/Home-State-Schutz bleibt stabil: `Core_IsValidState()`, `Core_GetValidStateOrDefault()`, `DB_ValidateStateTransfer()` und `INSERT OR IGNORE` verhindern das Überschreiben gültiger Werte mit `0`.
@@ -214,9 +235,9 @@ Wenn die Build-Pipeline in einem echten Produktiv-Host verwendet wird, müssen n
 
 ---
 
-## 5. Konfigurations- & Datenbank-Check
+## 📘 5. Konfigurations- & Datenbank-Check
 
-### 5.1 Server-Konfiguration
+### 🔧 5.1 Server-Konfiguration
 
 Ausgeführt:
 
@@ -239,7 +260,7 @@ Status: Bestanden
 - Plugins-Reihenfolge: `crashdetect streamer sscanf2 sqlite mysql zcmd`
 - Port ist auf `7780` gesetzt und bleibt der aktive Projekt-Contract für diese Repo-Version
 
-### 5.2 SQLite-Datenbankpfad
+### 📘 5.2 SQLite-Datenbankpfad
 
 Ausgeführt:
 
@@ -266,7 +287,7 @@ Status: Bestanden
 - `Compiler/samp03/data/db` existiert ebenfalls zur Laufzeitkonfiguration
 - Die SQLite-Datenbank ist korrekt initialisiert und vorhanden
 
-### 5.3 Bewertung der Konfiguration
+### 📘 5.3 Bewertung der Konfiguration
 
 Die Konfiguration ist konsistent und mit dem Build und den Dokumentationen synchronisiert:
 
@@ -278,9 +299,9 @@ Die zentrale Produktivregel ist erfüllt: Der Server referenziert genau die rich
 
 ---
 
-## 6. Server-Start & Live-Diagnostics
+## 🔧 6. Server-Start & Live-Diagnostics
 
-### 6.1 Startversuch via Deployment-Skript
+### 🔧 6.1 Startversuch via Deployment-Skript
 
 Ausgeführt:
 
@@ -300,7 +321,7 @@ Exit-Code: 2
 
 Status: Fehlgeschlagen im aktuellen Container-Laufzeitkontext
 
-### 6.2 Diagnose des Laufzeitproblems
+### 📘 6.2 Diagnose des Laufzeitproblems
 
 Ausgeführt:
 
@@ -326,7 +347,7 @@ Ergebnis:
 
 Status: Bestanden für Konfigurations- und Artefakt-Prüfung, aber nicht für tatsächlichen Live-Start in dieser Umgebung.
 
-### 6.3 Interpretation des Startfehlers
+### 🔧 6.3 Interpretation des Startfehlers
 
 Der SA-MP-Server startet in dieser Sandbox nicht sauber, obwohl:
 
@@ -341,9 +362,9 @@ Die Build- und Single-Target-Validierung selbst ist jedoch sauber bestanden.
 
 ---
 
-## 7. Abschlussbewertung
+## 📘 7. Abschlussbewertung
 
-### 7.1 Prüfstatus pro Bereich
+### 📊 7.1 Prüfstatus pro Bereich
 
 | Bereich | Status | Ergebnis |
 | --- | --- | --- |
@@ -356,7 +377,7 @@ Die Build- und Single-Target-Validierung selbst ist jedoch sauber bestanden.
 | SQLite-Pfad | Bestanden | `data/db/gtasa_reallife.db` vorhanden |
 | Produktiver Serverstart | Fehlgeschlagen im Container | Startfehler beim `samp03svr`-Launch, kein echter Live-Serverstart hier möglich |
 
-### 7.2 Finale Bewertung
+### 📘 7.2 Finale Bewertung
 
 Die technische Grundlage für einen produktiven Einsatz ist sauber vorbereitet:
 
@@ -369,7 +390,7 @@ Die technische Grundlage für einen produktiven Einsatz ist sauber vorbereitet:
 
 Die produktive Startfreigabe kann in einer echten SA-MP-Laufzeitumgebung erfolgen, wenn der Serverhost die erforderlichen 32-Bit- und Host-Abhängigkeiten vollständig bereitstellt. In der aktuellen Sandbox ist die Verifikation auf das Build-/Config-/Dokumentations-Level erfolgreich; der echte Live-Start kann hier nicht final bestätigt werden und bleibt als expliziter Release-Gate auf der Ubuntu-VM offen.
 
-### 7.3 Reale Produktions-Checkliste für die Ubuntu-VM
+### 📘 7.3 Reale Produktions-Checkliste für die Ubuntu-VM
 
 Die reale Übergabe in den Live-Betrieb muss auf der Ubuntu-VM mit den produktiven Daemonen erfolgen. Die konkrete Reihenfolge lautet:
 
@@ -390,7 +411,7 @@ Abnahmekriterien:
 
 Damit ist der Übergang vom Container-Check zur realen Ubuntu-VM-Validierung klar definiert: Der Build darf nicht nur strukturell sauber sein, sondern muss auf der echten Service-/Runtime-Umgebung mit den tatsächlichen Dini-Pfaden und Daemons laufen.
 
-### 7.4 Empfehlung für produktiven Start
+### 🔧 7.4 Empfehlung für produktiven Start
 
 Für den echten Produktivstart auf einem kompatiblen Linux-Server gilt:
 
@@ -404,7 +425,7 @@ Nur wenn der Serverhost die passende 32-Bit-Laufzeit und alle Bibliotheken berei
 
 ---
 
-## 8. Kurzfazit
+## 📘 8. Kurzfazit
 
 Der Repository-Workflow ist im Kern technisch sauber und konsistent: Der Build erzeugt exakt `Compiler/samp03/gamemodes/gtasa_reallife.amx`, keine Duplikate werden im Serverpfad gehalten, und die Konfiguration ist mit dem Build synchronisiert. Die Validierung des Build-/Konfigurations-Levels ist vollständig bestanden. Der tatsächliche Live-Serverstart konnte in dieser Umgebung nicht produktiv bestätigt werden, da das Laufzeitbinary beim Start im Container scheitert.
 
@@ -416,15 +437,15 @@ Damit lautet das Ergebnis der Gesamtvalidierung:
 
 ---
 
-## 9. Finaler Verifikationsstand (ergänzt)
+## 📊 9. Finaler Verifikationsstand (ergänzt)
 
 Die gesamte Verifikation wurde auf den echten Projektkontext und die harte Architektur-Governance bezogen. Dabei war die entscheidende Frage nicht nur „kompiliert es“, sondern auch „greift das System im Zusammenspiel der Module korrekt zusammen, ohne Default-Werte, halbe Transfers oder doppelte Trigger zu erzeugen.“
 
-### 9.1 Core-Validierung
+### 📘 9.1 Core-Validierung
 
 Die Kernvalidierung war erfolgreich: `core.inc` bleibt die zentrale Quelle für Spielerstatus, Home-State, Admin-/Projektleiterrechte und allgemeine Validierungen. Die Reihenfolge und die Datenquellen wurden nicht mit parallelen Shadow-States belastet. Dadurch bleiben eventuelle spätere State-Wechsel technisch nachvollziehbar und nicht durch inkonsistente Neben- oder Fallback-Varianten verfälscht.
 
-### 9.2 State-/DB-Validierung
+### 📘 9.2 State-/DB-Validierung
 
 Die DB- und State-Schicht blieb in der wesentlichen Form stabil:
 
@@ -433,7 +454,7 @@ Die DB- und State-Schicht blieb in der wesentlichen Form stabil:
 - Rehydrationspfade bleiben an `Core_IsValidState()` und die dazugehörigen State-/default-Guards gebunden, damit ein bereits gültiger Home-State oder State nach Reconnect nicht erneut durch einen Startpfad verschoben wird.
 - Der Dini-first-Ansatz bleibt im Dateisystem der primäre Persistenzpfad, während SQLite als sichtbarer Konsistenzpfad für Web-/Admin-Read-Only-Sichten fungiert.
 
-### 9.3 Login-/Tutorial-/Spawn-Validierung
+### 📘 9.3 Login-/Tutorial-/Spawn-Validierung
 
 Die Laufzeit- und Lifecycle-Logik wurde im Sinne des geforderten Onboarding-Flows geprüft:
 
@@ -444,7 +465,7 @@ Die Laufzeit- und Lifecycle-Logik wurde im Sinne des geforderten Onboarding-Flow
 
 Diese Prüfung ist wichtig, weil genau diese Fehlerkette in realen Server-Umgebungen die größten „visuellen“ und „logischen“ Probleme erzeugt: doppelte Tutorial-Starts, veränderte Home-States, unvollständige Spawns und spürbare UI-Reset-Schleifen.
 
-### 9.4 Camera-/HUD-/UI-Validierung
+### 🧩 9.4 Camera-/HUD-/UI-Validierung
 
 Die UI- und Camera-Logik blieb in den entscheidenden Punkten konsistent:
 
@@ -453,7 +474,7 @@ Die UI- und Camera-Logik blieb in den entscheidenden Punkten konsistent:
 - HUD-/TextDraw-Cleanup lässt die linke untere Zone frei und verhindert Überlagerungen auf kleinem / mobilen Layout.
 - Disconnect-/Reset-Pfade schalten Camera, TextDraws und Controls sauber zurück, sodass kein verhafteter Dialog-/Camera-Zustand hängen bleibt.
 
-### 9.5 Hotpath- und qemu-i386-Validierung
+### 📘 9.5 Hotpath- und qemu-i386-Validierung
 
 Der Runtime-Betrag wurde ebenfalls auf echte Infrastruktur-Respektierung geprüft:
 
@@ -462,7 +483,7 @@ Der Runtime-Betrag wurde ebenfalls auf echte Infrastruktur-Respektierung geprüf
 - `sscanf`-Puffer wurden dort, wo sie als ungeschützt galten, durch sichere Token-Extraktion ersetzt.
 - Early-Returns bei Inaktivität bleiben als wirksame Ressourcenschutzmaßnahme im Betrieb erhalten.
 
-### 9.6 Finaler Gesamtstatus
+### 📊 9.6 Finaler Gesamtstatus
 
 Der aktuelle Repository-Stand ist als implementierungs- und build-sicher zu bewerten, auch wenn die Live-Validierung auf der echten Ubuntu-VM noch aussteht. Die wichtigste Aussage lautet: Die Stabilität wurde dort, wo sie in der Codearchitektur wirklich eine Rolle spielt, nicht ignoriert; sie wurde als strukturelle Entscheidung durch die Nutzung von zentralen Guards, sauberem Lifecycle und konsistenten Reset-Pfaden eingeordnet.
 
@@ -470,7 +491,7 @@ Damit bleibt der definitive Release-Gate unverändert: Der echte SA:MP-/OMP-Live
 
 ---
 
-## Additive Abschluss-Validierung – 2026-11-21
+## 📘 Additive Abschluss-Validierung – 2026-11-21
 
 Diese Notiz ergänzt den Verifikationsbericht ohne bestehende Inhalte zu überschreiben.
 
