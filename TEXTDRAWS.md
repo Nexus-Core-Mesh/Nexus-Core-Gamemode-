@@ -87,6 +87,10 @@ Buttons: Box `0x224466BB`, selectable, 70×14. Live-Update über Timer `TextWars
 ### 9. Jail-HUD – `gJailTD` (nicht angebunden)
 „JAIL HUD“ y=30 · Rest-/Bootzeit y=62.
 
+### Zusätzliche Statusklarstellung
+- `/dispatch` und `/acceptcall` sind in der Main-Command-Chain aktiv angebunden; sie laufen über `DispatchSystem_HandleCommand()` und nicht als separate TextDraw-UI.
+- Die übrigen als „nicht angebunden“ markierten Anzeigen (`DrugSystem_ShowMarket`, `DynamicJobSystem_ShowStateJobs`, `MissionSystem_ShowMissionList` etc.) bleiben weiterhin nur als Bauzustand mit vorhandenen `Show*`-Funktionen dokumentiert.
+
 ### 10–12. Infoboards (x=320)
 | TextDraw | Zeilen (y) |
 |---|---|

@@ -68,6 +68,8 @@ Das Projekt als modularen, erweiterbaren GTA:SA-Reallife-Gamemode mit 3-Staaten-
 - [x] Offline-Setup-/Start-Manager für `control-panel/` unter `tools/control_panel_manager.py` ergänzt
 - [x] Deploy-Pfad `scripts/deploy_server.sh` startet das Panel nur als optionalen Zusatz-Worker, ohne den Gamemode-Deploy zu blockieren
 - [x] Dini-first vs. SQLite-Read-Only-Konsistenz als Teil der Dokumentation ergänzt
+- [x] Projektgewichtung Persistenz auf 51 % SQLite / 49 % Dini festgeschrieben: SQLite für Schema/Upserts/Sync, Dini für Datei- und Fallback-Persistenz ohne parallele Shadow-State-Quelle
+- [x] Source-of-Truth-Regel in `core.inc` explizit dokumentiert: `state_id`, `home_state`, Bank/Cash, Admin-Ränge (`1–5`) und `Core_IsProjectLeader()` bleiben einzig dort geführt
 - [x] Repo-gebundene Offline-TUI-/Autofix-Integration ergänzt: `tools/nexus_hub_tui.py`, `tools/nexus_tools_tui.py`, `tools/nexus_autofix.py`, `tools/samp_tui.py` sowie die Root-Wrapper `nexus_hub_tui.py`, `nexus_tools_tui.py`, `nexus_autofix.py`, `samp_tui.py`
 - [x] Repo-gebundene Pfadauflösung ohne feste `/home`-Argumente, `7780`-Live-Abhängigkeiten oder Server-Start in den TUI/Autofix-Workflows
 
@@ -114,6 +116,7 @@ Das Projekt als modularen, erweiterbaren GTA:SA-Reallife-Gamemode mit 3-Staaten-
 
 ### 🏗️ Release-Milestone B2 – Admin / Projektleiter-System
 - [x] Projektleiter-/Owner-Zugang als versteckter Spezialzugang in `core.inc` und `admin_system.inc` ergänzt; `Core_IsProjectLeader()` und `AdminSystem_IsProjectLeader()` sichern Zugriff ohne normale Spieler-Hilfen.
+- [x] Dispatch-Command-Flow in `OnPlayerCommandText()` konsolidiert: `/dispatch` und `/acceptcall` laufen jetzt über `DispatchSystem_HandleCommand()` und sind als aktiv dokumentiert.
 - [x] Disconnect-/Reset-/Menüwechselpfade auf saubere Camera- und HUD-Cleanup erweitert: `CameraSystem_ExitCameraMode()`, `CameraSystem_Reset()`, `RoleplayUI_Hide()` und `TutorialSystem_HideStage()` werden vor Disconnect/Reset und beim Öffnen von Haupt-/Quick-Action-/State-Menüs aufgerufen, um doppelte 4-Zonen-HUD-Renderings oder veraltete Kamerazustände zu verhindern.
 - [x] State-Setzen, Teleport und Spawnen über `StateSpawnSystem_Apply()`/`CameraSystem_Reset()` eingebaut; `Core_SetPlayerState()` und `Core_SetPlayerHomeState()` bleiben auf gültige State-IDs beschränkt.
 - [x] Fahrzeug-Spawnen über `VehicleSystem_SpawnAdminVehicle()` integriert; Slot-/Limit-Checks verbleiben im Vehiclesystem und vermeiden direkte rohe Array-Schreibpfade.

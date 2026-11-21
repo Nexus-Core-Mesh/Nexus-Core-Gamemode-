@@ -112,6 +112,7 @@
 
 main()
 {
+    return 0;
 }
 
 public OnGameModeInit()
@@ -374,6 +375,9 @@ public OnPlayerCommandText(playerid, cmdtext[])
         return 1;
 
     if (JailSystem_HandleCommand(playerid, cmdtext))
+        return 1;
+
+    if (DispatchSystem_HandleCommand(playerid, cmdtext))
         return 1;
 
     if (EmergencySystem_HandleCommand(playerid, cmdtext))
