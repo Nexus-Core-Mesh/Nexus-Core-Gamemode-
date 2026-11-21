@@ -122,7 +122,7 @@ stock TransportSystem_ShowRoutes(playerid)
 
     for (new i = 0; i < 3; i++)
     {
-        if (gTransportTD[playerid][i] != Text:0)
+        if (gTransportTD[playerid][i] != Text:INVALID_TEXT_DRAW)
         {
             TextDrawShowForPlayer(playerid, gTransportTD[playerid][i]);
         }
@@ -133,11 +133,11 @@ stock TransportSystem_HideRoutes(playerid)
 {
     for (new i = 0; i < 8; i++)
     {
-        if (gTransportTD[playerid][i] != Text:0)
+        if (gTransportTD[playerid][i] != Text:INVALID_TEXT_DRAW)
         {
             TextDrawHideForPlayer(playerid, gTransportTD[playerid][i]);
             TextDrawDestroy(gTransportTD[playerid][i]);
-            gTransportTD[playerid][i] = Text:0;
+            gTransportTD[playerid][i] = Text:INVALID_TEXT_DRAW;
         }
     }
 }

@@ -119,7 +119,7 @@ stock MissionSystem_ShowMissionList(playerid)
 
     for (new i = 0; i < 8; i++)
     {
-        if (gMissionTD[playerid][i] != Text:0)
+        if (gMissionTD[playerid][i] != Text:INVALID_TEXT_DRAW)
         {
             TextDrawShowForPlayer(playerid, gMissionTD[playerid][i]);
         }
@@ -130,11 +130,11 @@ stock MissionSystem_HideMissionList(playerid)
 {
     for (new i = 0; i < 8; i++)
     {
-        if (gMissionTD[playerid][i] != Text:0)
+        if (gMissionTD[playerid][i] != Text:INVALID_TEXT_DRAW)
         {
             TextDrawHideForPlayer(playerid, gMissionTD[playerid][i]);
             TextDrawDestroy(gMissionTD[playerid][i]);
-            gMissionTD[playerid][i] = Text:0;
+            gMissionTD[playerid][i] = Text:INVALID_TEXT_DRAW;
         }
     }
 }

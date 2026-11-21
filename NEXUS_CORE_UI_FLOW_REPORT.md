@@ -123,6 +123,17 @@ Der Spielpfad ist klar auf ein menu-first Verhalten ausgerichtet:
 
 ### 1.5 Kamera-/Perspektiv-Basis
 
+#### Additive Korrigierung – 2026-11-21
+
+Der aktuelle State-/Spawn-Hardening-Lauf schloss die bekannte Kollision zwischen validem Home-State, Tutorial-/Intro-Start und veralteter Kamera ab:
+
+- `OnPlayerSpawn()` prüft jetzt vor dem Start von Tutorial-/State-Intro-Flow, ob `home_state` und `state_id` bereits gültig sind. Wenn ja, wird nicht erneut in die State-Tutorial-Kette gesprungen.
+- `StateSpawnSystem_Apply()` setzt den gewählten State als festen Spawn und stellt die Kamera sofort auf den Spieler zurück (`SetCameraBehindPlayer()` + `TogglePlayerControllable(playerid, 1)`).
+- So bleibt der feste Spawnpunkt nach Reconnect/Respawn konsistent, ohne neue Intro- oder Tutorial-Kamera-Overlay zu erzeugen.
+- Der Build-Pfad wurde erneut mit der 7780-Toolchain validiert; ein echter Live-Server-Start blieb nach wie vor aus.
+
+### 1.5 Kamera-/Perspektiv-Basis
+
 Die Kamera logischer Aufwand ist bewusst in eine zentrale, wiederverwendbare Funktionalität verschoben:
 
 - `CameraSystem_Reset()` bzw. `CameraSystem_SetMode()` als Kern der Wiederverwendung.

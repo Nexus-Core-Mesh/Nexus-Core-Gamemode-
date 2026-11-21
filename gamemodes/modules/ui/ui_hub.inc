@@ -66,6 +66,9 @@ stock UiHub_ShowMain(playerid)
         return;
     }
 
+    CameraSystem_ExitCameraMode(playerid);
+    RoleplayUI_Hide(playerid);
+
     new const title[] = "Nexus Core | Hauptmenü";
     new const menu[] = "Stadt & Spawn\nInventar\nHandy\nBusiness\nAmmu-Nation\nMission-Board\nGarage\nFahrzeug-Menü\nFahrzeug-Status\nFahrzeug-Tuning\nJob-Menü\nJob-Zentrum\nText-Wars\nStaats-Leitstand\nSpieler-Dashboard\nSchnellzugriff\nKamera: Frei\nKamera: Drohne\nKamera: Reset";
     UiDialog_Show(playerid, DIALOG_UI_MAIN, DIALOG_STYLE_LIST, title, menu, UI_DIALOG_BUTTON_OK, UI_DIALOG_BUTTON_CLOSE);
@@ -77,6 +80,9 @@ stock UiHub_ShowQuickActionMenu(playerid)
     {
         return;
     }
+
+    CameraSystem_ExitCameraMode(playerid);
+    RoleplayUI_Hide(playerid);
 
     new const title[] = "Schnellzugriff";
     new const menu[] = "Stadt & Spawn\nStaatsinfo\nDienstleistungen\nFinanzen\nStatus & Wanted\nWirtschaft\nShops\nJobs\nFahrzeug-Menü\nStats\nFreie Kamera\nDrohnen-Kamera\nKamera aus";
@@ -107,6 +113,9 @@ stock UiHub_ShowStatePick(playerid)
     {
         return;
     }
+
+    CameraSystem_ExitCameraMode(playerid);
+    RoleplayUI_Hide(playerid);
 
     new stateList[128];
     format(stateList, sizeof(stateList), "Los Santos\nSan Fierro\nLas Venturas");

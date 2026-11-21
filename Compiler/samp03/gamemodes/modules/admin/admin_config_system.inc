@@ -129,11 +129,11 @@ stock AdminConfigSystem_HideMenu(playerid)
 {
     for (new i = 0; i < 8; i++)
     {
-        if (gAdminConfigTD[playerid][i] != Text:0)
+        if (gAdminConfigTD[playerid][i] != Text:INVALID_TEXT_DRAW)
         {
             TextDrawHideForPlayer(playerid, gAdminConfigTD[playerid][i]);
             TextDrawDestroy(gAdminConfigTD[playerid][i]);
-            gAdminConfigTD[playerid][i] = Text:0;
+            gAdminConfigTD[playerid][i] = Text:INVALID_TEXT_DRAW;
         }
     }
 }

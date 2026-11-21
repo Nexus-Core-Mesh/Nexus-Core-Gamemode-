@@ -127,7 +127,7 @@ stock ShopSystem_ShowStateShops(playerid, stateid)
 
     for (new i = 0; i < 7; i++)
     {
-        if (gShopTD[playerid][i] != Text:0)
+        if (gShopTD[playerid][i] != Text:INVALID_TEXT_DRAW)
         {
             TextDrawShowForPlayer(playerid, gShopTD[playerid][i]);
         }
@@ -138,11 +138,11 @@ stock ShopSystem_HideStateShops(playerid)
 {
     for (new i = 0; i < 8; i++)
     {
-        if (gShopTD[playerid][i] != Text:0)
+        if (gShopTD[playerid][i] != Text:INVALID_TEXT_DRAW)
         {
             TextDrawHideForPlayer(playerid, gShopTD[playerid][i]);
             TextDrawDestroy(gShopTD[playerid][i]);
-            gShopTD[playerid][i] = Text:0;
+            gShopTD[playerid][i] = Text:INVALID_TEXT_DRAW;
         }
     }
 }

@@ -264,6 +264,10 @@ public OnPlayerConnect(playerid)
 public OnPlayerDisconnect(playerid, reason)
 {
     Core_RunPlayerDisconnectHooks(playerid, reason);
+    CameraSystem_ExitCameraMode(playerid);
+    CameraSystem_Reset(playerid);
+    TutorialSystem_HideStage(playerid);
+    RoleplayUI_Hide(playerid);
     return 1;
 }
 

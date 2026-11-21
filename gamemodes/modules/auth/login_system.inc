@@ -159,7 +159,7 @@ stock LoginSystem_ShowLoginScreen(playerid)
 
     for (new i = 0; i < 5; i++)
     {
-        if (gLoginTD[playerid][i] != Text:0)
+        if (gLoginTD[playerid][i] != Text:INVALID_TEXT_DRAW)
         {
             TextDrawShowForPlayer(playerid, gLoginTD[playerid][i]);
         }
@@ -211,7 +211,7 @@ stock LoginSystem_ShowRegisterScreen(playerid)
 
     for (new i = 0; i < 6; i++)
     {
-        if (gLoginTD[playerid][i] != Text:0)
+        if (gLoginTD[playerid][i] != Text:INVALID_TEXT_DRAW)
         {
             TextDrawShowForPlayer(playerid, gLoginTD[playerid][i]);
         }
@@ -222,11 +222,11 @@ stock LoginSystem_HideLoginScreen(playerid)
 {
     for (new i = 0; i < 5; i++)
     {
-        if (gLoginTD[playerid][i] != Text:0)
+        if (gLoginTD[playerid][i] != Text:INVALID_TEXT_DRAW)
         {
             TextDrawHideForPlayer(playerid, gLoginTD[playerid][i]);
             TextDrawDestroy(gLoginTD[playerid][i]);
-            gLoginTD[playerid][i] = Text:0;
+            gLoginTD[playerid][i] = Text:INVALID_TEXT_DRAW;
         }
     }
 }
@@ -235,11 +235,11 @@ stock LoginSystem_HideRegisterScreen(playerid)
 {
     for (new i = 0; i < 8; i++)
     {
-        if (gLoginTD[playerid][i] != Text:0)
+        if (gLoginTD[playerid][i] != Text:INVALID_TEXT_DRAW)
         {
             TextDrawHideForPlayer(playerid, gLoginTD[playerid][i]);
             TextDrawDestroy(gLoginTD[playerid][i]);
-            gLoginTD[playerid][i] = Text:0;
+            gLoginTD[playerid][i] = Text:INVALID_TEXT_DRAW;
         }
     }
 }

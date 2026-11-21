@@ -209,7 +209,7 @@ stock DynamicJobSystem_ShowStateJobs(playerid, stateid)
 
     for (new i = 0; i < 8; i++)
     {
-        if (gDynamicJobTD[playerid][i] != Text:0)
+        if (gDynamicJobTD[playerid][i] != Text:INVALID_TEXT_DRAW)
         {
             TextDrawShowForPlayer(playerid, gDynamicJobTD[playerid][i]);
         }
@@ -220,11 +220,11 @@ stock DynamicJobSystem_HideStateJobs(playerid)
 {
     for (new i = 0; i < 8; i++)
     {
-        if (gDynamicJobTD[playerid][i] != Text:0)
+        if (gDynamicJobTD[playerid][i] != Text:INVALID_TEXT_DRAW)
         {
             TextDrawHideForPlayer(playerid, gDynamicJobTD[playerid][i]);
             TextDrawDestroy(gDynamicJobTD[playerid][i]);
-            gDynamicJobTD[playerid][i] = Text:0;
+            gDynamicJobTD[playerid][i] = Text:INVALID_TEXT_DRAW;
         }
     }
 }

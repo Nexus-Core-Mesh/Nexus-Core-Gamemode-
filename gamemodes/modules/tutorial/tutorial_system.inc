@@ -118,7 +118,7 @@ stock TutorialSystem_ShowStage(playerid, stage)
 
     for (new i = 0; i < 4; i++)
     {
-        if (gTutorialTD[playerid][i] != Text:0)
+        if (gTutorialTD[playerid][i] != Text:INVALID_TEXT_DRAW)
         {
             TextDrawShowForPlayer(playerid, gTutorialTD[playerid][i]);
         }
@@ -129,11 +129,11 @@ stock TutorialSystem_HideStage(playerid)
 {
     for (new i = 0; i < 4; i++)
     {
-        if (gTutorialTD[playerid][i] != Text:0)
+        if (gTutorialTD[playerid][i] != Text:INVALID_TEXT_DRAW)
         {
             TextDrawHideForPlayer(playerid, gTutorialTD[playerid][i]);
             TextDrawDestroy(gTutorialTD[playerid][i]);
-            gTutorialTD[playerid][i] = Text:0;
+            gTutorialTD[playerid][i] = Text:INVALID_TEXT_DRAW;
         }
     }
 }

@@ -68,9 +68,21 @@ stock ShopSystem_BuyItem(playerid, shopid, quantity)
     {
         return false;
     }
+    if (quantity <= 0)
+    {
+        SendClientMessage(playerid, 0xFF0000AA, "[SHOP] Anzahl muss größer als 0 sein.");
+        return false;
+    }
     if (gShopOpen[shopid] != 1)
     {
         SendClientMessage(playerid, 0xFF0000AA, "[SHOP] Dieses Geschäft ist derzeit geschlossen.");
+        return false;
+    }
+
+    new safeState = Core_GetValidStateOrDefault(gShopState[shopid], STATE_LOS_SANTOS);
+    if (!Core_IsValidState(safeState))
+    {
+        SendClientMessage(playerid, 0xFF0000AA, "[SHOP] Geschäft ist keinem gültigen Staat zugeordnet.");
         return false;
     }
 
@@ -78,6 +90,23 @@ stock ShopSystem_BuyItem(playerid, shopid, quantity)
     if (gShopStock[shopid] < quantity)
     {
         SendClientMessage(playerid, 0xFF0000AA, "[SHOP] Nicht genug Lagerbestand.");
+        return false;
+    }
+    if (Core_GetPlayerBank(playerid) < totalCost)
+    {
+        SendClientMessage(playerid, 0xFF0000AA, "[SHOP] Nicht genug Geld auf der Bank.");
+        return false;
+    }
+    if (!Core_ChangePlayerBank(playerid, -totalCost))
+    {
+        SendClientMessage(playerid, 0xFF0000AA, "[SHOP] Zahlung fehlgeschlagen.");
+        return false;
+    }
+
+    if (!StateLedgerSystem_Transfer(safeState, max(0, totalCost / 10), "shop_purchase", "shop_system"))
+    {
+        Core_ChangePlayerBank(playerid, totalCost);
+        SendClientMessage(playerid, 0xFF0000AA, "[SHOP] Ledger-Transfer für den Staat fehlgeschlagen; Einkauf abgebrochen.");
         return false;
     }
 
@@ -127,7 +156,7 @@ stock ShopSystem_ShowStateShops(playerid, stateid)
 
     for (new i = 0; i < 7; i++)
     {
-        if (gShopTD[playerid][i] != Text:0)
+        if (gShopTD[playerid][i] != Text:INVALID_TEXT_DRAW)
         {
             TextDrawShowForPlayer(playerid, gShopTD[playerid][i]);
         }
@@ -138,11 +167,11 @@ stock ShopSystem_HideStateShops(playerid)
 {
     for (new i = 0; i < 8; i++)
     {
-        if (gShopTD[playerid][i] != Text:0)
+        if (gShopTD[playerid][i] != Text:INVALID_TEXT_DRAW)
         {
             TextDrawHideForPlayer(playerid, gShopTD[playerid][i]);
             TextDrawDestroy(gShopTD[playerid][i]);
-            gShopTD[playerid][i] = Text:0;
+            gShopTD[playerid][i] = Text:INVALID_TEXT_DRAW;
         }
     }
 }
