@@ -24,14 +24,15 @@ stock TutorialSystem_Start(playerid)
         return;
     }
 
-    if (gTutorialStage[playerid] >= TUTORIAL_STAGE_FINISH && Core_IsValidState(Core_GetPlayerHomeState(playerid)))
+    new homeState = Core_GetValidStateOrDefault(Core_GetPlayerHomeState(playerid), Core_GetPlayerState(playerid));
+    if (gTutorialStage[playerid] >= TUTORIAL_STAGE_FINISH && Core_IsValidState(homeState))
     {
         return;
     }
 
     gTutorialStage[playerid] = TUTORIAL_STAGE_INTRO;
     TutorialSystem_ShowStage(playerid, gTutorialStage[playerid]);
-    SendClientMessage(playerid, 0xFFCC00AA, "[TUTORIAL] Willkommen im GTA:SA Reallife. Folge dem kurzen Einstieg.");
+    SendClientMessage(playerid, 0xFFCC00AA, "[TUTORIAL] Willkommen im GTA:SA Reallife. Folge dem kurzen Einstieg und wähle anschließend deine Heimatstadt im Menü.");
 }
 
 stock TutorialSystem_ShowStage(playerid, stage)
@@ -151,12 +152,17 @@ stock TutorialSystem_Next(playerid)
 
     if (gTutorialStage[playerid] == TUTORIAL_STAGE_FINISH)
     {
-        new stateid = Core_GetPlayerHomeState(playerid);
+        new stateid = Core_GetValidStateOrDefault(Core_GetPlayerHomeState(playerid), Core_GetPlayerState(playerid));
         if (!Core_IsValidState(stateid))
         {
-            stateid = Core_GetValidStateOrDefault(Core_GetPlayerState(playerid), STATE_LOS_SANTOS);
-            Core_SetPlayerHomeState(playerid, stateid);
+            stateid = STATE_LOS_SANTOS;
         }
+
+        Core_SetPlayerHomeState(playerid, stateid);
+        Core_SetPlayerState(playerid, stateid);
+        DB_ValidateStateTransfer(playerid, stateid, stateid);
+        DB_SavePlayerState(playerid, stateid);
+        StateSpawnSystem_Apply(playerid, stateid);
 
         CameraSystem_Reset(playerid);
         CameraSystem_PlayStateScene(playerid, stateid);

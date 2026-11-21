@@ -442,3 +442,14 @@ Der Runtime-Betrag wurde ebenfalls auf echte Infrastruktur-Respektierung geprüf
 Der aktuelle Repository-Stand ist als implementierungs- und build-sicher zu bewerten, auch wenn die Live-Validierung auf der echten Ubuntu-VM noch aussteht. Die wichtigste Aussage lautet: Die Stabilität wurde dort, wo sie in der Codearchitektur wirklich eine Rolle spielt, nicht ignoriert; sie wurde als strukturelle Entscheidung durch die Nutzung von zentralen Guards, sauberem Lifecycle und konsistenten Reset-Pfaden eingeordnet.
 
 Damit bleibt der definitive Release-Gate unverändert: Der echte SA:MP-/OMP-Live-Test auf der Ubuntu-VM ist nach dem Build noch erforderlich und darf nicht durch source-seitige Analyse ersetzt werden.
+
+---
+
+## Additive Abschluss-Validierung – 2026-11-21
+
+Diese Notiz ergänzt den Verifikationsbericht ohne bestehende Inhalte zu überschreiben.
+
+- Der gezielte Build auf `Compiler/samp03/gamemodes/gtasa_reallife.amx` wurde erneut mit dem angegebenen `qemu-i386`/`pawncc`-Kommando ausgeführt und als Exit-Code `0` bestätigt.
+- Die relevantesten Hardening-Pfade (`LoginSystem_AutoResolveFlow()`, `LoginSystem_AdvanceToStateSelection()`, `TutorialSystem_Next()`, `OnPlayerSpawn()`, `CameraSystem_ExitCameraMode()`) wurden für die validen State-/Home-State-Guards, den password-only-Flow und den Reset-/Cleanup-Pfad re-evaluiert.
+- Die UI-/Camera-/TextDraw-Sicherung blieb konsistent: `SetCameraBehindPlayer()`, `TogglePlayerControllable(playerid, 1)`, `INVALID_TEXT_DRAW`-Checks und der gültige `Core_*State`-Fallback-Pfad wurden in der aktuellen Source-Architektur sauber gehalten.
+- Ein Live-Serverstart unter Port 7780 blieb bewusst ungenutzt, da die reale Runtime-Freigabe nach wie vor ein getrenntes Gate auf der Ubuntu-VM darstellt.

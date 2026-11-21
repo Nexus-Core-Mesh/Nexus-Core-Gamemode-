@@ -123,9 +123,7 @@ stock CameraSystem_ToggleFreeCamera(playerid)
 {
     if (gCameraMode[playerid] == CAMERA_MODE_FREE && gCameraActive[playerid])
     {
-        CameraSystem_Reset(playerid);
-        SetCameraBehindPlayer(playerid);
-        TogglePlayerControllable(playerid, true);
+        CameraSystem_ExitCameraMode(playerid);
         SendClientMessage(playerid, 0x00D9FFFF, "[CAMERA] Freie Kamera beendet.");
         return;
     }

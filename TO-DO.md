@@ -195,3 +195,15 @@ Diese Eintragung ergänzt die vorhandenen Milestones ohne einen bestehenden Absc
 - Offlinestrategie bestätigt: `bash scripts/build_gamemode.sh` und die statischen Guards `(py_compile`, `bash -n`, `node --check`, Tool-Guard-Skripte) liefen erfolgreich durch.
 - Der Fortgang bleibt immer noch nicht als Live-Server-Start auf Port 7780 interpretiert; das bleibt ein separates Freigabe-Gate außerhalb der Code-Validierung.
 
+---
+
+## Additive Abschluss-Validierung – 2026-11-21
+
+Diese Abschlussnotiz ergänzt den Projekttracker, ohne frühere Einträge zu entfernen.
+
+- Finaler Build- und Hardening-Lauf: `LoginSystem_AutoResolveFlow()`, `LoginSystem_AdvanceToStateSelection()`, `TutorialSystem_Next()`, `OnPlayerSpawn()` und `CameraSystem_ExitCameraMode()` wurden in der aktuellen 7780-Source-Konfiguration geprüft und auf den menu-first-Flow mit gültigem State-/Home-State-Fallback ausgerichtet.
+- Passwort-Only-Onboarding bleibt auf `DIALOG_STYLE_INPUT` mit freiem Passwort-Feld beschränkt; alle Auswahlpunkte für Stadt/State und Tutorial-Schritte laufen über Dialog-/Menü-Buttons weiter.
+- State-/Home-State-Sicherung bleibt unverändert durch `Core_IsValidState()`, `Core_GetValidStateOrDefault()` und den bestehenden `DB_ValidateStateTransfer()`-Guard. Gültige Werte werden nicht durch spätere Reconnect-/Spawn-Pfade auf `0` zurückgesetzt.
+- Camera-/HUD-Cleanup blieb zentralisiert: `SetCameraBehindPlayer()` + `TogglePlayerControllable(playerid, 1)` wurden bei Reset/Exit gepflegt und der TextDraw-/HUD-Cleanup bleibt über `INVALID_TEXT_DRAW`-Checks abgesichert.
+- Build-Status: Der gezielte AMX-Build auf `Compiler/samp03/gamemodes/gtasa_reallife.amx` lief erfolgreich und hat Exit-Code `0` zurückgegeben; ein echter Live-Serverstart unter Port 7780 blieb bewusst aus, da die Freigabe dafür ausdrücklich offen bleibt.
+

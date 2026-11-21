@@ -38,13 +38,15 @@ stock LoginSystem_AutoResolveFlow(playerid)
     {
         gLoginState[playerid] = LOGIN_STATE_LOGIN;
         LoginSystem_ShowLoginScreen(playerid);
-        SendClientMessage(playerid, 0x00D9FFFF, "[LOGIN] Bestehender Account erkannt. Login wird gestartet.");
+        UiHub_ShowPasswordInput(playerid);
+        SendClientMessage(playerid, 0x00D9FFFF, "[LOGIN] Bestehender Account erkannt. Passwort eingeben und mit Menü-Weiter fortfahren.");
     }
     else
     {
         gLoginState[playerid] = LOGIN_STATE_REGISTER;
         LoginSystem_ShowRegisterScreen(playerid);
-        SendClientMessage(playerid, 0x00D9FFFF, "[LOGIN] Neuer Account erkannt. Registrierung wird gestartet.");
+        UiHub_ShowPasswordInput(playerid);
+        SendClientMessage(playerid, 0x00D9FFFF, "[LOGIN] Neuer Account erkannt. Passwort eingeben und Heimatstadt im Menü auswählen.");
     }
     TogglePlayerControllable(playerid, false);
 }

@@ -492,7 +492,18 @@ public OnPlayerSpawn(playerid)
         homeState = Core_GetValidStateOrDefault(homeState, stateid);
         Core_SetPlayerState(playerid, stateid);
         Core_SetPlayerHomeState(playerid, homeState);
+        DB_ValidateStateTransfer(playerid, stateid, homeState);
         DB_SavePlayerState(playerid, stateid);
+    }
+
+    if (!hasCompletedOnboarding && (!Core_IsValidState(homeState) || !Core_IsValidState(stateid)))
+    {
+        CameraSystem_Reset(playerid);
+        StateSpawnSystem_Apply(playerid, Core_GetValidStateOrDefault(homeState, stateid));
+        RoleplayUI_ShowDashboard(playerid);
+        PhoneSystem_OnPlayerConnect(playerid);
+        PrisonSystem_OnPlayerConnect(playerid);
+        return 1;
     }
 
     if (!hasCompletedOnboarding)

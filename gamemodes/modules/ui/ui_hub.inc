@@ -98,7 +98,7 @@ stock UiHub_ShowAuthMenu(playerid)
 
 stock UiHub_ShowPasswordInput(playerid)
 {
-    UiDialog_Show(playerid, DIALOG_UI_AUTH_PASSWORD, DIALOG_STYLE_INPUT, "Passwort", "Bitte Passwort eingeben:", "Weiter", "Zurück");
+    UiDialog_Show(playerid, DIALOG_UI_AUTH_PASSWORD, DIALOG_STYLE_INPUT, "Passwort", "Bitte Passwort nur als freie Texteingabe eingeben. Weitere Auswahl erfolgt im Menü.", "Weiter", "Zurück");
 }
 
 stock UiHub_ShowStatePick(playerid)
