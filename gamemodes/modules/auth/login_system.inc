@@ -248,8 +248,13 @@ stock LoginSystem_SetPlayerHomeState(playerid, stateid)
 {
     if (!Core_IsValidState(stateid))
     {
+        printf("[LOGIN] invalid home state rejected: player=%d state=%d", playerid, stateid);
         return;
     }
+
+    new oldHome = Core_GetPlayerHomeState(playerid);
+    new oldState = Core_GetPlayerState(playerid);
+    printf("[LOGIN] set home state: player=%d oldHome=%d oldState=%d new=%d", playerid, oldHome, oldState, stateid);
 
     Core_SetPlayerHomeState(playerid, stateid);
     Core_SetPlayerState(playerid, stateid);
@@ -289,6 +294,8 @@ stock LoginSystem_CompleteLogin(playerid)
         homeState = STATE_LOS_SANTOS;
     }
 
+    printf("[LOGIN] complete login: player=%d homeState=%d currentState=%d", playerid, homeState, Core_GetPlayerState(playerid));
+
     Core_SetPlayerHomeState(playerid, homeState);
     Core_SetPlayerState(playerid, homeState);
     gPlayerData[playerid][E_PLAYER_HOME_STATE] = homeState;
@@ -316,6 +323,8 @@ stock LoginSystem_CompleteReg(playerid)
     {
         homeState = STATE_LOS_SANTOS;
     }
+
+    printf("[LOGIN] complete registration: player=%d homeState=%d currentState=%d", playerid, homeState, Core_GetPlayerState(playerid));
 
     Core_SetPlayerHomeState(playerid, homeState);
     Core_SetPlayerState(playerid, homeState);

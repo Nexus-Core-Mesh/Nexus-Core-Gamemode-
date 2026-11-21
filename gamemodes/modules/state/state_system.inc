@@ -213,9 +213,12 @@ stock StateSystem_OnPlayerDisconnect(playerid, reason)
 
 stock StateSystem_OnPlayerSpawn(playerid)
 {
+    new stateid = Core_GetPlayerState(playerid);
+    new homeState = Core_GetPlayerHomeState(playerid);
     new stateName[32];
-    StateSystem_GetStateName(Core_GetPlayerState(playerid), stateName, sizeof(stateName));
+    StateSystem_GetStateName(stateid, stateName, sizeof(stateName));
 
+    printf("[STATE] spawn: player=%d state=%d home=%d name=%s", playerid, stateid, homeState, stateName);
     SendClientMessage(playerid, 0x00FF00AA, "[STATE] Aktueller Staat:");
     SendClientMessage(playerid, 0x00FF00AA, stateName);
 }

@@ -8,15 +8,21 @@ preserving valid plugin list entries and other user-managed configuration.
 
 from __future__ import annotations
 
+import argparse
 import json
-import re
 import secrets
 import sys
 from datetime import datetime
 from pathlib import Path
 
 
-def resolve_repo_root() -> Path:
+def resolve_repo_root(explicit_root: str | Path | None = None) -> Path:
+    if explicit_root is not None:
+        candidate = Path(explicit_root).expanduser().resolve()
+        if (candidate / "gamemodes" / "gamemode.pwn").is_file() and (candidate / "tools").is_dir():
+            return candidate
+        return candidate
+
     here = Path(__file__).resolve()
     candidates = [
         here.parent.parent,
@@ -36,7 +42,10 @@ REPO = resolve_repo_root()
 RUNTIME = REPO / "Compiler" / "samp03"
 ALERT_FILE = Path("/tmp/nexus_live_alert.json")
 FIX_LOG = Path("/tmp/nexus_autofix.log")
-PLACEHOLDER_START = "bash ./scripts/build_gamemode.sh"
+PLACEHOLDER_STARTS = (
+    "bash ./scripts/build_gamemode.sh",
+    "./dein_startskript_fuer_7780.sh",
+)
 SAFE_LINUX_PLUGIN_SUFFIXES = (".so", ".dll")
 
 
@@ -49,9 +58,9 @@ def log_msg(text: str):
 
 def classify_line(line: str):
     lower = line.lower()
-    if PLACEHOLDER_START in lower:
+    if any(marker in lower for marker in ("dein_startskript_fuer_7780.sh", "bash ./scripts/build_gamemode.sh")):
         return "FIX_PLACEHOLDER_START", "Platzhalter-Startskript im Repo gefunden"
-    if "default password" in lower or "changeme" in lower or "rcon_password" in lower and "changeme" in lower:
+    if "default password" in lower or "changeme" in lower or ("rcon_password" in lower and "changeme" in lower):
         return "FIX_RCON_DEFAULT", "Standard-rcon_password erkannt"
     if "cannot open shared object file" in lower or "plugin-datei nicht gefunden" in lower or "plugin-datei fehlt" in lower:
         return "FIX_PLUGIN_SO", "Plugin-Pfad oder .so-Endung in server.cfg fehlerhaft"
@@ -86,7 +95,7 @@ def scan_for_placeholder_start() -> list[Path]:
             content = path.read_text(encoding="utf-8", errors="replace")
         except OSError:
             continue
-        if PLACEHOLDER_START in content:
+        if any(marker in content for marker in PLACEHOLDER_STARTS):
             matches.append(path)
     return matches
 
@@ -96,7 +105,9 @@ def fix_placeholder_start():
     changed = 0
     for path in scan_for_placeholder_start():
         content = path.read_text(encoding="utf-8", errors="replace")
-        updated = content.replace(PLACEHOLDER_START, replacement)
+        updated = content
+        for marker in PLACEHOLDER_STARTS:
+            updated = updated.replace(marker, replacement)
         if updated != content:
             path.write_text(updated, encoding="utf-8")
             changed += 1
@@ -205,10 +216,26 @@ def fix_runtime_alias():
                 log_msg(f"[WARN] Legacy alias konnte nicht entfernt werden: {path} ({exc})")
 
 
-def main():
+def main(argv: list[str] | None = None):
+    parser = argparse.ArgumentParser(description="Offline-safe autofix for repo-local config and runtime hints.")
+    parser.add_argument("--root", type=str, default=None, help="Project root to operate on")
+    parser.add_argument("--ingest", nargs="+", default=None, help="Ingest a log line to emit a live alert")
+    args = parser.parse_args(argv)
+
+    global REPO, RUNTIME
+    if args.root is not None:
+        REPO = resolve_repo_root(args.root)
+        RUNTIME = REPO / "Compiler" / "samp03"
+
     FIX_LOG.parent.mkdir(parents=True, exist_ok=True)
     FIX_LOG.write_text("", encoding="utf-8")
     log_msg(f"[START] Repo-root: {REPO}")
+
+    if args.ingest is not None:
+        publish_alert(" ".join(args.ingest))
+        log_msg(f"[INGEST] {args.ingest[0] if args.ingest else ''}")
+        return 0
+
     fix_placeholder_start()
     fix_rcon_default()
     fix_plugin_so()

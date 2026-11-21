@@ -401,7 +401,13 @@ stock Core_SetPlayerState(playerid, stateid)
     }
     if (!Core_IsValidState(stateid))
     {
+        printf("[CORE] invalid state rejected: player=%d state=%d", playerid, stateid);
         return;
+    }
+    new oldState = gPlayerData[playerid][E_PLAYER_STATE];
+    if (oldState != stateid)
+    {
+        printf("[CORE] state transition: player=%d old=%d new=%d", playerid, oldState, stateid);
     }
     gPlayerData[playerid][E_PLAYER_STATE] = stateid;
 }
@@ -414,7 +420,13 @@ stock Core_SetPlayerHomeState(playerid, stateid)
     }
     if (!Core_IsValidState(stateid))
     {
+        printf("[CORE] invalid home-state rejected: player=%d state=%d", playerid, stateid);
         return;
+    }
+    new oldState = gPlayerData[playerid][E_PLAYER_HOME_STATE];
+    if (oldState != stateid)
+    {
+        printf("[CORE] home-state transition: player=%d old=%d new=%d", playerid, oldState, stateid);
     }
     gPlayerData[playerid][E_PLAYER_HOME_STATE] = stateid;
 }

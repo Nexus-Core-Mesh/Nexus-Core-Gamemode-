@@ -37,6 +37,23 @@ def validate_cfg(root: Path, do_fix: bool = False):
     server_cfg_path = root / "server.cfg"
     sql_cfg_path = root / "sql.cfg"
 
+    def plugin_exists(plugin_name: str) -> bool:
+        if not plugin_name:
+            return False
+        normalized = plugin_name.strip()
+        if normalized.endswith((".so", ".dll")):
+            candidates = [root / "plugins" / normalized, root / normalized]
+        else:
+            candidates = [
+                root / "plugins" / normalized,
+                root / "plugins" / f"{normalized}.so",
+                root / "plugins" / f"{normalized}.dll",
+                root / normalized,
+                root / f"{normalized}.so",
+                root / f"{normalized}.dll",
+            ]
+        return any(path.exists() for path in candidates)
+
     if not server_cfg_path.exists():
         issues.append(f"[ERROR] server.cfg fehlt: {server_cfg_path}")
     else:
@@ -57,10 +74,8 @@ def validate_cfg(root: Path, do_fix: bool = False):
                 issues.append("[WARN] plugins-Liste ist leer")
             else:
                 for plugin in plugins:
-                    plugin_path = root / "plugins" / plugin
-                    if plugin_path.exists() is False and not plugin.endswith(".dll"):
-                        if not (root / f"{plugin}").exists():
-                            issues.append(f"[WARN] Plugin-Datei nicht gefunden: {plugin}")
+                    if not plugin_exists(plugin):
+                        issues.append(f"[WARN] Plugin-Datei nicht gefunden: {plugin}")
 
         hostname = cfg.get("hostname", "")
         if not hostname or hostname.lower() in {"changeme", "localhost", "example", "default"}:

@@ -20,9 +20,14 @@ def resolve_repo_root() -> Path:
         Path.home() / "Nexus-Core-Gamemode-",
         Path.home() / "studious-fishstick",
     ]
+    seen = set()
     for candidate in candidates:
-        if (candidate / "gamemodes" / "gamemode.pwn").is_file() and (candidate / "tools").is_dir():
-            return candidate.resolve()
+        resolved = candidate.resolve()
+        if resolved in seen:
+            continue
+        seen.add(resolved)
+        if (resolved / "gamemodes" / "gamemode.pwn").is_file() and (resolved / "tools").is_dir():
+            return resolved
     return Path.cwd().resolve()
 
 

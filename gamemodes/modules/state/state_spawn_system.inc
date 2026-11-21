@@ -88,6 +88,8 @@ stock StateSpawnSystem_Apply(playerid, stateid)
         safeHomeState = safeState;
     }
 
+    printf("[STATE] apply spawn: player=%d requested=%d safe=%d home=%d", playerid, stateid, safeState, safeHomeState);
+
     Core_SetPlayerState(playerid, safeState);
     Core_SetPlayerHomeState(playerid, safeHomeState);
     DB_ValidateStateTransfer(playerid, safeState, safeHomeState);

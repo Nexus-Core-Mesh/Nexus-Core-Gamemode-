@@ -431,6 +431,7 @@ stock DB_SetPlayerState(playerid, stateid)
     new normalizedState = Core_GetValidStateOrDefault(stateid, Core_GetPlayerState(playerid));
     if (!Core_IsValidState(normalizedState))
     {
+        printf("[DB] rejected invalid state assignment: player=%d requested=%d", playerid, stateid);
         return false;
     }
 
@@ -439,6 +440,8 @@ stock DB_SetPlayerState(playerid, stateid)
     {
         homeState = normalizedState;
     }
+
+    printf("[DB] persist state: player=%d state=%d home=%d", playerid, normalizedState, homeState);
 
     if (!DB_EnsurePlayerRecord(playerid, normalizedState))
     {
@@ -650,6 +653,7 @@ stock DB_SavePlayerState(playerid, stateid)
     new normalizedState = Core_GetValidStateOrDefault(stateid, Core_GetPlayerState(playerid));
     if (!Core_IsValidState(normalizedState))
     {
+        printf("[DB] save rejected invalid state: player=%d requested=%d", playerid, stateid);
         return false;
     }
 
@@ -663,6 +667,8 @@ stock DB_SavePlayerState(playerid, stateid)
     {
         homeState = normalizedState;
     }
+
+    printf("[DB] save snapshot: player=%d state=%d home=%d", playerid, normalizedState, homeState);
 
     gDBPlayerStateCache[playerid] = normalizedState;
     gDBPlayerHomeStateCache[playerid] = homeState;
