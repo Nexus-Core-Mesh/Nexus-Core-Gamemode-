@@ -108,6 +108,10 @@
 
 #define SERVER_NAME "GTA:SA Reallife Modular"
 
+main()
+{
+}
+
 public OnGameModeInit()
 {
     print("==================================================");
@@ -144,6 +148,7 @@ public OnGameModeInit()
     Core_PrintRuntimeRegistry();
 
     InitCore();
+    Core_MarkModuleReady("core");
     DB_Initialize();
     Core_SetLifecycleStage(CORE_LIFECYCLE_DB_READY);
     DB_EnsureInventorySchema();
@@ -164,19 +169,28 @@ public OnGameModeInit()
     MarketSystem_Initialize();
     DispatchSystem_Initialize();
     StateBank_Initialize();
+    Core_MarkModuleReady("state");
+    Core_MarkModuleReady("economy");
     Core_SetLifecycleStage(CORE_LIFECYCLE_STATE_READY);
     AdminSystem_Initialize();
     StateAdminSystem_Initialize();
     AdminMappingSystem_Initialize();
+    Core_MarkModuleReady("admin");
+    Core_MarkModuleReady("security");
     JobsCore_Initialize();
     StateJobs_Initialize();
     LoginSystem_Initialize();
+    Core_MarkModuleReady("auth");
     Core_SetLifecycleStage(CORE_LIFECYCLE_AUTH_READY);
     CameraSystem_Initialize();
     TutorialSystem_Initialize();
+    Core_MarkModuleReady("camera");
+    Core_MarkModuleReady("tutorial");
     GovernmentSystem_Initialize();
     HouseSystem_Initialize();
     BusinessSystem_Initialize();
+    Core_MarkModuleReady("housing");
+    Core_MarkModuleReady("business");
     FactionSystem_Initialize();
     GangWarSystem_Initialize();
     GangFightSystem_Initialize();
@@ -205,8 +219,11 @@ public OnGameModeInit()
     DealershipSystem_Initialize();
     TuningSystem_Initialize();
     UBBVehicleSystem_Initialize();
+    Core_MarkModuleReady("vehicles");
+    Core_MarkModuleReady("inventory");
     FuelStationSystem_Initialize();
     WebBridge_Initialize();
+    Core_MarkModuleReady("web");
     EventSystem_Initialize();
     GymSystem_Initialize();
     FishingSystem_Initialize();
@@ -230,12 +247,14 @@ public OnGameModeInit()
     RelationshipSystem_Initialize();
     StateLedgerSystem_Initialize();
     RoleplayUI_Initialize();
+    Core_MarkModuleReady("social");
     Core_SetLifecycleStage(CORE_LIFECYCLE_WORLD_READY);
     JobCenter_Initialize();
     TextWars_Initialize();
     StateControl_Initialize();
-    UiHub_Initialize();
+    PremiumSystem_Initialize();
     Core_SetLifecycleStage(CORE_LIFECYCLE_RUNTIME_READY);
+    UiHub_Initialize();
     Core_PrintLifecycleReport();
 
     print("==================================================");
