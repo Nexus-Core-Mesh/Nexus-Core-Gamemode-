@@ -100,7 +100,7 @@ Details zu Commands: `COMMANDS.md`, zu TextDraws: `TEXTDRAWS.md`.
 | Prison | `justice/prison_system.inc` | Justiz/Haft |
 | Court | `justice/court_system.inc` | Gericht |
 | Emergency | `emergency/emergency_system.inc` | Polizei/EMS |
-| Dispatch | `emergency/dispatch_system.inc` | Notruf-Queue |
+| Dispatch | `emergency/dispatch_system.inc` | Notruf-Queue (`/dispatch`, `/acceptcall` aktiv angebunden) |
 | EMS Hospital | `medical/ems_hospital.inc` | Krankenhäuser/Versicherung |
 | Drugs | `drugs/drug_system.inc` | Drogenmarkt (TD, derzeit ohne Aufrufer) |
 

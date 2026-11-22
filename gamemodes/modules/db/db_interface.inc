@@ -55,7 +55,8 @@ stock DB_InitializeRuntimeCaches()
         {
             gDBPlayerInventoryCache[playerid][slot] = 0;
             gDBPlayerInventoryQtyCache[playerid][slot] = 0;
-            format(gDBPlayerInventoryMetaCache[playerid][slot], 32, "NONE");
+            gDBPlayerInventoryMetaCache[playerid][slot][0] = EOS;
+            strcat(gDBPlayerInventoryMetaCache[playerid][slot], "NONE", 32);
         }
     }
 
@@ -65,7 +66,8 @@ stock DB_InitializeRuntimeCaches()
         {
             gDBHouseStorageCache[houseid][slot] = 0;
             gDBHouseStorageQtyCache[houseid][slot] = 0;
-            format(gDBHouseStorageMetaCache[houseid][slot], 32, "NONE");
+            gDBHouseStorageMetaCache[houseid][slot][0] = EOS;
+            strcat(gDBHouseStorageMetaCache[houseid][slot], "NONE", 32);
         }
     }
 

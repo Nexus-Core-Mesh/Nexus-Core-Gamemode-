@@ -93,7 +93,7 @@ Admin-Ränge (`core.inc`): 1 Support, 2 Moderator, 3 State-Admin, 4 State-Leader
 | `/police` | – | Polizeiaktion (nur Polizei) | aktiv |
 | `/stations` | – | Wachen/Stationen anzeigen | aktiv |
 | `/dispatch` | – | Dispatch-Queue | aktiv (Inline in `gamemode.pwn`) |
-| `/acceptcall` | `<ID>` | Notruf annehmen | **nicht angebunden** (`DispatchSystem_HandleCommand` wird nie aufgerufen) |
+| `/acceptcall` | `<ID>` | Notruf annehmen | aktiv (`DispatchSystem_HandleCommand` im `OnPlayerCommandText()`-Pfad angebunden) |
 
 ### Events (`modules/events/state_event_system.inc`)
 | Command | Parameter | Rang | Status |
@@ -183,7 +183,7 @@ Admin-Ränge (`core.inc`): 1 Support, 2 Moderator, 3 State-Admin, 4 State-Leader
 
 ## 4. Bekannte Auffälligkeiten
 
-- `/acceptcall` ist unerreichbar (Handler nicht eingehängt).
+- `/acceptcall` ist nun über den zentralen `OnPlayerCommandText()`-Pfad erreichbar und als aktiv dokumentiert.
 - Doppelte/verdeckte Commands: `/me`, `/do`, `/report` (RoleplayCommand), `/spawn`, `/garage`, `/weapons`, `/state` (Inline), `/gangwar`.
 - `/pm` und `/gang` sind nur Platzhalter ohne Logik.
 - Module ohne eigenen Command (nur indirekt über Menüs/Dialoge): Premium, Season, Inventar-Aktionen, Business, Haus, Jobcenter, State-Control (Leitstand-Dialoge).

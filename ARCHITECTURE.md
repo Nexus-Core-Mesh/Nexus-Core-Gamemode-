@@ -39,6 +39,15 @@ Die Kernidee ist eine saubere Trennung von Verantwortlichkeiten, damit das Syste
 
 Das wichtigste Designprinzip lautet: Der Quellcode wird im Root entwickelt, gebaut und kompiliert, während der Serverordner nur die Laufzeitbinary und runtime-required Files enthält. Dadurch bleibt die Deployment-Kette reproduzierbar und frei von veralteten Alias-Dateien. Die Architektur ist bewusst auf den Dini-first-Laufpfad ausgelegt; SQLite/MySQL sind optionale Konsistenz- und Monitoring-Schnittstellen, nicht die primäre Runtime-Quelle.
 
+### Projektgewichtung Persistenz: 51 % SQLite / 49 % Dini
+
+Die projektweite Persistenzstrategie bleibt bewusst hybrid:
+
+- SQLite (51 %): primäre Konsistenz- und Synchronisationsschicht für Datenmodelle, Schema-Integrity, Upserts und Read-Only-/Dashboard-Views (`data/db/gtasa_reallife.db`, `control-panel/server.js`).
+- Dini (49 %): primäre Runtime-/Save-Quelle unter `Compiler/samp03/scriptfiles/` mit `temp -> validate -> rename`-Mechanik, Reparaturpfaden und klaren Fallback-Checks ohne parallele Shadow-State-Speicher.
+
+Darin bleibt `gamemodes/modules/core/core.inc` die einzige Source of Truth für State- und Bank-/Cash-Werte; Dini- und SQLite-Pfade dienen der verlässlichen Persistenz und der Operationssicht, aber nicht als zweite State-Quelle im laufenden Serverzustand.
+
 ---
 
 ## 🏗️ 2. Verzeichnisstruktur und Dateizuordnung

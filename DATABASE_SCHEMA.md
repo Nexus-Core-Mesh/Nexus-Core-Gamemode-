@@ -50,7 +50,16 @@ Die relevanten Laufzeit-/Verzeichnisbereiche sind:
 - `backup/`
 - `logs/`
 
-Dieser Pfad ist in der Architektur-Doku explizit beschrieben и als primäre Persistenzlogik vorgesehen.
+Dieser Pfad ist in der Architektur-Doku explizit beschrieben und als primäre Persistenzlogik vorgesehen.
+
+## 3.1 Gewichtung SQLite vs. Dini (51/49)
+
+Die projektweit vereinbarte Lastverteilung lautet:
+
+- SQLite: 51 % – für DB-Interface, Schema-Repair, Transaktionen, Upserts und die produktive Synchronisation mit `data/db/gtasa_reallife.db` sowie `control-panel/server.js`.
+- Dini: 49 % – für durehafte INI-/Dateisaves unter `Compiler/samp03/scriptfiles/` inklusive `temp -> validate -> rename`, Repairs, Fallbacks und Dateistruktur-Erhaltung.
+
+Wesentlicher Punkt: Dini bleibt der stabile Dateisystem-Laufpfad, aber `core.inc` bleibt immer die einzige State-Quelle für `state_id`, `home_state`, Bank/Cash, Admin-Ränge (`1–5`) und `Core_IsProjectLeader()`. SQLite und Dini dienen zur Konsistenz, nicht zum parallelen Shadow-State-System.
 
 ## 4. Runtime-Caches
 

@@ -16,6 +16,7 @@ stock WebBridge_Initialize()
         gUcpAuthState[i] = UCP_AUTH_NONE;
         gUcpTicketCount[i] = 0;
     }
+    Core_MarkModuleReady("web");
     print("[WEB] UCP-/Web-Bridge initialisiert");
 }
 

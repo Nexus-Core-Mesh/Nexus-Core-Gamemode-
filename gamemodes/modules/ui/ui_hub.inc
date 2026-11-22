@@ -430,13 +430,18 @@ stock UiHub_ShowPhoneMessages(playerid)
 
 stock UiHub_ShowBusinessList(playerid)
 {
+    if (!Core_IsValidPlayerId(playerid))
+    {
+        return 0;
+    }
+
     new list[1536];
     format(list, sizeof(list), "Business\tStaat\tWert\tStatus\n");
     gUiPickCount[playerid] = 0;
 
     for (new b = 0; b < MAX_BUSINESSES && gUiPickCount[playerid] < UI_MAX_PICK; b++)
     {
-        if (gBizActive[b] != 1 || !Core_IsValidState(gBizState[b]))
+        if (b < 0 || b >= MAX_BUSINESSES || gBizActive[b] != 1 || !Core_IsValidState(gBizState[b]))
         {
             continue;
         }
@@ -452,12 +457,13 @@ stock UiHub_ShowBusinessList(playerid)
     if (gUiPickCount[playerid] == 0)
     {
         UiHub_ShowText(playerid, "Business-Verwaltung", "Aktuell sind keine aktiven Businesses verfügbar.");
-        return;
+        return 0;
     }
 
     new const bizCaption[] = "Business-Verwaltung";
     new const bizButton[] = "Öffnen";
     UiDialog_Show(playerid, DIALOG_UI_BIZ_LIST, DIALOG_STYLE_TABLIST_HEADERS, bizCaption, list, bizButton, UI_DIALOG_BUTTON_CLOSE);
+    return 1;
 }
 
 stock UiHub_ShowBusinessAction(playerid, bizid)
@@ -465,7 +471,7 @@ stock UiHub_ShowBusinessAction(playerid, bizid)
     if (!Core_IsValidPlayerId(playerid) || bizid < 0 || bizid >= MAX_BUSINESSES || gBizActive[bizid] != 1 || !Core_IsValidState(gBizState[bizid]))
     {
         UiHub_ShowBusinessList(playerid);
-        return;
+        return 0;
     }
 
     new title[48];
@@ -485,6 +491,7 @@ stock UiHub_ShowBusinessAction(playerid, bizid)
         new const bizInfo[] = "Informationen";
         UiDialog_Show(playerid, DIALOG_UI_BIZ_ACTION, DIALOG_STYLE_LIST, title, bizInfo, UI_DIALOG_BUTTON_OK, UI_DIALOG_BUTTON_BACK);
     }
+    return 1;
 }
 
 // ---------------------------------------------------------------- Ammu-Nation
