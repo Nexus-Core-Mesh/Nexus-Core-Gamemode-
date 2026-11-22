@@ -267,15 +267,20 @@ stock StateSystem_GetStateName(stateid, output[], len)
 
 stock StateSystem_SpawnPlayerForState(playerid, stateid)
 {
-    new normalizedState = StateSystem_NormalizeStateId(stateid);
+    new normalizedState = Core_GetValidStateOrDefault(StateSystem_NormalizeStateId(stateid), STATE_LOS_SANTOS);
 
     if (!Core_IsValidState(normalizedState))
     {
-        return;
+        normalizedState = STATE_LOS_SANTOS;
     }
 
+    SetPlayerInterior(playerid, 0);
+    SetPlayerVirtualWorld(playerid, 0);
     SetPlayerPos(playerid, gStateSpawnX[normalizedState], gStateSpawnY[normalizedState], gStateSpawnZ[normalizedState]);
     SetPlayerFacingAngle(playerid, 0.0);
+    CameraSystem_ExitCameraMode(playerid);
+    SetCameraBehindPlayer(playerid);
+    TogglePlayerControllable(playerid, 1);
     Core_SetPlayerState(playerid, normalizedState);
     Core_SetPlayerHomeState(playerid, normalizedState);
 }

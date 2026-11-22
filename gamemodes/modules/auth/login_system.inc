@@ -3,26 +3,45 @@
 
 #include <a_samp>
 
+#if !defined TUTORIAL_STAGE_NONE
+#define TUTORIAL_STAGE_NONE 0
+#endif
+#if !defined TUTORIAL_STAGE_INTRO
+#define TUTORIAL_STAGE_INTRO 1
+#endif
+#if !defined TUTORIAL_STAGE_HOME
+#define TUTORIAL_STAGE_HOME 2
+#endif
+#if !defined TUTORIAL_STAGE_GOV
+#define TUTORIAL_STAGE_GOV 3
+#endif
+#if !defined TUTORIAL_STAGE_FINISH
+#define TUTORIAL_STAGE_FINISH 4
+#endif
+
 #define LOGIN_STATE_NONE 0
 #define LOGIN_STATE_REGISTER 1
 #define LOGIN_STATE_LOGIN 2
 #define LOGIN_STATE_ACTIVE 3
 
-new gLoginState[MAX_PLAYERS];
-new bool:gLoginAccountExists[MAX_PLAYERS];
+new gPlayerLoginState[MAX_PLAYERS];
+new gLoginAccountExists[MAX_PLAYERS];
 new Text:gLoginTD[MAX_PLAYERS][12];
 
-stock bool:LoginSystem_HandleClickTextDraw(playerid, Text:clickedid)
+forward TutorialSystem_Start(playerid);
+forward int:TutorialSystem_GetCurrentStage(playerid);
+
+stock LoginSystem_HandleClickTextDraw(playerid, Text:clickedid)
 {
     if (!Core_IsValidPlayerId(playerid))
     {
-        return false;
+        return 0;
     }
 
     if (clickedid == Text:INVALID_TEXT_DRAW)
     {
         CancelSelectTextDraw(playerid);
-        return true;
+        return 1;
     }
 
     for (new i = 0; i < 12; i++)
@@ -32,65 +51,101 @@ stock bool:LoginSystem_HandleClickTextDraw(playerid, Text:clickedid)
             continue;
         }
 
-        if (gLoginState[playerid] == LOGIN_STATE_LOGIN)
+        if (gPlayerLoginState[playerid] == LOGIN_STATE_LOGIN)
         {
             if (i == 5)
             {
                 UiHub_ShowPasswordInput(playerid);
-                return true;
+                return 1;
             }
             if (i == 6)
             {
                 LoginSystem_CompleteLogin(playerid);
-                return true;
+                return 1;
             }
-            return false;
+            return 0;
         }
 
-        if (gLoginState[playerid] == LOGIN_STATE_REGISTER)
+        if (gPlayerLoginState[playerid] == LOGIN_STATE_REGISTER)
         {
             if (i == 6)
             {
                 UiHub_ShowPasswordInput(playerid);
-                return true;
+                return 1;
             }
             if (i == 7)
             {
                 LoginSystem_CompleteReg(playerid);
-                return true;
+                return 1;
             }
             if (i == 8)
             {
                 LoginSystem_SetPlayerHomeState(playerid, STATE_LOS_SANTOS);
-                return true;
+                return 1;
             }
             if (i == 9)
             {
                 LoginSystem_SetPlayerHomeState(playerid, STATE_SAN_FIERRO);
-                return true;
+                return 1;
             }
             if (i == 10)
             {
                 LoginSystem_SetPlayerHomeState(playerid, STATE_LAS_VENTURAS);
-                return true;
+                return 1;
             }
             if (i == 11)
             {
                 TutorialSystem_Start(playerid);
-                return true;
+                return 1;
             }
-            return false;
+            return 0;
         }
 
-        return false;
+        return 0;
     }
 
-    return false;
+    return 0;
 }
 
 stock LoginSystem_Initialize()
 {
     print("[LOGIN] Textdraw-Login Modul initialisiert");
+}
+
+stock LoginSystem_IsRegistered(playerid)
+{
+    if (!Core_IsValidPlayerId(playerid))
+    {
+        return 0;
+    }
+
+    if (gLoginAccountExists[playerid])
+    {
+        return 1;
+    }
+
+    if (gPlayerData[playerid][E_PLAYER_LEVEL] > 1)
+    {
+        return 1;
+    }
+    if (gPlayerData[playerid][E_PLAYER_BANK] != 2500 || gPlayerBank[playerid] != 2500)
+    {
+        return 1;
+    }
+    if (gPlayerCash[playerid] != 2500)
+    {
+        return 1;
+    }
+    if (gPlayerData[playerid][E_PLAYER_ADMIN_LEVEL] > 0 || gPlayerData[playerid][E_PLAYER_PROJECT_LEADER] == 1)
+    {
+        return 1;
+    }
+    if (gPlayerData[playerid][E_PLAYER_WANTED] > 0 || gPlayerData[playerid][E_PLAYER_JAIL_ACTIVE] == 1)
+    {
+        return 1;
+    }
+
+    return 0;
 }
 
 stock LoginSystem_AutoResolveFlow(playerid)
@@ -100,35 +155,45 @@ stock LoginSystem_AutoResolveFlow(playerid)
         return;
     }
 
-    gLoginAccountExists[playerid] = false;
+    new registered = LoginSystem_IsRegistered(playerid);
+    gLoginAccountExists[playerid] = registered;
 
-    if (Core_IsValidState(Core_GetPlayerState(playerid)))
+    if (registered)
     {
-        gLoginAccountExists[playerid] = true;
-    }
-    else if (Core_IsValidState(Core_GetPlayerHomeState(playerid)))
-    {
-        gLoginAccountExists[playerid] = true;
-    }
-    else if (gPlayerData[playerid][E_PLAYER_LEVEL] > 1 || gPlayerData[playerid][E_PLAYER_BANK] > 0 || gPlayerCash[playerid] > 0)
-    {
-        gLoginAccountExists[playerid] = true;
-    }
-
-    if (gLoginAccountExists[playerid])
-    {
-        gLoginState[playerid] = LOGIN_STATE_LOGIN;
+        gPlayerLoginState[playerid] = LOGIN_STATE_LOGIN;
+        LoginSystem_HideLoginScreen(playerid);
+        LoginSystem_HideRegisterScreen(playerid);
         LoginSystem_ShowLoginScreen(playerid);
         UiHub_ShowPasswordInput(playerid);
-        SendClientMessage(playerid, 0x00D9FFFF, "[LOGIN] Bestehender Account erkannt. Passwort eingeben und mit Menü-Weiter fortfahren.");
+        SendClientMessage(playerid, 0x00D9FFFF, "[LOGIN] Bestehender Account erkannt. Bitte Passwort eingeben und mit Weiter fortfahren.");
     }
     else
     {
-        gLoginState[playerid] = LOGIN_STATE_REGISTER;
+        new defaultState = Core_GetValidStateOrDefault(Core_GetPlayerState(playerid), STATE_LOS_SANTOS);
+        new defaultHomeState = Core_GetValidStateOrDefault(Core_GetPlayerHomeState(playerid), defaultState);
+
+        if (!Core_IsValidState(defaultState))
+        {
+            defaultState = STATE_LOS_SANTOS;
+        }
+        if (!Core_IsValidState(defaultHomeState))
+        {
+            defaultHomeState = defaultState;
+        }
+
+        Core_SetPlayerHomeState(playerid, defaultHomeState);
+        Core_SetPlayerState(playerid, defaultState);
+        gPlayerData[playerid][E_PLAYER_HOME_STATE] = defaultHomeState;
+        gPlayerData[playerid][E_PLAYER_STATE] = defaultState;
+
+        gPlayerLoginState[playerid] = LOGIN_STATE_REGISTER;
+        LoginSystem_HideLoginScreen(playerid);
+        LoginSystem_HideRegisterScreen(playerid);
         LoginSystem_ShowRegisterScreen(playerid);
-        UiHub_ShowPasswordInput(playerid);
-        SendClientMessage(playerid, 0x00D9FFFF, "[LOGIN] Neuer Account erkannt. Passwort eingeben und Heimatstadt im Menü auswählen.");
+        TutorialSystem_Start(playerid);
+        SendClientMessage(playerid, 0x00D9FFFF, "[LOGIN] Neuer Spieler erkannt. Tutorial startet und der Account-Start wird vorbereitet.");
     }
+
     TogglePlayerControllable(playerid, false);
 }
 
@@ -139,7 +204,7 @@ stock LoginSystem_AdvanceToStateSelection(playerid)
         return;
     }
 
-    gLoginState[playerid] = LOGIN_STATE_ACTIVE;
+    gPlayerLoginState[playerid] = LOGIN_STATE_ACTIVE;
     CameraSystem_Reset(playerid);
     if (!Core_IsValidState(Core_GetPlayerHomeState(playerid)))
     {
@@ -155,7 +220,7 @@ stock LoginSystem_OnPlayerConnect(playerid)
         return;
     }
 
-    gLoginState[playerid] = LOGIN_STATE_NONE;
+    gPlayerLoginState[playerid] = LOGIN_STATE_NONE;
     gLoginAccountExists[playerid] = false;
 
     new defaultState = Core_GetValidStateOrDefault(gPlayerData[playerid][E_PLAYER_STATE], STATE_LOS_SANTOS);
@@ -189,7 +254,7 @@ stock LoginSystem_OnPlayerDisconnect(playerid, reason)
     LoginSystem_HideRegisterScreen(playerid);
     LoginSystem_HideLoginScreen(playerid);
     CancelSelectTextDraw(playerid);
-    gLoginState[playerid] = LOGIN_STATE_NONE;
+    gPlayerLoginState[playerid] = LOGIN_STATE_NONE;
     gLoginAccountExists[playerid] = false;
 
     new preservedState = Core_GetValidStateOrDefault(gPlayerData[playerid][E_PLAYER_STATE], STATE_LOS_SANTOS);
@@ -208,10 +273,7 @@ stock LoginSystem_OnPlayerDisconnect(playerid, reason)
     gPlayerData[playerid][E_PLAYER_HOME_STATE] = preservedHomeState;
     gPlayerData[playerid][E_PLAYER_STATE] = preservedState;
     Core_NormalizePlayerState(playerid);
-    if (playerid >= 0 && playerid < MAX_PLAYERS)
-    {
-        gLoginState[playerid] = LOGIN_STATE_NONE;
-    }
+    gPlayerLoginState[playerid] = LOGIN_STATE_NONE;
 }
 
 stock LoginSystem_ShowLoginScreen(playerid)
@@ -455,7 +517,7 @@ stock LoginSystem_SetPlayerHomeState(playerid, stateid)
     Core_SetPlayerState(playerid, stateid);
     gPlayerData[playerid][E_PLAYER_HOME_STATE] = stateid;
     gPlayerData[playerid][E_PLAYER_STATE] = stateid;
-    gLoginState[playerid] = LOGIN_STATE_ACTIVE;
+    gPlayerLoginState[playerid] = LOGIN_STATE_ACTIVE;
     gLoginAccountExists[playerid] = true;
     TogglePlayerControllable(playerid, true);
 
@@ -471,7 +533,41 @@ stock LoginSystem_SetPlayerHomeState(playerid, stateid)
 
 stock LoginSystem_IsActive(playerid)
 {
-    return gLoginState[playerid] == LOGIN_STATE_ACTIVE;
+    return gPlayerLoginState[playerid] == LOGIN_STATE_ACTIVE;
+}
+
+stock LoginSystem_ActivateSession(playerid, stateid)
+{
+    if (!Core_IsValidPlayerId(playerid))
+    {
+        return;
+    }
+
+    new safeState = Core_GetValidStateOrDefault(stateid, Core_GetPlayerState(playerid));
+    if (!Core_IsValidState(safeState))
+    {
+        safeState = STATE_LOS_SANTOS;
+    }
+
+    new safeHomeState = Core_GetValidStateOrDefault(Core_GetPlayerHomeState(playerid), safeState);
+    if (!Core_IsValidState(safeHomeState))
+    {
+        safeHomeState = safeState;
+    }
+
+    Core_SetPlayerState(playerid, safeState);
+    Core_SetPlayerHomeState(playerid, safeHomeState);
+    gPlayerData[playerid][E_PLAYER_STATE] = safeState;
+    gPlayerData[playerid][E_PLAYER_HOME_STATE] = safeHomeState;
+    gPlayerLoginState[playerid] = LOGIN_STATE_ACTIVE;
+    gLoginAccountExists[playerid] = true;
+    TogglePlayerControllable(playerid, true);
+
+    LoginSystem_HideLoginScreen(playerid);
+    LoginSystem_HideRegisterScreen(playerid);
+
+    DB_ValidateStateTransfer(playerid, safeState, safeHomeState);
+    DB_SavePlayerState(playerid, safeState);
 }
 
 stock int:LoginSystem_GetHomeState(playerid)
@@ -486,28 +582,18 @@ stock LoginSystem_CompleteLogin(playerid)
         return;
     }
 
-    LoginSystem_HideLoginScreen(playerid);
-    LoginSystem_HideRegisterScreen(playerid);
-    gLoginState[playerid] = LOGIN_STATE_ACTIVE;
-    gLoginAccountExists[playerid] = true;
-
     new homeState = Core_GetValidStateOrDefault(Core_GetPlayerHomeState(playerid), Core_GetPlayerState(playerid));
     if (!Core_IsValidState(homeState))
     {
         homeState = STATE_LOS_SANTOS;
     }
 
-    Core_SetPlayerHomeState(playerid, homeState);
-    Core_SetPlayerState(playerid, homeState);
-    gPlayerData[playerid][E_PLAYER_HOME_STATE] = homeState;
-    gPlayerData[playerid][E_PLAYER_STATE] = homeState;
-    DB_ValidateStateTransfer(playerid, homeState, homeState);
-    DB_SavePlayerState(playerid, homeState);
-
-    TogglePlayerControllable(playerid, true);
+    LoginSystem_ActivateSession(playerid, homeState);
+    LoginSystem_HideLoginScreen(playerid);
+    LoginSystem_HideRegisterScreen(playerid);
     SendClientMessage(playerid, 0x00FF00AA, "[LOGIN] Login erfolgreich. Das Tutorial startet nun.");
     CameraSystem_PlayStateScene(playerid, homeState);
-    if (!Core_IsValidState(Core_GetPlayerHomeState(playerid)) || gTutorialStage[playerid] < TUTORIAL_STAGE_FINISH)
+    if (!Core_IsValidState(Core_GetPlayerHomeState(playerid)) || TutorialSystem_GetCurrentStage(playerid) < TUTORIAL_STAGE_FINISH)
     {
         TutorialSystem_Start(playerid);
     }
@@ -520,28 +606,18 @@ stock LoginSystem_CompleteReg(playerid)
         return;
     }
 
-    LoginSystem_HideRegisterScreen(playerid);
-    LoginSystem_HideLoginScreen(playerid);
-    gLoginState[playerid] = LOGIN_STATE_ACTIVE;
-    gLoginAccountExists[playerid] = true;
-
     new homeState = Core_GetValidStateOrDefault(Core_GetPlayerHomeState(playerid), Core_GetPlayerState(playerid));
     if (!Core_IsValidState(homeState))
     {
         homeState = STATE_LOS_SANTOS;
     }
 
-    Core_SetPlayerHomeState(playerid, homeState);
-    Core_SetPlayerState(playerid, homeState);
-    gPlayerData[playerid][E_PLAYER_HOME_STATE] = homeState;
-    gPlayerData[playerid][E_PLAYER_STATE] = homeState;
-    DB_ValidateStateTransfer(playerid, homeState, homeState);
-    DB_SavePlayerState(playerid, homeState);
-
-    TogglePlayerControllable(playerid, true);
+    LoginSystem_ActivateSession(playerid, homeState);
+    LoginSystem_HideLoginScreen(playerid);
+    LoginSystem_HideRegisterScreen(playerid);
     SendClientMessage(playerid, 0x00FF00AA, "[LOGIN] Registrierung erfolgreich. Das Tutorial startet nun.");
     CameraSystem_PlayStateScene(playerid, homeState);
-    if (!Core_IsValidState(Core_GetPlayerHomeState(playerid)) || gTutorialStage[playerid] < TUTORIAL_STAGE_FINISH)
+    if (!Core_IsValidState(Core_GetPlayerHomeState(playerid)) || TutorialSystem_GetCurrentStage(playerid) < TUTORIAL_STAGE_FINISH)
     {
         TutorialSystem_Start(playerid);
     }

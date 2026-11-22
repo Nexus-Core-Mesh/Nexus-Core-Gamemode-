@@ -94,8 +94,13 @@ stock StateSpawnSystem_Apply(playerid, stateid)
     DB_SetPlayerState(playerid, safeState);
     DB_SavePlayerState(playerid, safeState);
 
+    SetPlayerInterior(playerid, 0);
+    SetPlayerVirtualWorld(playerid, 0);
+
     if (gStateSpawnCount[safeState] <= 0)
     {
+        SetPlayerInterior(playerid, 0);
+        SetPlayerVirtualWorld(playerid, 0);
         StateSystem_SpawnPlayerForState(playerid, safeState);
         CameraSystem_ExitCameraMode(playerid);
         SetCameraBehindPlayer(playerid);
@@ -107,6 +112,8 @@ stock StateSpawnSystem_Apply(playerid, stateid)
     new stateName[32];
     StateSystem_GetStateName(safeState, stateName, sizeof(stateName));
 
+    SetPlayerInterior(playerid, 0);
+    SetPlayerVirtualWorld(playerid, 0);
     SetPlayerPos(playerid,
         gStateSpawnXByState[safeState][slot],
         gStateSpawnYByState[safeState][slot],

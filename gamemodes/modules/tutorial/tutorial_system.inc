@@ -44,6 +44,10 @@ stock TutorialSystem_Start(playerid)
     TutorialSystem_Reset(playerid);
     gTutorialStage[playerid] = TUTORIAL_STAGE_INTRO;
     TutorialSystem_ShowStage(playerid, gTutorialStage[playerid]);
+    CameraSystem_Reset(playerid);
+    SetPlayerInterior(playerid, 0);
+    SetPlayerVirtualWorld(playerid, 0);
+    TogglePlayerControllable(playerid, false);
     SendClientMessage(playerid, 0xFFCC00AA, "[TUTORIAL] Willkommen im GTA:SA Reallife. Folge dem kurzen Einstieg und wähle anschließend deine Heimatstadt im Menü.");
 }
 
@@ -170,21 +174,31 @@ stock TutorialSystem_Next(playerid)
 
     if (gTutorialStage[playerid] == TUTORIAL_STAGE_FINISH)
     {
+        gPlayerLoginState[playerid] = LOGIN_STATE_ACTIVE;
         new stateid = Core_GetValidStateOrDefault(Core_GetPlayerHomeState(playerid), Core_GetPlayerState(playerid));
         if (!Core_IsValidState(stateid))
         {
             stateid = STATE_LOS_SANTOS;
+            Core_SetPlayerHomeState(playerid, stateid);
+            Core_SetPlayerState(playerid, stateid);
+            gPlayerLoginState[playerid] = LOGIN_STATE_ACTIVE;
+            UiHub_ShowStatePick(playerid);
+            return;
         }
 
         Core_SetPlayerHomeState(playerid, stateid);
         Core_SetPlayerState(playerid, stateid);
+        gPlayerLoginState[playerid] = LOGIN_STATE_ACTIVE;
         DB_ValidateStateTransfer(playerid, stateid, stateid);
         DB_SavePlayerState(playerid, stateid);
+        SetPlayerInterior(playerid, 0);
+        SetPlayerVirtualWorld(playerid, 0);
         StateSpawnSystem_Apply(playerid, stateid);
 
         CameraSystem_Reset(playerid);
         CameraSystem_PlayStateScene(playerid, stateid);
-        UiHub_ShowStatePick(playerid);
+        TogglePlayerControllable(playerid, 1);
+        RoleplayUI_ShowDashboard(playerid);
     }
 }
 

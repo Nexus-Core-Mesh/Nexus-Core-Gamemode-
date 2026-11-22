@@ -75,7 +75,11 @@ stock SocialSystem_HandleCommand(playerid, const cmdtext[])
 
     if (strcmp(cmd, "/help", true) == 0)
     {
-        SendClientMessage(playerid, 0x33CCFFAA, "[HELP] /jobs /wanted /crime /garage /weapons /events /me /do /report /gov");
+        SendClientMessage(playerid, 0x33CCFFAA, "[HELP] /menu /hud /jobs /garage /vehicle /money /state /wanted /crime /dispatch /acceptcall /me /do /report");
+        if (UiHub_Ready(playerid))
+        {
+            UiHub_ShowMain(playerid);
+        }
         return true;
     }
 

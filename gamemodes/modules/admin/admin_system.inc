@@ -284,6 +284,11 @@ stock AdminSystem_HandleCommand(playerid, const cmdtext[])
 
     if (strcmp(cmd, "/state", true) == 0)
     {
+        if (!AdminSystem_CanManageWorld(playerid) && !AdminSystem_IsModerator(playerid) && !AdminSystem_IsProjectLeader(playerid))
+        {
+            return false;
+        }
+
         SendClientMessage(playerid, 0xFFFF00AA, "[STATE] Verfügbar: Los Santos, San Fierro, Las Venturas");
         return true;
     }
