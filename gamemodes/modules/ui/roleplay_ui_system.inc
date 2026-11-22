@@ -162,6 +162,10 @@ stock RoleplayUI_HandleCommand(playerid, const cmdtext[])
 
     if (strcmp(cmd, "/hud", true) == 0 || strcmp(cmd, "/dashboard", true) == 0)
     {
+        if (!UiHub_Ready(playerid))
+        {
+            return true;
+        }
         RoleplayUI_ShowDashboard(playerid);
         return true;
     }

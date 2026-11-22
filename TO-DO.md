@@ -73,6 +73,14 @@ Das Projekt als modularen, erweiterbaren GTA:SA-Reallife-Gamemode mit 3-Staaten-
 - [x] Repo-gebundene Offline-TUI-/Autofix-Integration ergänzt: `tools/nexus_hub_tui.py`, `tools/nexus_tools_tui.py`, `tools/nexus_autofix.py`, `tools/samp_tui.py` sowie die Root-Wrapper `nexus_hub_tui.py`, `nexus_tools_tui.py`, `nexus_autofix.py`, `samp_tui.py`
 - [x] Repo-gebundene Pfadauflösung ohne feste `/home`-Argumente, `7780`-Live-Abhängigkeiten oder Server-Start in den TUI/Autofix-Workflows
 
+### 🏗️ P6 – Kommandos, Hub-Fluss und RP-Module
+- [x] `OnPlayerCommandText()` konsolidiert: UI-Hub, RP-UI, TextWars, Admin, Jail, Dispatch, Emergency, Garage, Weapon, State-Event, Social, Roleplay-Command und AdminMapping in einer klaren Reihenfolge ohne Shadowing.
+- [x] `/menu`, `/m`, `/help`, `/hud`, `/dashboard`, `/spawn`, `/jobs`, `/jobcenter`, `/dispatch`, `/acceptcall` durch `UiHub_HandleCommand()` und zuständige Module aktiv verkettet.
+- [x] `UiHub_Ready()` bleibt Guard für noch nicht aktivierte oder unauthorisierte Übergänge; validierte Login-/Tutorial-/State-Pfade bleiben durchlaufbar.
+- [x] `RoleplayUI_HandleCommand()` bleibt als kompatibler Fallback aktiv, aber der primäre Dashboard-/Hub-Flow läuft über `UiHub_Ready()` und das zentrale Menü.
+- [x] Economy-/Jobs-/Law-/Faction-/World-/Vehicle-/Housing-/Inventory-Module bleiben im aktiven Quellfluss konsistent mit `core.inc` als Single Source of Truth und Dini-first-Safe-Pattern unter `Compiler/samp03/scriptfiles/`.
+- [x] Live-Server-Tests bleiben bewusst außerhalb der Quelle und des Compiles; nur Code-Audit und `bash scripts/build_gamemode.sh` sind die gültigen Validierungspfade.
+
 ## 📘 Nächste releaseorientierte Aufgaben
 
 ### 📘 Release-Milestone A – Production-safe backend

@@ -51,11 +51,26 @@ stock UiHub_Ready(playerid)
         SendClientMessage(playerid, 0xFF6666AA, "[UI] Der Server startet noch, bitte kurz warten.");
         return false;
     }
+
     if (!LoginSystem_IsActive(playerid))
     {
+        new loginPhase = gPlayerLoginState[playerid];
+        if (loginPhase == LOGIN_STATE_LOGIN || loginPhase == LOGIN_STATE_REGISTER || gTutorialStage[playerid] < TUTORIAL_STAGE_FINISH ||
+            (gTutorialStage[playerid] >= TUTORIAL_STAGE_FINISH && Core_IsValidState(Core_GetPlayerHomeState(playerid))))
+        {
+            return true;
+        }
+
         SendClientMessage(playerid, 0xFF6666AA, "[UI] Bitte zuerst einloggen.");
         return false;
     }
+
+    if (!Core_IsValidState(Core_GetPlayerHomeState(playerid)) && !Core_IsValidState(Core_GetPlayerState(playerid)))
+    {
+        SendClientMessage(playerid, 0xFF6666AA, "[UI] Spielerstatus noch nicht initialisiert.");
+        return false;
+    }
+
     return true;
 }
 
@@ -111,6 +126,10 @@ stock UiHub_ShowStatePick(playerid)
 {
     if (!UiHub_Ready(playerid))
     {
+        if (gPlayerLoginState[playerid] == LOGIN_STATE_REGISTER || gPlayerLoginState[playerid] == LOGIN_STATE_LOGIN || gTutorialStage[playerid] < TUTORIAL_STAGE_FINISH)
+        {
+            return;
+        }
         return;
     }
 
@@ -1059,17 +1078,17 @@ stock UiHub_OnDialogResponse(playerid, dialogid, response, listitem, const input
             {
                 case 0:
                 {
-                    gLoginState[playerid] = LOGIN_STATE_LOGIN;
+                    gPlayerLoginState[playerid] = LOGIN_STATE_LOGIN;
                     UiHub_ShowPasswordInput(playerid);
                 }
                 case 1:
                 {
-                    gLoginState[playerid] = LOGIN_STATE_REGISTER;
+                    gPlayerLoginState[playerid] = LOGIN_STATE_REGISTER;
                     UiHub_ShowPasswordInput(playerid);
                 }
                 case 2:
                 {
-                    gLoginState[playerid] = LOGIN_STATE_LOGIN;
+                    gPlayerLoginState[playerid] = LOGIN_STATE_LOGIN;
                     UiHub_ShowPasswordInput(playerid);
                 }
                 case 3:
@@ -1103,7 +1122,7 @@ stock UiHub_OnDialogResponse(playerid, dialogid, response, listitem, const input
                 return true;
             }
 
-            if (gLoginState[playerid] == LOGIN_STATE_REGISTER)
+            if (gPlayerLoginState[playerid] == LOGIN_STATE_REGISTER)
             {
                 new defaultHome = Core_GetValidStateOrDefault(Core_GetPlayerHomeState(playerid), Core_GetPlayerState(playerid));
                 if (!Core_IsValidState(defaultHome))
@@ -1133,7 +1152,33 @@ stock UiHub_HandleCommand(playerid, const cmdtext[])
 
     if (strcmp(cmdtext, "/menu", true) == 0 || strcmp(cmdtext, "/m", true) == 0)
     {
+        if (!UiHub_Ready(playerid))
+        {
+            return true;
+        }
         UiHub_ShowMain(playerid);
+        return true;
+    }
+    if (strcmp(cmdtext, "/help", true) == 0)
+    {
+        SendClientMessage(playerid, 0x33CCFFAA, "[HELP] /menu /hud /jobs /garage /vehicle /money /state /wanted /crime /dispatch /acceptcall /me /do /report");
+        if (UiHub_Ready(playerid))
+        {
+            UiHub_ShowMain(playerid);
+        }
+        return true;
+    }
+    if (strcmp(cmdtext, "/hud", true) == 0 || strcmp(cmdtext, "/dashboard", true) == 0)
+    {
+        if (UiHub_Ready(playerid))
+        {
+            RoleplayUI_ShowDashboard(playerid);
+        }
+        return true;
+    }
+    if (strcmp(cmdtext, "/hudhide", true) == 0)
+    {
+        RoleplayUI_Hide(playerid);
         return true;
     }
     if (strcmp(cmdtext, "/spawn", true) == 0)

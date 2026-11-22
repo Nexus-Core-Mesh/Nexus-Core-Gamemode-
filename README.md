@@ -107,6 +107,13 @@ Zusätzlich wurden im Offline-/Audit-Pfad mehrere manuelle `python3`-Werkzeuge e
 - `jobs/jobs_core.inc` – zentrale Aufgaben-/Lohn-Pipeline mit staatlicher Kassenfinanzierung und steuerbarer Verteilung.
 - `premium/premium_system.inc` – Premium-/VIP-System mit Laufzeiten 30/90/300 Tage sowie Permanent, validem Ablauf-Check, zentraler Core-Integration und Dini-first/Persistence-Bridge ohne parallele State-Shadow-Quelle.
 
+### ✅ Aktueller Runtime-Status (Quellvalidierung)
+
+- `OnPlayerCommandText()` bleibt in der Reihenfolge `UI-Hub -> RP-UI -> TextWars -> Admin -> Jail -> Dispatch -> Emergency -> Garage -> Weapon -> State-Event -> Social -> RoleplayCommand -> AdminMapping` verankert, sodass `/menu`, `/hud`, `/help`, `/spawn`, `/jobs` und `/acceptcall` praktisch in einer zentralen UI-/Hub-Schicht landen, ohne durch veraltete Shadow-Handlers zu fallen.
+- `UiHub_HandleCommand()` ist die aktive, konsolidierte Entry-Point-Schicht; `RoleplayUI_HandleCommand()` bleibt als kompatibler Fallback für `/hud`/`/dashboard` aktiv, aber der Hub nimmt mit `UiHub_Ready()` den primären Guard- und Menü-Flow.
+- Die 3-Staaten-Start-/Spawn-Logik bleibt an `Core_IsValidState()` / `Core_GetValidStateOrDefault()` / `StateSpawnSystem_Apply()` gekoppelt, sodass gültige `state_id` und `home_state` nicht mit `0` überschrieben werden.
+- Build-/Compile-Gate: `bash scripts/build_gamemode.sh` muss weiterhin mit Exit-Code `0` und dem AMX-Ziel unter `Compiler/samp03/gamemodes/gtasa_reallife.amx` durchlaufen.
+
 ## 📘 Produktionsrelevante Stabilitätsbasis
 
 Die letzte Erweiterungsphase war bewusst auf echte Produktionsrelevanz ausgerichtet. Dabei wurden die kritischen Übergabepunkte zwischen Kernmodulen, DB-Abstraktion, Inventar, Haussafes und Fahrzeugsystemen systematisch überarbeitet.

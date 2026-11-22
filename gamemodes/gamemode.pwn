@@ -40,8 +40,8 @@
 #include "modules/housing/house_storage_system.inc"
 #include "modules/jobs/jobs_core.inc"
 #include "modules/jobs/state_jobs.inc"
-#include "modules/tutorial/tutorial_system.inc"
 #include "modules/auth/login_system.inc"
+#include "modules/tutorial/tutorial_system.inc"
 #include "modules/camera/camera_system.inc"
 #include "modules/government/government_system.inc"
 #include "modules/housing/house_system.inc"
@@ -302,7 +302,7 @@ public OnPlayerDisconnect(playerid, reason)
     TutorialSystem_Reset(playerid);
     RoleplayUI_Hide(playerid);
     CancelSelectTextDraw(playerid);
-    gLoginState[playerid] = LOGIN_STATE_NONE;
+    gPlayerLoginState[playerid] = LOGIN_STATE_NONE;
     gTutorialStage[playerid] = TUTORIAL_STAGE_NONE;
     return 1;
 }
@@ -333,7 +333,7 @@ public OnPlayerCommandText(playerid, cmdtext[])
             return 1;
         }
 
-        gLoginState[playerid] = LOGIN_STATE_LOGIN;
+        gPlayerLoginState[playerid] = LOGIN_STATE_LOGIN;
         UiHub_ShowPasswordInput(playerid);
         SendClientMessage(playerid, 0x00D9FFFF, "[LOGIN] Passwort-Input aktiv. Bitte das Passwort im Dialog eingeben.");
         return 1;
@@ -349,23 +349,23 @@ public OnPlayerCommandText(playerid, cmdtext[])
 
         if (cmdtext[offset] == '\0')
         {
-            gLoginState[playerid] = LOGIN_STATE_REGISTER;
+            gPlayerLoginState[playerid] = LOGIN_STATE_REGISTER;
             LoginSystem_ShowRegisterScreen(playerid);
             UiHub_ShowPasswordInput(playerid);
             SendClientMessage(playerid, 0x00D9FFFF, "[REGISTER] Bitte ein Passwort im Dialog eingeben.");
             return 1;
         }
 
-        gLoginState[playerid] = LOGIN_STATE_REGISTER;
+        gPlayerLoginState[playerid] = LOGIN_STATE_REGISTER;
         UiHub_ShowPasswordInput(playerid);
         SendClientMessage(playerid, 0x00D9FFFF, "[REGISTER] Passwort-Input aktiv. Bitte das Passwort im Dialog eingeben.");
         return 1;
     }
 
-    if (RoleplayUI_HandleCommand(playerid, cmdtext))
+    if (UiHub_HandleCommand(playerid, cmdtext))
         return 1;
 
-    if (UiHub_HandleCommand(playerid, cmdtext))
+    if (RoleplayUI_HandleCommand(playerid, cmdtext))
         return 1;
 
     if (TextWars_HandleCommand(playerid, cmdtext))
