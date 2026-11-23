@@ -12,6 +12,16 @@ new gHouseOwner[MAX_HOUSES];
 new gHousePrice[MAX_HOUSES];
 new gHouseInterior[MAX_HOUSES];
 new gHouseLocked[MAX_HOUSES];
+new gHouseExtraCount[MAX_HOUSES];
+new gHouseExtraId[MAX_HOUSES][4];
+new gHouseExtraState[MAX_HOUSES][4];
+new gHouseExtraOwner[MAX_HOUSES][4];
+new gHouseExtraStatus[MAX_HOUSES][4];
+
+#define HOUSE_EXTRA_STATUS_INACTIVE 0
+#define HOUSE_EXTRA_STATUS_ACTIVE 1
+#define HOUSE_EXTRA_STATUS_OVERRIDDEN 2
+#define HOUSE_EXTRA_STATUS_DELETED 3
 
 stock HouseSystem_Initialize()
 {
@@ -22,13 +32,92 @@ stock HouseSystem_Initialize()
         gHousePrice[i] = 0;
         gHouseInterior[i] = 0;
         gHouseLocked[i] = HOUSE_LOCKED;
+        gHouseExtraCount[i] = 0;
+        for (new e = 0; e < 4; e++)
+        {
+            gHouseExtraId[i][e] = -1;
+            gHouseExtraState[i][e] = -1;
+            gHouseExtraOwner[i][e] = -1;
+            gHouseExtraStatus[i][e] = HOUSE_EXTRA_STATUS_INACTIVE;
+        }
     }
 
     HouseSystem_CreateHouse(0, 0, 250000, 1, -1);
     HouseSystem_CreateHouse(1, 1, 230000, 2, -1);
     HouseSystem_CreateHouse(2, 2, 260000, 3, -1);
 
+    HouseSystem_RegisterExtra(0, 1, STATE_LOS_SANTOS, -1, HOUSE_EXTRA_STATUS_ACTIVE);
+    HouseSystem_RegisterExtra(0, 2, STATE_LOS_SANTOS, -1, HOUSE_EXTRA_STATUS_INACTIVE);
+    HouseSystem_RegisterExtra(1, 1, STATE_SAN_FIERRO, -1, HOUSE_EXTRA_STATUS_ACTIVE);
+    HouseSystem_RegisterExtra(2, 1, STATE_LAS_VENTURAS, -1, HOUSE_EXTRA_STATUS_ACTIVE);
+
     print("[HOUSE] Dynamisches Haussystem initialisiert");
+}
+
+stock HouseSystem_RegisterExtra(houseid, extraid, stateid, ownerid, status)
+{
+    if (houseid < 0 || houseid >= MAX_HOUSES)
+    {
+        return false;
+    }
+    if (extraid < 0 || extraid >= 4)
+    {
+        return false;
+    }
+    if (!Core_IsValidState(stateid))
+    {
+        stateid = STATE_LOS_SANTOS;
+    }
+    if (status < HOUSE_EXTRA_STATUS_INACTIVE || status > HOUSE_EXTRA_STATUS_DELETED)
+    {
+        status = HOUSE_EXTRA_STATUS_INACTIVE;
+    }
+
+    gHouseExtraId[houseid][extraid] = extraid;
+    gHouseExtraState[houseid][extraid] = stateid;
+    gHouseExtraOwner[houseid][extraid] = ownerid;
+    gHouseExtraStatus[houseid][extraid] = status;
+    if (gHouseExtraCount[houseid] <= extraid)
+    {
+        gHouseExtraCount[houseid] = extraid + 1;
+    }
+    return true;
+}
+
+stock HouseSystem_SetExtraStatus(houseid, extraid, status)
+{
+    if (houseid < 0 || houseid >= MAX_HOUSES)
+    {
+        return false;
+    }
+    if (extraid < 0 || extraid >= 4)
+    {
+        return false;
+    }
+    if (status < HOUSE_EXTRA_STATUS_INACTIVE || status > HOUSE_EXTRA_STATUS_DELETED)
+    {
+        return false;
+    }
+
+    gHouseExtraStatus[houseid][extraid] = status;
+    if (status == HOUSE_EXTRA_STATUS_DELETED)
+    {
+        gHouseExtraOwner[houseid][extraid] = -1;
+    }
+    return true;
+}
+
+stock int:HouseSystem_GetExtraStatus(houseid, extraid)
+{
+    if (houseid < 0 || houseid >= MAX_HOUSES)
+    {
+        return HOUSE_EXTRA_STATUS_INACTIVE;
+    }
+    if (extraid < 0 || extraid >= 4)
+    {
+        return HOUSE_EXTRA_STATUS_INACTIVE;
+    }
+    return gHouseExtraStatus[houseid][extraid];
 }
 
 stock HouseSystem_CreateHouse(houseid, stateid, price, interior, ownerid)
@@ -109,6 +198,61 @@ stock HouseSystem_SetOwner(houseid, ownerid)
 
     gHouseOwner[houseid] = ownerid;
     gHouseLocked[houseid] = (ownerid == -1) ? HOUSE_UNLOCKED : HOUSE_LOCKED;
+
+    if (ownerid == -1)
+    {
+        for (new e = 0; e < 4; e++)
+        {
+            if (gHouseExtraStatus[houseid][e] == HOUSE_EXTRA_STATUS_ACTIVE)
+            {
+                gHouseExtraStatus[houseid][e] = HOUSE_EXTRA_STATUS_INACTIVE;
+            }
+        }
+    }
+    return true;
+}
+
+stock HouseSystem_SellHouse(playerid, houseid)
+{
+    if (playerid < 0 || playerid >= MAX_PLAYERS)
+    {
+        return false;
+    }
+    if (houseid < 0 || houseid >= MAX_HOUSES)
+    {
+        return false;
+    }
+    if (gHouseOwner[houseid] != playerid)
+    {
+        return false;
+    }
+
+    new safeState = Core_GetValidStateOrDefault(gHouseState[houseid], STATE_LOS_SANTOS);
+    if (!Core_IsValidState(safeState))
+    {
+        return false;
+    }
+
+    for (new i = 0; i < MAX_HOUSES; i++)
+    {
+        if (gHouseStorageOwner[i] == playerid && gHouseStorageState[i] == safeState)
+        {
+            gHouseStorageOwner[i] = -1;
+            gHouseStorageState[i] = safeState;
+        }
+    }
+
+    for (new e = 0; e < 4; e++)
+    {
+        if (gHouseExtraOwner[houseid][e] == playerid || gHouseExtraStatus[houseid][e] == HOUSE_EXTRA_STATUS_ACTIVE)
+        {
+            gHouseExtraStatus[houseid][e] = HOUSE_EXTRA_STATUS_INACTIVE;
+            gHouseExtraOwner[houseid][e] = -1;
+        }
+    }
+
+    gHouseOwner[houseid] = -1;
+    gHouseLocked[houseid] = HOUSE_UNLOCKED;
     return true;
 }
 
@@ -181,6 +325,32 @@ stock HouseSystem_ShowInfo(playerid, houseid)
     new msg[256];
     format(msg, sizeof(msg), "[HOUSE] Haus %d | Staat: %d | Preis: %d | Besitzer: %d | Interior: %d", houseid, gHouseState[houseid], gHousePrice[houseid], gHouseOwner[houseid], gHouseInterior[houseid]);
     SendClientMessage(playerid, 0xFFFF00AA, msg);
+}
+
+stock int:HouseSystem_FindNearbyOwnedHouse(playerid, Float:radius = 25.0)
+{
+    if (playerid < 0 || playerid >= MAX_PLAYERS)
+    {
+        return -1;
+    }
+
+    new Float:px, Float:py, Float:pz;
+    GetPlayerPos(playerid, px, py, pz);
+
+    for (new i = 0; i < MAX_HOUSES; i++)
+    {
+        if (gHouseOwner[i] == playerid)
+        {
+            new Float:houseX = float(i * 6 + 2);
+            new Float:houseY = float(i * 4 + 3);
+            if (GetPlayerDistanceFromPoint(playerid, houseX, houseY, pz) <= radius)
+            {
+                return i;
+            }
+        }
+    }
+
+    return -1;
 }
 
 stock HouseSystem_CreateHouseAtPlayer(playerid, stateid, price, interior)

@@ -84,14 +84,33 @@ stock MissionBoard_Accept(playerid, missionId)
         return false;
     }
 
-    if (!Core_ChangePlayerBank(playerid, gMissionBoardReward[missionId]))
+    new stateid = Core_GetValidStateOrDefault(gMissionBoardState[missionId], Core_GetPlayerState(playerid));
+    if (!Core_IsValidState(stateid))
+    {
+        stateid = STATE_LOS_SANTOS;
+    }
+
+    new reward = gMissionBoardReward[missionId];
+    new tax = reward * StateSystem_GetTaxRate(stateid) / 100;
+    new net = reward - tax;
+
+    if (!StateLedgerSystem_Transfer(stateid, max(0, tax), "mission_board_tax", "mission_board"))
+    {
+        tax = 0;
+    }
+
+    if (!Core_ChangePlayerBank(playerid, net))
     {
         SendClientMessage(playerid, 0xFF0000AA, "[MISSION_BOARD] Bankfehler beim Aufgabenabschluss.");
         return false;
     }
 
+    JobsCore_AddPlayerJobXP(playerid, max(25, reward / 250));
+    ProgressionSystem_AddXP(playerid, max(15, reward / 300));
+    ProgressionSystem_AddRep(playerid, max(1, reward / 10000));
+
     gMissionBoardActive[missionId] = 0;
-    SendClientMessage(playerid, 0x00FF00AA, "[MISSION_BOARD] Aufgabe angenommen und abgearbeitet.");
+    SendClientMessage(playerid, 0x00FF00AA, "[MISSION_BOARD] Aufgabe angenommen und abgearbeitet. +$%d | +%d XP | +%d Rep", net, max(15, reward / 300), max(1, reward / 10000));
     return true;
 }
 

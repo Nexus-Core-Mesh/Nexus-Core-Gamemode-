@@ -180,14 +180,29 @@ stock BusinessSystem_ApplyEconomyPulse(bizid, amount, const reason[])
     }
 
     new safeState = Core_GetValidStateOrDefault(gBizState[bizid], STATE_LOS_SANTOS);
+    if (!Core_IsValidState(safeState))
+    {
+        return false;
+    }
+
     new total = gBizIncome[bizid] + amount;
     if (total < 0)
     {
         return false;
     }
 
+    new ledgerDelta = max(0, amount / 2);
+    if (amount < 0)
+    {
+        new negativeAmount = -amount;
+        if (negativeAmount > gBizIncome[bizid])
+        {
+            return false;
+        }
+    }
+
     gBizIncome[bizid] = total;
-    if (!StateLedgerSystem_Transfer(safeState, max(0, amount / 2), reason, "business_system"))
+    if (!StateLedgerSystem_Transfer(safeState, ledgerDelta, reason, "business_system"))
     {
         gBizIncome[bizid] = max(0, total - amount);
         return false;
@@ -218,8 +233,40 @@ stock BusinessSystem_CollectIncome(bizid)
         income = 0;
     }
 
-    gBizIncome[bizid] = income;
-    return StateLedgerSystem_Transfer(safeState, max(0, income / 4), "business_income", "business_system");
+    if (income == 0)
+    {
+        return true;
+    }
+
+    new transferAmount = max(0, income / 4);
+    gBizIncome[bizid] = max(0, income - transferAmount);
+    return StateLedgerSystem_Transfer(safeState, transferAmount, "business_income", "business_system");
+}
+
+stock BusinessSystem_RegisterRole(bizid, roleType, requiredState, requiredOwnership)
+{
+    if (bizid < 0 || bizid >= MAX_BUSINESSES)
+    {
+        return false;
+    }
+    if (!Core_IsValidState(requiredState))
+    {
+        return false;
+    }
+    if (requiredOwnership < 0)
+    {
+        requiredOwnership = 0;
+    }
+
+    new safeState = Core_GetValidStateOrDefault(requiredState, gBizState[bizid]);
+    if (!Core_IsValidState(safeState))
+    {
+        return false;
+    }
+
+    gBizState[bizid] = safeState;
+    gBizActive[bizid] = (requiredOwnership == 0 || gBizOwner[bizid] != -1) ? 1 : 0;
+    return true;
 }
 
 stock BusinessSystem_GetIncome(bizid)
@@ -329,6 +376,33 @@ stock int:BusinessSystem_GetState(bizid)
         return -1;
     }
     return gBizState[bizid];
+}
+
+stock int:BusinessSystem_FindNearbyOwnedBusiness(playerid, Float:radius = 25.0)
+{
+    if (playerid < 0 || playerid >= MAX_PLAYERS)
+    {
+        return -1;
+    }
+
+    new Float:px, Float:py, Float:pz;
+    GetPlayerPos(playerid, px, py, pz);
+
+    for (new i = 0; i < MAX_BUSINESSES; i++)
+    {
+        if (gBizOwner[i] == playerid)
+        {
+            new Float:x = float(i * 7 + 5);
+            new Float:y = float(i * 5 + 12);
+            new Float:z = 0.0;
+            if (GetPlayerDistanceFromPoint(playerid, x, y, z) <= radius)
+            {
+                return i;
+            }
+        }
+    }
+
+    return -1;
 }
 
 stock BusinessSystem_ShowInfo(playerid, bizid)

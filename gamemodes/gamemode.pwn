@@ -102,6 +102,7 @@
 #include "modules/management/state_ledger_system.inc"
 #include "modules/jobs/job_center.inc"
 #include "modules/factions/text_wars.inc"
+#include "modules/ui/ui_id_registry.inc"
 #include "modules/ui/state_control_ui.inc"
 #include "modules/ui/ui_hub.inc"
 #include "modules/premium/premium_system.inc"
@@ -671,8 +672,16 @@ public OnPlayerDeath(playerid, killerid, reason)
 public OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 {
     if ((newkeys & KEY_YES) && !(oldkeys & KEY_YES))
-        UiHub_ShowMain(playerid);
+    {
+        if (!UiHub_Ready(playerid))
+        {
+            return 1;
+        }
+        UiHub_HandleNearbyContext(playerid);
+    }
     else if ((newkeys & KEY_NO) && !(oldkeys & KEY_NO))
+    {
         TextWars_Toggle(playerid);
+    }
     return 1;
 }

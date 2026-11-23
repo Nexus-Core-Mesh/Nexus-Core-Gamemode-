@@ -48,6 +48,25 @@ stock DispatchSystem_CreateCall(stateid, const callType[], priority)
     return true;
 }
 
+stock DispatchSystem_ClearStateCalls(stateid)
+{
+    if (!Core_IsValidState(stateid))
+    {
+        return;
+    }
+
+    for (new i = 0; i < MAX_DISPATCH_CALLS; i++)
+    {
+        if (gDispatchCallState[i] == stateid)
+        {
+            gDispatchCallActive[i] = 0;
+            gDispatchCallState[i] = -1;
+            format(gDispatchCallType[i], 32, "");
+            gDispatchCallPriority[i] = DISPATCH_PRIORITY_LOW;
+        }
+    }
+}
+
 stock DispatchSystem_ShowQueue(playerid, stateid)
 {
     if (!Core_IsValidState(stateid))
@@ -82,7 +101,7 @@ stock DispatchSystem_AcceptCall(playerid, callIndex)
         return false;
     }
 
-    if (gDispatchCallState[callIndex] != StateSystem_GetPlayerState(playerid))
+    if (gDispatchCallState[callIndex] != Core_GetValidStateOrDefault(StateSystem_GetPlayerState(playerid), Core_GetPlayerHomeState(playerid)))
     {
         SendClientMessage(playerid, 0xFF0000AA, "[DISPATCH] Dieser Einsatz liegt nicht in deinem Staat.");
         return false;
@@ -95,6 +114,9 @@ stock DispatchSystem_AcceptCall(playerid, callIndex)
     }
 
     gDispatchCallActive[callIndex] = 0;
+    gDispatchCallState[callIndex] = -1;
+    format(gDispatchCallType[callIndex], 32, "");
+    gDispatchCallPriority[callIndex] = DISPATCH_PRIORITY_LOW;
     SendClientMessage(playerid, 0x00FF00AA, "[DISPATCH] Einsatz erfolgreich angenommen und bearbeitet.");
     return true;
 }

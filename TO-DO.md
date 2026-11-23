@@ -9,6 +9,7 @@
 - Technische Fakten, Befehle, Pfade und Projektregeln bleiben bewusst unverändert.
 - Port- und Systemtrennung bleiben konsistent, insbesondere für den 7780-Contract und den Dini-first-Pfad.
 - Die optische Aufwertung dient nur der Lesbarkeit, nicht der inhaltlichen Interpretation.
+- Status-Tags: `aktiv`, `verdeckt`, `gebaut aber nicht angebunden`, `vorbereitet` sind die verbindlichen Projektlabels für Module/Commands/UI-Views.
 
 ---
 ## 🧭 Schnellüberblick
@@ -80,6 +81,7 @@ Das Projekt als modularen, erweiterbaren GTA:SA-Reallife-Gamemode mit 3-Staaten-
 - [x] `RoleplayUI_HandleCommand()` bleibt als kompatibler Fallback aktiv, aber der primäre Dashboard-/Hub-Flow läuft über `UiHub_Ready()` und das zentrale Menü.
 - [x] Economy-/Jobs-/Law-/Faction-/World-/Vehicle-/Housing-/Inventory-Module bleiben im aktiven Quellfluss konsistent mit `core.inc` als Single Source of Truth und Dini-first-Safe-Pattern unter `Compiler/samp03/scriptfiles/`.
 - [x] Live-Server-Tests bleiben bewusst außerhalb der Quelle und des Compiles; nur Code-Audit und `bash scripts/build_gamemode.sh` sind die gültigen Validierungspfade.
+- [x] `ui_hub` / `roleplay_ui_system` / `job_center` / `mission_system` / `jail_system` / `drug_system` / `shop_system` / `business_system` / `vehicle_system` / `inventory_system` / `event_system` / `season_system` / `web_bridge` als Status-Matrix in den Projektstatus aufgenommen: aktiv, verdeckt, gebaut aber nicht angebunden oder vorbereitet.
 
 ## 📘 Nächste releaseorientierte Aufgaben
 

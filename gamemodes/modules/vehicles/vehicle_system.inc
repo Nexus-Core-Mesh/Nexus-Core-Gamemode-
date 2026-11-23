@@ -135,6 +135,29 @@ stock VehicleSystem_SetOwner(vehicleid, ownerid)
     return true;
 }
 
+stock VehicleSystem_RegisterMechanicWorkshop(stateid, modelid, ownerid)
+{
+    new safeState = Core_GetValidStateOrDefault(stateid, STATE_LOS_SANTOS);
+    if (!Core_IsValidState(safeState))
+    {
+        return false;
+    }
+
+    new slot = VehicleSystem_GetFreeSlot();
+    if (slot < 0)
+    {
+        return false;
+    }
+
+    gVehicleModel[slot] = modelid;
+    gVehicleState[slot] = safeState;
+    gVehicleOwner[slot] = ownerid;
+    gVehiclePrice[slot] = 0;
+    gVehicleFuel[slot] = 100;
+    gVehicleType[slot] = VEHICLE_TYPE_CAR;
+    return true;
+}
+
 stock int:VehicleSystem_GetOwner(vehicleid)
 {
     if (vehicleid < 0 || vehicleid >= MAX_VEHICLES)

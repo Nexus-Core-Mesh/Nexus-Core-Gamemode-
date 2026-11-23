@@ -27,6 +27,16 @@ Dieses Projekt ist als modularer, erweiterbarer GTA:SA-Reallife-Gamemode für ei
 
 Die Kernidee ist bewusst: keine monolithische `gamemode.pwn`-Logik, sondern ein klares Modul- und Layer-System mit separaten Bereichen für Core, State, Government, Economy, Housing, Jobs, Factions, Vehicles, Inventory, Services und Web-Management.
 
+### Status-Tagging der aktuellen Projektlage
+
+- `aktiv`: Kernpfade mit stabiler Einbindung in den Laufzeit- und Command-Flow (`core.inc`, `login_system.inc`, `ui_hub.inc`, `state_spawn_system.inc`, `OnPlayerCommandText()` / `OnPlayerSpawn()`)
+- `verdeckt`: bereits im Code vorhanden, aber nicht als primärer Endanwender-Flow eingeblendet oder noch durch ein aktiveres System überlagert (`roleplay_ui_system`, Teilbereiche von Job-/Mission-/Jail-/Drug-/Shop-/Business-/Vehicle-/Inventory-/Event-/Season-/Web-Bridge)
+- `gebaut aber nicht angebunden`: Architektur und Logik existieren, aber der aktive Routing-/UI-/State-Pfad ist noch nicht in den Haupt-Loop eingehängt (`mission_system`, `job_center`, gewisse spezielle Web-/Dialog-Views)
+- `vorbereitet`: System- und Datenpfade strukuriert angelegt, aber noch keine feste End-to-End-Verknüpfung im aktiven RP-Flow (`season_system`, weiterführende Web-/Bridge-/Admin-Views, bestimmte Export-/Sync-Pfade)
+- `nicht verbunden`: Module, Commands oder UI-Views, die im Quellenbaum vorhanden sind, aber in der aktiven Main-Loop und dem Hub-Flow keine ansprechbare Route besitzen (`reine Spezialansichten, legacy-scoped mini-views, einzelne nicht durch `UiHub_Ready()` geschützte Handler`)
+
+Hinweis: Das GitHub-Root-README ist die sichtbare Projektübersicht auf mobil/Browser; das separate `control-panel/` ist ein eigenes Node-Tooling und nicht die Ursache für die Mobile-Renderprobleme in `README.md`.
+
 ### 📘 Kerneigenschaften
 
 - 3-Staaten-System: Los Santos, San Fierro, Las Venturas

@@ -104,6 +104,98 @@ stock UiHub_ShowQuickActionMenu(playerid)
     UiDialog_Show(playerid, DIALOG_UI_STATE_MENU, DIALOG_STYLE_LIST, title, menu, UI_DIALOG_BUTTON_OK, UI_DIALOG_BUTTON_BACK);
 }
 
+stock UiHub_HandleNearbyContext(playerid)
+{
+    if (!UiHub_Ready(playerid))
+    {
+        return false;
+    }
+
+    new stateid = StateSystem_GetPlayerState(playerid);
+    if (!Core_IsValidState(stateid))
+    {
+        stateid = Core_GetValidStateOrDefault(Core_GetPlayerHomeState(playerid), STATE_LOS_SANTOS);
+    }
+
+    new Float:x = 0.0, Float:y = 0.0, Float:z = 0.0;
+    GetPlayerPos(playerid, x, y, z);
+
+    new Float:jobCenterX[3] = {1535.0, -1915.0, 1668.0};
+    new Float:jobCenterY[3] = {-1675.0, 270.0, 1447.0};
+    new Float:jobCenterZ[3] = {13.0, 35.0, 10.0};
+    new inJobZone = 0;
+
+    for (new i = 0; i < 3; i++)
+    {
+        if (GetPlayerDistanceFromPoint(playerid, jobCenterX[i], jobCenterY[i], jobCenterZ[i]) <= 30.0)
+        {
+            inJobZone = 1;
+            break;
+        }
+    }
+
+    new bool:hasMission = (gPlayerMission[playerid] >= 0 && gPlayerMission[playerid] < MAX_MISSIONS);
+    new bool:nearDispatch = false;
+    for (new i = 0; i < gEmergencyStationCount; i++)
+    {
+        if (gEmergencyStationState[i] == stateid && GetPlayerDistanceFromPoint(playerid, gEmergencyStationX[i], gEmergencyStationY[i], gEmergencyStationZ[i]) <= 30.0)
+        {
+            nearDispatch = true;
+            break;
+        }
+    }
+
+    new houseid = HouseSystem_FindNearbyOwnedHouse(playerid, 25.0);
+    if (houseid != -1)
+    {
+        HouseSystem_ShowInfo(playerid, houseid);
+        UiHub_ShowInventory(playerid);
+        return true;
+    }
+
+    new bizid = BusinessSystem_FindNearbyOwnedBusiness(playerid, 25.0);
+    if (bizid != -1)
+    {
+        BusinessSystem_ShowInfo(playerid, bizid);
+        UiHub_ShowBusinessList(playerid);
+        return true;
+    }
+
+    if (InventorySystem_HasNearbyHouseStorage(playerid, 25.0))
+    {
+        UiHub_ShowInventory(playerid);
+        SendClientMessage(playerid, 0x00FF99AA, "[J] Hauslager in Reichweite erkannt: Inventar geöffnet.");
+        return true;
+    }
+
+    if (inJobZone)
+    {
+        JobCenter_ShowMain(playerid);
+        return true;
+    }
+
+    if (nearDispatch)
+    {
+        DispatchSystem_ShowQueue(playerid, stateid);
+        return true;
+    }
+
+    if (hasMission)
+    {
+        MissionSystem_ShowMissionList(playerid);
+        return true;
+    }
+
+    if (GetPlayerVehicleID(playerid) > 0)
+    {
+        UiHub_ShowVehicleMenu(playerid);
+        return true;
+    }
+
+    UiHub_ShowQuickActionMenu(playerid);
+    return true;
+}
+
 stock UiHub_ShowAuthMenu(playerid)
 {
     if (!LoginSystem_IsActive(playerid))

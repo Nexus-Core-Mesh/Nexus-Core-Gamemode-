@@ -273,6 +273,83 @@ stock InventorySystem_UseSlot(playerid, slot)
     return INV_USE_NO_EFFECT;
 }
 
+stock InventorySystem_HasNearbyHouseStorage(playerid, Float:radius = 15.0)
+{
+    if (playerid < 0 || playerid >= MAX_PLAYERS)
+    {
+        return false;
+    }
+
+    new Float:px, Float:py, Float:pz;
+    GetPlayerPos(playerid, px, py, pz);
+
+    for (new i = 0; i < MAX_HOUSES; i++)
+    {
+        if (gHouseStorageOwner[i] == playerid)
+        {
+            new Float:ox = float(i * 8 + 4);
+            new Float:oy = float(i * 6 + 2);
+            if (GetPlayerDistanceFromPoint(playerid, ox, oy, pz) <= radius)
+            {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+stock InventorySystem_TransferHouseInventoryOnSale(playerid, soldHouseid, replacementHouseid)
+{
+    if (playerid < 0 || playerid >= MAX_PLAYERS)
+    {
+        return false;
+    }
+    if (soldHouseid < 0 || soldHouseid >= MAX_HOUSES)
+    {
+        return false;
+    }
+    if (replacementHouseid != -1 && (replacementHouseid < 0 || replacementHouseid >= MAX_HOUSES))
+    {
+        return false;
+    }
+
+    if (replacementHouseid == -1)
+    {
+        for (new s = 0; s < MAX_HOUSE_STORAGE_SLOTS; s++)
+        {
+            if (gHouseStorageItem[soldHouseid][s] != INVENTORY_ITEM_NONE && gHouseStorageQty[soldHouseid][s] > 0)
+            {
+                gHouseStorageItem[soldHouseid][s] = INVENTORY_ITEM_NONE;
+                gHouseStorageQty[soldHouseid][s] = 0;
+                format(gHouseStorageMeta[soldHouseid][s], 32, "NONE");
+            }
+        }
+        gHouseStorageMoney[soldHouseid] = 0;
+        return true;
+    }
+
+    for (new s = 0; s < MAX_HOUSE_STORAGE_SLOTS; s++)
+    {
+        if (gHouseStorageItem[soldHouseid][s] != INVENTORY_ITEM_NONE && gHouseStorageQty[soldHouseid][s] > 0)
+        {
+            if (!HouseStorageSystem_StoreItem(playerid, replacementHouseid, gHouseStorageItem[soldHouseid][s], gHouseStorageQty[soldHouseid][s], gHouseStorageMeta[soldHouseid][s]))
+            {
+                return false;
+            }
+            gHouseStorageItem[soldHouseid][s] = INVENTORY_ITEM_NONE;
+            gHouseStorageQty[soldHouseid][s] = 0;
+            format(gHouseStorageMeta[soldHouseid][s], 32, "NONE");
+        }
+    }
+
+    if (gHouseStorageMoney[soldHouseid] > 0)
+    {
+        gHouseStorageMoney[replacementHouseid] += gHouseStorageMoney[soldHouseid];
+        gHouseStorageMoney[soldHouseid] = 0;
+    }
+    return true;
+}
+
 stock InventorySystem_OnPlayerConnect(playerid)
 {
     if (playerid < 0 || playerid >= MAX_PLAYERS)

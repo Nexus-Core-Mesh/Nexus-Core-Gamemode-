@@ -25,18 +25,21 @@ stock DynamicJobSystem_Initialize()
     DynamicJobSystem_RegisterJob("Polizei", STATE_LOS_SANTOS, JOB_TYPE_POLICE);
     DynamicJobSystem_RegisterJob("Sanitäter", STATE_LOS_SANTOS, JOB_TYPE_MEDIC);
     DynamicJobSystem_RegisterJob("Logistik", STATE_LOS_SANTOS, JOB_TYPE_LOGISTICS);
+    DynamicJobSystem_RegisterJob("Bankmitarbeiter", STATE_LOS_SANTOS, JOB_TYPE_STATE);
 
     DynamicJobSystem_RegisterJob("Staatsdienst", STATE_SAN_FIERRO, JOB_TYPE_STATE);
     DynamicJobSystem_RegisterJob("Mechaniker", STATE_SAN_FIERRO, JOB_TYPE_BUSINESS);
     DynamicJobSystem_RegisterJob("Wirtschaft", STATE_SAN_FIERRO, JOB_TYPE_BUSINESS);
     DynamicJobSystem_RegisterJob("Casino", STATE_SAN_FIERRO, JOB_TYPE_BUSINESS);
     DynamicJobSystem_RegisterJob("Service", STATE_SAN_FIERRO, JOB_TYPE_STATE);
+    DynamicJobSystem_RegisterJob("Busfahrer", STATE_SAN_FIERRO, JOB_TYPE_TRUCKER);
 
     DynamicJobSystem_RegisterJob("Casino", STATE_LAS_VENTURAS, JOB_TYPE_BUSINESS);
     DynamicJobSystem_RegisterJob("Tourismus", STATE_LAS_VENTURAS, JOB_TYPE_CIVIL);
     DynamicJobSystem_RegisterJob("Service", STATE_LAS_VENTURAS, JOB_TYPE_STATE);
     DynamicJobSystem_RegisterJob("Logistik", STATE_LAS_VENTURAS, JOB_TYPE_LOGISTICS);
     DynamicJobSystem_RegisterJob("Transport", STATE_LAS_VENTURAS, JOB_TYPE_TRUCKER);
+    DynamicJobSystem_RegisterJob("Bankchef", STATE_LAS_VENTURAS, JOB_TYPE_STATE);
 
     print("[JOB_DYNAMIC] Dynamisches Job-System initialisiert");
     Core_MarkModuleReady("jobs");
@@ -52,12 +55,13 @@ stock DynamicJobSystem_AssignJob(playerid, jobid, stateid)
     {
         return false;
     }
-    if (!Core_IsValidState(stateid))
-    {
-        stateid = gDynamicJobState[jobid];
-    }
 
-    if (gDynamicJobState[jobid] != stateid)
+    new safeState = Core_GetValidStateOrDefault(stateid, gDynamicJobState[jobid]);
+    if (!Core_IsValidState(safeState))
+    {
+        return false;
+    }
+    if (gDynamicJobState[jobid] != safeState)
     {
         return false;
     }
@@ -68,7 +72,7 @@ stock DynamicJobSystem_AssignJob(playerid, jobid, stateid)
 
     JobsCore_SetPlayerJob(playerid, gDynamicJobType[jobid]);
     JobsCore_SetPlayerJobId(playerid, jobid);
-    JobsCore_SetPlayerJobState(playerid, stateid);
+    JobsCore_SetPlayerJobState(playerid, safeState);
     return true;
 }
 

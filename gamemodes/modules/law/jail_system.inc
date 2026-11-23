@@ -69,10 +69,14 @@ stock JailSystem_SendToJail(playerid, stateid, timeMinutes)
         return;
     if (!Core_IsValidState(stateid))
         return;
+    if (timeMinutes < 0)
+        timeMinutes = 0;
 
     gJailActive[playerid] = 1;
     gJailState[playerid] = JAIL_STATE_ACTIVE;
     gJailTime[playerid] = timeMinutes;
+    gPlayerData[playerid][E_PLAYER_JAIL_ACTIVE] = 1;
+    gPlayerData[playerid][E_PLAYER_JAIL_TIME] = timeMinutes;
 
     new jailCell = stateid;
     if (jailCell >= gJailLocationCount)
@@ -82,6 +86,9 @@ stock JailSystem_SendToJail(playerid, stateid, timeMinutes)
     SetPlayerPos(playerid, gJailLocationX[jailCell], gJailLocationY[jailCell], gJailLocationZ[jailCell]);
     SetPlayerHealth(playerid, 100.0);
     TogglePlayerControllable(playerid, false);
+    LawSystem_SetWantedLevel(playerid, 0);
+    JailSystem_HideHUD(playerid);
+    JailSystem_ShowHUD(playerid);
 
     new msg[128];
     format(msg, sizeof(msg), "[JAIL] Du wurdest in %s eingesperrt für %d Minuten.", gJailLocationName[jailCell], timeMinutes);
@@ -97,7 +104,11 @@ stock JailSystem_ReleasePlayer(playerid)
     gJailState[playerid] = JAIL_STATE_RELEASED;
     gJailTime[playerid] = 0;
     gJailCell[playerid] = -1;
+    gPlayerData[playerid][E_PLAYER_JAIL_ACTIVE] = 0;
+    gPlayerData[playerid][E_PLAYER_JAIL_TIME] = 0;
     TogglePlayerControllable(playerid, true);
+    JailSystem_HideHUD(playerid);
+    LawSystem_ClearWanted(playerid);
     SendClientMessage(playerid, 0x00FF00AA, "[JAIL] Du bist aus dem Gefängnis entlassen worden.");
 }
 

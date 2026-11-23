@@ -36,6 +36,9 @@ forward PremiumSystem_OnPlayerDisconnect(playerid, reason);
 forward JobsCore_OnPlayerDisconnect(playerid);
 forward JobCenter_OnPlayerDisconnect(playerid);
 forward TextWars_OnPlayerDisconnect(playerid);
+forward LawSystem_OnPlayerDisconnect(playerid);
+forward CrimeSystem_OnPlayerDisconnect(playerid);
+forward EmergencySystem_OnPlayerDisconnect(playerid);
 
 stock Core_RuntimeModuleExists(const moduleName[])
 {
@@ -177,6 +180,9 @@ stock Core_RunPlayerDisconnectHooks(playerid, reason)
     AdminSystem_OnPlayerDisconnect(playerid, reason);
     StateSystem_OnPlayerDisconnect(playerid, reason);
     PremiumSystem_OnPlayerDisconnect(playerid, reason);
+    LawSystem_OnPlayerDisconnect(playerid);
+    CrimeSystem_OnPlayerDisconnect(playerid);
+    EmergencySystem_OnPlayerDisconnect(playerid);
     Core_OnPlayerDisconnect(playerid, reason);
 }
 
@@ -220,6 +226,9 @@ stock Core_RegisterDefaultRuntimeModules()
     Core_RegisterDisconnectHook("AdminSystem_OnPlayerDisconnect");
     Core_RegisterDisconnectHook("StateSystem_OnPlayerDisconnect");
     Core_RegisterDisconnectHook("PremiumSystem_OnPlayerDisconnect");
+    Core_RegisterDisconnectHook("LawSystem_OnPlayerDisconnect");
+    Core_RegisterDisconnectHook("CrimeSystem_OnPlayerDisconnect");
+    Core_RegisterDisconnectHook("EmergencySystem_OnPlayerDisconnect");
     Core_RegisterDisconnectHook("Core_OnPlayerDisconnect");
 
     return true;
