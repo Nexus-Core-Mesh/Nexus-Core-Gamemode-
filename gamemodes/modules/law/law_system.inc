@@ -43,6 +43,29 @@ stock LawSystem_OnPlayerConnect(playerid)
     gPlayerData[playerid][E_PLAYER_LAW_ROLE] = LAW_ROLE_NONE;
 }
 
+stock LawSystem_OnPlayerDisconnect(playerid)
+{
+    if (playerid < 0 || playerid >= MAX_PLAYERS)
+    {
+        return;
+    }
+
+    LawSystem_HideWanted(playerid);
+    new stateid = Core_GetValidStateOrDefault(Core_GetPlayerState(playerid), Core_GetPlayerHomeState(playerid));
+    if (Core_IsValidState(stateid))
+    {
+        DispatchSystem_ClearStateCalls(stateid);
+    }
+
+    gWantedLevel[playerid] = 0;
+    gArrestTime[playerid] = 0;
+    gPlayerLawRole[playerid] = LAW_ROLE_NONE;
+    gPlayerData[playerid][E_PLAYER_WANTED] = 0;
+    gPlayerData[playerid][E_PLAYER_JAIL_ACTIVE] = 0;
+    gPlayerData[playerid][E_PLAYER_JAIL_TIME] = 0;
+    gPlayerData[playerid][E_PLAYER_LAW_ROLE] = LAW_ROLE_NONE;
+}
+
 stock LawSystem_SetWantedLevel(playerid, level)
 {
     if (playerid < 0 || playerid >= MAX_PLAYERS)
@@ -58,11 +81,46 @@ stock LawSystem_SetWantedLevel(playerid, level)
         level = MAX_WANTED_LEVEL;
     }
 
+    new lastLevel = gWantedLevel[playerid];
+    if (lastLevel == level && gPlayerData[playerid][E_PLAYER_WANTED] == level)
+    {
+        return;
+    }
+
     gWantedLevel[playerid] = level;
     gPlayerData[playerid][E_PLAYER_WANTED] = level;
+
+    new stateid = Core_GetValidStateOrDefault(StateSystem_GetPlayerState(playerid), Core_GetPlayerHomeState(playerid));
+    if (!Core_IsValidState(stateid))
+    {
+        stateid = STATE_LOS_SANTOS;
+    }
+
     if (level > 0)
     {
-        gStateWantedCount[StateSystem_GetPlayerState(playerid)]++;
+        if (lastLevel == 0)
+        {
+            gStateWantedCount[stateid] = gStateWantedCount[stateid] + 1;
+            if (gStateWantedCount[stateid] < 0)
+            {
+                gStateWantedCount[stateid] = 0;
+            }
+
+            DispatchSystem_CreateCall(stateid, "Wanted-Verbrecher im Einsatzgebiet", DISPATCH_PRIORITY_HIGH);
+        }
+    }
+    else if (lastLevel > 0)
+    {
+        if (gStateWantedCount[stateid] > 0)
+        {
+            gStateWantedCount[stateid]--;
+        }
+        if (gStateWantedCount[stateid] < 0)
+        {
+            gStateWantedCount[stateid] = 0;
+        }
+        DispatchSystem_ClearStateCalls(stateid);
+        LawSystem_ClearWanted(playerid);
     }
 }
 
@@ -82,7 +140,17 @@ stock LawSystem_AddWanted(playerid, amount)
     {
         newLevel = MAX_WANTED_LEVEL;
     }
+
     gWantedLevel[playerid] = newLevel;
+    gPlayerData[playerid][E_PLAYER_WANTED] = newLevel;
+    if (newLevel > 0)
+    {
+        new stateid = Core_GetValidStateOrDefault(StateSystem_GetPlayerState(playerid), Core_GetPlayerHomeState(playerid));
+        if (Core_IsValidState(stateid))
+        {
+            DispatchSystem_CreateCall(stateid, "Wanted-Verbrecher im Einsatzgebiet", DISPATCH_PRIORITY_HIGH);
+        }
+    }
 }
 
 stock LawSystem_ClearWanted(playerid)
@@ -94,6 +162,8 @@ stock LawSystem_ClearWanted(playerid)
     gWantedLevel[playerid] = 0;
     gArrestTime[playerid] = 0;
     gPlayerData[playerid][E_PLAYER_WANTED] = 0;
+    gPlayerData[playerid][E_PLAYER_JAIL_ACTIVE] = 0;
+    gPlayerData[playerid][E_PLAYER_JAIL_TIME] = 0;
 }
 
 stock LawSystem_IsWanted(playerid)

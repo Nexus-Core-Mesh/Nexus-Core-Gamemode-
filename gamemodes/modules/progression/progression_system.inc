@@ -61,6 +61,10 @@ stock ProgressionSystem_AddXP(playerid, amount)
         gPlayerXP[playerid] -= PROGRESSION_BASE_XP;
         gPlayerLevel[playerid]++;
         gPlayerData[playerid][E_PLAYER_LEVEL] = gPlayerLevel[playerid];
+        if (gPlayerLevel[playerid] > 1)
+        {
+            gPlayerData[playerid][E_PLAYER_REP] = gPlayerRep[playerid] + 1;
+        }
     }
 }
 
@@ -77,6 +81,10 @@ stock ProgressionSystem_AddRep(playerid, amount)
 
     gPlayerRep[playerid] += amount;
     gPlayerData[playerid][E_PLAYER_REP] = gPlayerRep[playerid];
+    if (gPlayerRep[playerid] > 0)
+    {
+        Core_ChangePlayerBank(playerid, max(5, amount * 10));
+    }
 }
 
 stock int:ProgressionSystem_GetLevel(playerid)

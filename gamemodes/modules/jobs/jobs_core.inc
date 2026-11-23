@@ -42,6 +42,7 @@ new gPlayerJobState[MAX_PLAYERS];
 new gPlayerJobXP[MAX_PLAYERS];
 new gPlayerJobPay[MAX_PLAYERS];
 new gPlayerJobTasksDone[MAX_PLAYERS];
+new gPlayerMission[MAX_PLAYERS];
 
 stock JobsCore_Initialize()
 {
@@ -67,6 +68,7 @@ stock JobsCore_OnPlayerConnect(playerid)
     gPlayerJobXP[playerid] = 0;
     gPlayerJobPay[playerid] = 0;
     gPlayerJobTasksDone[playerid] = 0;
+    gPlayerMission[playerid] = -1;
 }
 
 stock JobsCore_OnPlayerDisconnect(playerid)
@@ -120,12 +122,42 @@ stock JobsCore_GetJobTypeName(jobType, output[], len)
         case JOB_TYPE_POLICE: format(output, len, "Polizei");
         case JOB_TYPE_MEDIC: format(output, len, "Sanitäter");
         case JOB_TYPE_TRUCKER: format(output, len, "Truckfahrer");
-        case JOB_TYPE_BUSINESS: format(output, len, "Business");
+        case JOB_TYPE_BUSINESS: format(output, len, "Business / Mechanik");
         case JOB_TYPE_STATE: format(output, len, "Staatsjob");
         case JOB_TYPE_GANG: format(output, len, "Gang/Fraktion");
         case JOB_TYPE_LOGISTICS: format(output, len, "Logistik");
         default: format(output, len, "Unbekannt");
     }
+}
+
+stock JobsCore_CanPlayerTakeFlexibleRole(playerid, stateid, requiredJobType)
+{
+    if (playerid < 0 || playerid >= MAX_PLAYERS)
+    {
+        return false;
+    }
+    if (!Core_IsValidState(stateid))
+    {
+        return false;
+    }
+
+    new currentJob = gPlayerJob[playerid];
+    if (requiredJobType == JOB_TYPE_NONE)
+    {
+        return true;
+    }
+
+    if (currentJob == JOB_TYPE_NONE || currentJob == JOB_TYPE_CIVIL)
+    {
+        return (stateid == StateSystem_GetPlayerState(playerid));
+    }
+
+    if (currentJob == JOB_TYPE_BUSINESS)
+    {
+        return true;
+    }
+
+    return currentJob == requiredJobType || requiredJobType == JOB_TYPE_NONE;
 }
 
 // Zentrale Belohnungspipeline: Lohn (Staatskasse/Steuer) -> Bank, XP, Reputation, Güter -> Inventar/Haussafe.
@@ -189,6 +221,11 @@ stock JobsCore_CompleteTask(playerid, basePay, xp, rep, itemid = 0, itemQty = 0)
     if (itemid > 0 && itemQty > 0)
     {
         JobsCore_GrantItem(playerid, itemid, itemQty);
+    }
+
+    if (MissionSystem_IsMissionActive(gPlayerMission[playerid]))
+    {
+        MissionSystem_CompleteMission(playerid);
     }
 
     new msg[128];

@@ -59,6 +59,19 @@ stock EmergencySystem_OnPlayerConnect(playerid)
     gEmergencyState[playerid] = STATE_LOS_SANTOS;
 }
 
+stock EmergencySystem_OnPlayerDisconnect(playerid)
+{
+    if (playerid < 0 || playerid >= MAX_PLAYERS)
+    {
+        return;
+    }
+
+    gEmergencyRole[playerid] = EMERGENCY_ROLE_NONE;
+    gEmergencyState[playerid] = STATE_LOS_SANTOS;
+    gPlayerData[playerid][E_PLAYER_EMERGENCY_ROLE] = EMERGENCY_ROLE_NONE;
+    gPlayerData[playerid][E_PLAYER_EMERGENCY_STATE] = STATE_LOS_SANTOS;
+}
+
 stock EmergencySystem_SetRole(playerid, role, stateid)
 {
     if (playerid < 0 || playerid >= MAX_PLAYERS)
@@ -67,9 +80,13 @@ stock EmergencySystem_SetRole(playerid, role, stateid)
         return;
 
     gEmergencyRole[playerid] = role;
-    if (Core_IsValidState(stateid))
+    gPlayerData[playerid][E_PLAYER_EMERGENCY_ROLE] = role;
+
+    new safeState = Core_GetValidStateOrDefault(stateid, Core_GetPlayerState(playerid));
+    if (Core_IsValidState(safeState))
     {
-        gEmergencyState[playerid] = stateid;
+        gEmergencyState[playerid] = safeState;
+        gPlayerData[playerid][E_PLAYER_EMERGENCY_STATE] = safeState;
     }
 }
 
@@ -87,6 +104,19 @@ stock EmergencySystem_HealPlayer(playerid, targetid)
 
     SetPlayerHealth(targetid, 100.0);
     SetPlayerArmour(targetid, 50.0);
+    if (gJailActive[targetid] == 1)
+    {
+        JailSystem_ReleasePlayer(targetid);
+    }
+    if (gWantedLevel[targetid] > 0)
+    {
+        LawSystem_ClearWanted(targetid);
+    }
+    if (gCrimeHeat[targetid] > 0)
+    {
+        gCrimeHeat[targetid] = 0;
+        gPlayerCrimeState[targetid] = 0;
+    }
     SendClientMessage(targetid, 0x00FF00AA, "[EMS] Du wurdest behandelt und stabilisiert.");
     SendClientMessage(playerid, 0x00FF00AA, "[EMS] Behandlung wurde erfolgreich ausgeführt.");
 }

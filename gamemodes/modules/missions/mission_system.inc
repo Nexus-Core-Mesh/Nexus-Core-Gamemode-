@@ -15,7 +15,6 @@ new gMissionType[MAX_MISSIONS];
 new gMissionReward[MAX_MISSIONS];
 new gMissionActive[MAX_MISSIONS];
 new gMissionName[MAX_MISSIONS][24];
-new gPlayerMission[MAX_PLAYERS];
 new Text:gMissionTD[MAX_PLAYERS][8];
 
 stock MissionSystem_Initialize()
@@ -110,6 +109,10 @@ stock MissionSystem_CompleteMission(playerid)
             return;
         }
     }
+
+    ProgressionSystem_AddXP(playerid, max(25, reward / 200));
+    ProgressionSystem_AddRep(playerid, max(1, reward / 5000));
+    StateSystem_ApplyTreasuryDelta(stateid, max(0, reward / 25));
 
     printf("[MISSION] Spieler %d hat Mission %d abgeschlossen und %d$ erhalten.", playerid, missionid, reward);
     gMissionActive[missionid] = 1;

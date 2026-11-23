@@ -23,6 +23,7 @@ new gHouseStorageMoney[MAX_HOUSES];
 new gHouseStorageItem[MAX_HOUSES][MAX_HOUSE_STORAGE_SLOTS];
 new gHouseStorageQty[MAX_HOUSES][MAX_HOUSE_STORAGE_SLOTS];
 new gHouseStorageMeta[MAX_HOUSES][MAX_HOUSE_STORAGE_SLOTS][32];
+new gHouseStorageTransferActive[MAX_HOUSES];
 
 stock HouseStorageSystem_Connect(playerid)
 {
@@ -45,6 +46,7 @@ stock HouseStorageSystem_Initialize()
         gHouseStorageState[i] = STATE_LOS_SANTOS;
         gHouseStorageSafe[i] = HOUSE_STORAGE_NONE;
         gHouseStorageMoney[i] = 0;
+        gHouseStorageTransferActive[i] = 0;
         for (new s = 0; s < MAX_HOUSE_STORAGE_SLOTS; s++)
         {
             gHouseStorageItem[i][s] = INVENTORY_ITEM_NONE;
@@ -58,6 +60,70 @@ stock HouseStorageSystem_Initialize()
     HouseStorageSystem_RegHouse(2, STATE_LAS_VENTURAS, -1, HOUSE_STORAGE_SAFE, 8000);
 
     print("[HOUSE_STORAGE] Haus-Safes und Lagerplätze initialisiert");
+}
+
+stock HouseStorageSystem_TransferInventoryOnSale(playerid, oldHouseid, newHouseid)
+{
+    if (playerid < 0 || playerid >= MAX_PLAYERS)
+    {
+        return false;
+    }
+    if (oldHouseid < 0 || oldHouseid >= MAX_HOUSES)
+    {
+        return false;
+    }
+    if (newHouseid != -1 && (newHouseid < 0 || newHouseid >= MAX_HOUSES))
+    {
+        return false;
+    }
+
+    new moved = 0;
+    if (newHouseid == -1)
+    {
+        for (new s = 0; s < MAX_HOUSE_STORAGE_SLOTS; s++)
+        {
+            if (gHouseStorageItem[oldHouseid][s] != INVENTORY_ITEM_NONE && gHouseStorageQty[oldHouseid][s] > 0)
+            {
+                gHouseStorageItem[oldHouseid][s] = INVENTORY_ITEM_NONE;
+                gHouseStorageQty[oldHouseid][s] = 0;
+                format(gHouseStorageMeta[oldHouseid][s], 32, "NONE");
+                moved++;
+            }
+        }
+        if (gHouseStorageMoney[oldHouseid] > 0)
+        {
+            gHouseStorageMoney[oldHouseid] = 0;
+            moved++;
+        }
+        gHouseStorageTransferActive[oldHouseid] = 0;
+        return moved > 0;
+    }
+
+    for (new s = 0; s < MAX_HOUSE_STORAGE_SLOTS; s++)
+    {
+        if (gHouseStorageItem[oldHouseid][s] != INVENTORY_ITEM_NONE && gHouseStorageQty[oldHouseid][s] > 0)
+        {
+            if (!HouseStorageSystem_StoreItem(playerid, newHouseid, gHouseStorageItem[oldHouseid][s], gHouseStorageQty[oldHouseid][s], gHouseStorageMeta[oldHouseid][s]))
+            {
+                return false;
+            }
+
+            gHouseStorageItem[oldHouseid][s] = INVENTORY_ITEM_NONE;
+            gHouseStorageQty[oldHouseid][s] = 0;
+            format(gHouseStorageMeta[oldHouseid][s], 32, "NONE");
+            moved++;
+        }
+    }
+
+    if (gHouseStorageMoney[oldHouseid] > 0)
+    {
+        gHouseStorageMoney[newHouseid] += gHouseStorageMoney[oldHouseid];
+        gHouseStorageMoney[oldHouseid] = 0;
+        moved++;
+    }
+
+    gHouseStorageTransferActive[oldHouseid] = 0;
+    return moved > 0;
 }
 
 stock HouseStorageSystem_RegHouse(houseid, stateid, ownerid, type, money)

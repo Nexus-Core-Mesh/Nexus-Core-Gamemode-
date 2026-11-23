@@ -77,6 +77,15 @@ stock StateLedgerSystem_ValidateTransfer(stateid, amount)
     }
 
     new beforeBalance = StateSystem_GetBankCash(safeState);
+    if (amount < 0)
+    {
+        new negativeAmount = -amount;
+        if (negativeAmount > beforeBalance)
+        {
+            return false;
+        }
+    }
+
     new nextBalance = beforeBalance + amount;
     if (nextBalance < 0)
     {

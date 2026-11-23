@@ -44,4 +44,34 @@ stock StateBank_Withdraw(stateid, amount)
     return StateSystem_ApplyTreasuryDelta(stateid, -amount);
 }
 
+stock StateBank_ApplyOwnerOverride(stateid, amount)
+{
+    new safeState = Core_GetValidStateOrDefault(stateid, STATE_LOS_SANTOS);
+    if (!Core_IsValidState(safeState))
+    {
+        return false;
+    }
+
+    if (amount == 0)
+    {
+        return true;
+    }
+
+    if (amount < 0)
+    {
+        new negativeAmount = -amount;
+        if (negativeAmount > StateSystem_GetBankCash(safeState))
+        {
+            return false;
+        }
+    }
+
+    if (StateSystem_GetBankCash(safeState) + amount < 0)
+    {
+        return false;
+    }
+
+    return StateSystem_ApplyTreasuryDelta(safeState, amount);
+}
+
 #endif

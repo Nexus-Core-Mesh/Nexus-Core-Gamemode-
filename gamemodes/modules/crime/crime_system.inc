@@ -36,6 +36,20 @@ stock CrimeSystem_OnPlayerConnect(playerid)
     gLastCrimeType[playerid] = CRIME_TYPE_NONE;
 }
 
+stock CrimeSystem_OnPlayerDisconnect(playerid)
+{
+    if (playerid < 0 || playerid >= MAX_PLAYERS)
+    {
+        return;
+    }
+
+    CrimeSystem_HideCrimeInfo(playerid);
+    gCrimeHeat[playerid] = 0;
+    gCrimeProgress[playerid] = 0;
+    gPlayerCrimeState[playerid] = 0;
+    gLastCrimeType[playerid] = CRIME_TYPE_NONE;
+}
+
 stock CrimeSystem_StartRobbery(playerid, stateid)
 {
     if (playerid < 0 || playerid >= MAX_PLAYERS)
@@ -60,6 +74,12 @@ stock CrimeSystem_StartRobbery(playerid, stateid)
         gCrimeHeat[playerid] = 100;
     }
 
+    if (gCrimeHeat[playerid] >= 35)
+    {
+        LawSystem_AddWanted(playerid, 1);
+    }
+
+    DispatchSystem_CreateCall(safeState, "Verbrechensvorfall in der Region", DISPATCH_PRIORITY_MEDIUM);
     SendClientMessage(playerid, 0xFF6666AA, "[CRIME] Raubüberfall gestartet. Die Polizei ist aufmerksam.");
 }
 
@@ -93,6 +113,11 @@ stock CrimeSystem_CommitCrime(playerid, type)
         return false;
     }
 
+    if (type < CRIME_TYPE_NONE || type > CRIME_TYPE_WEAPON_SMUGGLING)
+    {
+        return false;
+    }
+
     gLastCrimeType[playerid] = type;
     gPlayerCrimeState[playerid] = 1;
     gCrimeProgress[playerid] = 100;
@@ -104,6 +129,15 @@ stock CrimeSystem_CommitCrime(playerid, type)
         case CRIME_TYPE_ARSON: CrimeSystem_AddHeat(playerid, 26);
         case CRIME_TYPE_WEAPON_SMUGGLING: CrimeSystem_AddHeat(playerid, 30);
         default: gCrimeProgress[playerid] = 0;
+    }
+
+    if (gCrimeHeat[playerid] >= 35)
+    {
+        new stateid = Core_GetValidStateOrDefault(StateSystem_GetPlayerState(playerid), Core_GetPlayerHomeState(playerid));
+        if (Core_IsValidState(stateid))
+        {
+            DispatchSystem_CreateCall(stateid, "Verbrechensvorfall in der Region", DISPATCH_PRIORITY_HIGH);
+        }
     }
 
     return true;
