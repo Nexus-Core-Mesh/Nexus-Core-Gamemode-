@@ -66,7 +66,7 @@ def audit_scriptfiles(root: Path):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Validate Dini-first scriptfiles paths against the source tree.')
+    parser = argparse.ArgumentParser(description='Validate SQLite-only scriptfiles paths against the source tree.')
     parser.add_argument('--root', default='.', help='Project root to scan')
     args = parser.parse_args()
 

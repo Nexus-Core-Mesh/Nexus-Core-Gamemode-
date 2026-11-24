@@ -7,7 +7,7 @@
 ## ✅ Wichtig zu wissen
 
 - Technische Fakten, Befehle, Pfade und Projektregeln bleiben bewusst unverändert.
-- Port- und Systemtrennung bleiben konsistent, insbesondere für den 7780-Contract und den Dini-first-Pfad.
+- Port- und Systemtrennung bleiben konsistent, insbesondere für den 7780-Contract und den SQLite-only-Pfad.
 - Die optische Aufwertung dient nur der Lesbarkeit, nicht der inhaltlichen Interpretation.
 
 ---
@@ -23,7 +23,7 @@
 ---
 ## 📊 Veröffentlichungsstatus
 
-Dieses Projekt ist als modularer, erweiterbarer GTA:SA-Reallife-Gamemode für einen 3-Staaten-Server dokumentiert. Der aktuelle Stand ist ein konsistenter Dini-first-/Fallback-Architektur- und Build-Validierungsstand, aber keine finale Live-Release-Freigabe für einen echten Ubuntu-VM-Produktionslauf. Der reale Freigabe-Gate bleibt erst dann erfüllt, wenn `pawncc`/`qemu-i386`, die vollständige `scriptfiles/`-Struktur, der echte Service-Start und die SQLite-/Control-Panel-Synchronisierung auf der Ziel-VM ohne offene Blocker bestanden sind.
+Dieses Projekt ist als modularer, erweiterbarer GTA:SA-Reallife-Gamemode für einen 3-Staaten-Server dokumentiert. Der aktuelle Stand ist ein konsistenter SQLite-only-/Fallback-Architektur- und Build-Validierungsstand, aber keine finale Live-Release-Freigabe für einen echten Ubuntu-VM-Produktionslauf. Der reale Freigabe-Gate bleibt erst dann erfüllt, wenn `pawncc`/`qemu-i386`, die vollständige `scriptfiles/`-Struktur, der echte Service-Start und die SQLite-/Control-Panel-Synchronisierung auf der Ziel-VM ohne offene Blocker bestanden sind.
 
 Die Kernidee ist bewusst: keine monolithische `gamemode.pwn`-Logik, sondern ein klares Modul- und Layer-System mit separaten Bereichen für Core, State, Government, Economy, Housing, Jobs, Factions, Vehicles, Inventory, Services und Web-Management.
 
@@ -43,7 +43,7 @@ Hinweis: Das GitHub-Root-README ist die sichtbare Projektübersicht auf mobil/Br
 - eigene Staatskasse pro Staat
 - eigene Verwaltung, Steuern, Revenue- und Treasury-Logik je Staat
 - 3x/1Admin-Architektur mit globalem Admin, staatlichem Admin und State-Leitung
-- Dini-first Persistenz mit robuster `scriptfiles/`-Fallback-Schicht und optionaler SQLite/MySQL-Autosync-Integration
+- SQLite-only Persistenz mit robuster `scriptfiles/`-Fallback-Schicht und optionaler SQLite/MySQL-Autosync-Integration
 - modulare Struktur für einzelne Systeme, die unabhängig ausgebaut werden können
 - Textdraw-basierte Auth- und Login-Flows
 - Heimatstadt-, Tutorial- und Intro-Camera-Systeme
@@ -76,7 +76,7 @@ Diese Skripte laden den jeweiligen Implementierungsteil aus `tools/` und nutzen 
 Wichtige Regeln:
 
 - `control-panel/server.js` liest nur lesend aus `data/db/gtasa_reallife.db` und ist keine primäre Schreibquelle.
-- Der Gamemode selbst bleibt Dini-first über `Compiler/samp03/scriptfiles/`; dadurch bleibt die SQLite-Sicht nur dann korrekt, wenn Dini- und SQLite-Pfade synchronisiert wurden.
+- Der Gamemode selbst bleibt SQLite-only über `Compiler/samp03/scriptfiles/`; dadurch bleibt die SQLite-Sicht nur dann korrekt, wenn SQLite-Pfade synchronisiert wurden.
 - Ein fehlendes `node`/`npm` oder eine unvollständige `npm install` blockiert das Panel nicht mehr den Gamemode-Start, sondern erzeugt nur eine Warnung und lässt den Server-Deploy weiterlaufen.
 - Der Server-Deploy bleibt auf einen einzelnen Build-Target ausgerichtet: `Compiler/samp03/gamemodes/gtasa_reallife.amx`.
 
@@ -115,7 +115,7 @@ Zusätzlich wurden im Offline-/Audit-Pfad mehrere manuelle `python3`-Werkzeuge e
 - `business/business_system.inc` – Business-Registrierung, Einnahmen, Owner-Payouts und State-zugewiesene Treasury-Transfers mit validem State-Fallback.
 - `law/law_system.inc` und `crime/crime_system.inc` – Wanted-Status, Verbrechens-Wärme, Polizei-/Staats-Interaktion und Textdraw-Tracking für Polizei-/Crime-UI.
 - `jobs/jobs_core.inc` – zentrale Aufgaben-/Lohn-Pipeline mit staatlicher Kassenfinanzierung und steuerbarer Verteilung.
-- `premium/premium_system.inc` – Premium-/VIP-System mit Laufzeiten 30/90/300 Tage sowie Permanent, validem Ablauf-Check, zentraler Core-Integration und Dini-first/Persistence-Bridge ohne parallele State-Shadow-Quelle.
+- `premium/premium_system.inc` – Premium-/VIP-System mit Laufzeiten 30/90/300 Tage sowie Permanent, validem Ablauf-Check, zentraler Core-Integration und SQLite-only/Persistence-Bridge ohne parallele State-Shadow-Quelle.
 
 ### ✅ Aktueller Runtime-Status (Quellvalidierung)
 
@@ -155,10 +155,10 @@ Damit bleiben die kritischen Pfade für Login/Disconnect/Spawn/Rehydrate, State-
    - `module_contract.inc` ergänzt den Boot- und Runtime-Flow mit definierter Stufenfolge: Boot → DB-ready → State-ready → Runtime-ready.
    - `Core_SetLifecycleStage()` und `Core_AssertLifecycleStage()` erzwingen ein vorhersehbares Startprotokoll, damit Module nicht implizit in falscher Reihenfolge initialisiert werden.
 
-3. Dini-first-Atomarität und SQL-Sync-Abgrenzung wurden explizit getrennt.
-   - `DB_BeginTransaction()`/`DB_CommitTransaction()` sind für optionale SQLite/MySQL-Sync- und Audit-Pfade relevant, aber sie ersetzen nicht die primäre Dini-first-Transaktionslogik im laufenden Serverzustand.
-   - Der echte primäre Schreibpfad bleibt `scriptfiles/`-Dini; kritische Transfers müssen als temp-Datei → validate → rename ohne halbe Zustände abgewickelt werden.
-   - SQLite/MySQL dient ergänzend als Autosync- oder Dashboard-Quelle und niemals als alleiniger Ersatz für den Dini-first-Save-Stack.
+3. SQLite-only-Atomarität und SQL-Sync-Abgrenzung wurden explizit getrennt.
+   - `DB_BeginTransaction()`/`DB_CommitTransaction()` sind für optionale SQLite/MySQL-Sync- und Audit-Pfade relevant, aber sie ersetzen nicht die primäre SQLite-only-Transaktionslogik im laufenden Serverzustand.
+   - Der echte primäre Schreibpfad bleibt `scriptfiles/`-SQLite; kritische Transfers müssen als temp-Datei → validate → rename ohne halbe Zustände abgewickelt werden.
+   - SQLite/MySQL dient ergänzend als Autosync- oder Dashboard-Quelle und niemals als alleiniger Ersatz für den SQLite-only-Save-Stack.
 
 4. Schema- und Constraint-Logik wurde für die wichtigen Tabellen erweitert.
    - `houses` hat klare `ON DELETE CASCADE`-/`SET NULL`-Beziehungen.
@@ -166,14 +166,14 @@ Damit bleiben die kritischen Pfade für Login/Disconnect/Spawn/Rehydrate, State-
    - `inventory`, `house_storage_items`, `ubb_vehicles` sind mit gültigen Index- und Value-Grenzen versehen.
 
 5. State- und Treasury-Logik wurde auf eine gemeinsame Quelle zurückgeführt.
-   - `Core_*`-Bankwerte, `StateSystem_*`-Kassen und die Dini-/SQLite-Reload-Pfade bilden einen konsistenten Datenfluss; die primäre Live-Quelle bleibt jedoch der Dini-first-Storage in `scriptfiles/`.
+   - `Core_*`-Bankwerte, `StateSystem_*`-Kassen und die SQLite-Reload-Pfade bilden einen konsistenten Datenfluss; die primäre Live-Quelle bleibt jedoch der SQLite-only-Storage in `scriptfiles/`.
 
 6. Für kritische Systeme gibt es Guard-Checks gegen ungültige Werte.
    - Arrayslots, Item-Quantitäten und Fahrzeug-/Safe-Operationen prüfen explizit Grenzen und Zustände.
 
-## 🏗️ Scriptfiles-/Dini-Laufzeitstruktur und 7780-Ordner
+## 🏗️ Scriptfiles-/SQLite-Laufzeitstruktur und 7780-Ordner
 
-Neben den modularen Source-Dateien wurde die physische Laufzeitstruktur unter `Compiler/samp03/scriptfiles/` vollständig ergänzt, damit der Dini-first-Write-Pfad nicht an fehlenden Verzeichnissen scheitert. Die aktuelle Struktur umfasst die kritischen Speicherpfade für Spieler, Häuser, House-Storage, Safes, Fahrzeuge, UBB-Fahrzeuge, Staatskassen, Business-, Faction- und Inventardaten sowie temporäre und Backup-Dateien:
+Neben den modularen Source-Dateien wurde die physische Laufzeitstruktur unter `Compiler/samp03/scriptfiles/` vollständig ergänzt, damit der SQLite-only-Write-Pfad nicht an fehlenden Verzeichnissen scheitert. Die aktuelle Struktur umfasst die kritischen Speicherpfade für Spieler, Häuser, House-Storage, Safes, Fahrzeuge, UBB-Fahrzeuge, Staatskassen, Business-, Faction- und Inventardaten sowie temporäre und Backup-Dateien:
 
 - `Compiler/samp03/scriptfiles/players/`
 - `Compiler/samp03/scriptfiles/houses/`
@@ -337,23 +337,23 @@ Die neuen `tools/*.py`-Helfer sind bewusst auf keinen Hintergrundbetrieb oder Da
 
 ### 📘 Kritische Übergangspunkte
 
-1. Dini-first vs. Control Panel
+1. SQLite-only vs. Control Panel
    - Das Web-Dashboard ist offiziell als SQLite-Read-Only-Lesezugriff konzipiert.
-   - Wenn der Gamemode im Alltag primär per Dini in `Compiler/samp03/scriptfiles/` schreibt, muss jeder relevante Save-Pfad entweder synchron in SQLite upserted werden oder das Node.js-Backend muss die INI-Dateien direkt lesen.
+   - Wenn der Gamemode im Alltag primär per SQLite in `Compiler/samp03/scriptfiles/` schreibt, muss jeder relevante Save-Pfad entweder synchron in SQLite upserted werden oder das Node.js-Backend muss die INI-Dateien direkt lesen.
    - Ohne diese Synchronisation bleiben Staatskassen, Häuser und Spielerstatus in `control-panel/server.js` veraltet oder leer.
 
-2. Atomarität bei Dini statt SQL-Transaction
-   - `DB_BeginTransaction()`/`BEGIN EXCLUSIVE TRANSACTION` ist für SQL-Backends geeignet, aber Dini schreibt direkt in Textdateien ohne Transaktions-Rollback.
+2. Atomarität bei SQLite statt SQL-Transaction
+   - `DB_BeginTransaction()`/`BEGIN EXCLUSIVE TRANSACTION` ist für SQL-Backends geeignet, aber SQLite schreibt direkt in Textdateien ohne Transaktions-Rollback.
    - Für kritische Pfade (`StateLedgerSystem_Transfer()`, Haus-Safes, Fahrzeug- und Inventar-Transfers) muss die Speicherlogik absichtlich robust sein: temp-Datei schreiben, atomisch umbenennen, dabei keine halben Zustände zulassen.
    - Wenn ein Server-Crash mitten im Schreibvorgang auftritt, dürfen keine Werte als "abgebucht aber nicht gutgeschrieben" in scriptfiles/ landen.
 
 3. Include-Reihenfolge und Guard-Layer
    - Die Reihenfolge `Core → DB → State → Admin → Auth → Economy → Jobs → Laws → Housing/Vehicle → Leisure/Web` bleibt bindend.
    - `core.inc` und `production_guard.inc` müssen mit `pawncc` gegen den echten Compiler laufen, damit Makro-, Tag- und Include-Konflikte sichtbar werden.
-   - Gerade Dini-Wrapper und `DB_*`-Signaturen müssen gegen die reale Pawn-Toolchain geprüft werden, nicht nur in der Container-Struktur.
+   - Gerade SQLite-Wrapper und `DB_*`-Signaturen müssen gegen die reale Pawn-Toolchain geprüft werden, nicht nur in der Container-Struktur.
 
 4. Echte scriptfiles/-Verzeichnisstruktur unter Linux
-   - Dini legt Unterordner nicht automatisch an.
+   - SQLite legt Unterordner nicht automatisch an.
    - Vor dem Start der SAMP-/OMP-Daemons müssen alle erwarteten Ordner in `Compiler/samp03/scriptfiles/` physisch existieren, etwa für Spieler, Häuser, Safes, UBB-Fahrzeuge und die Staatskassen LS/SF/LV.
    - Schreibrechte und Dateierstellung müssen sauber auf den Servernutzer passen.
 
@@ -378,10 +378,10 @@ ls -ld Compiler/samp03/scriptfiles Compiler/samp03/scriptfiles/*
 Danach wird verifiziert:
 
 - `gtasa_reallife.amx` wird gebaut
-- keine Makro-/Tag-Fehler aus der Dini-Umstellung
+- keine Makro-/Tag-Fehler aus der SQLite-Umstellung
 - `scriptfiles/` enthält die erwarteten Verzeichnisse mit Schreibrechten
 - `samp.service`, `samp2.service` oder `omp-server.service` startet ohne Runtime-Fehler
-- `control-panel/server.js` zeigt denselben Stand wie die Dini-Dateien bzw. liest dieselben Daten synchronisiert
+- `control-panel/server.js` zeigt denselben Stand wie die SQLite-Dateien bzw. liest dieselben Daten synchronisiert
 
 ### 📘 Abnahme-/Erfolgs-Kriterien
 
@@ -389,7 +389,7 @@ Die Übergabe gilt als erfüllt, wenn alle folgenden Kriterien in der echten Ubu
 
 - Kompilierung: `pawncc` via `qemu-i386` läuft ohne blockierende Fehler und erzeugt die aktuelle `.amx` im `Compiler/samp03/gamemodes/`-Pfad.
 - Persistenz & Reconnect: Registrierung, Login, Home-State-Wahl LS/SF/LV und Reconnect schreiben erwartete Schlüssel-Wert-Einträge in `scriptfiles/` und laden sie identisch wieder.
-- Autosync & Control Panel: Nach einem Dini-Write landet der gleiche Stand in SQLite bzw. wird im Panel lesend konsistent dargestellt, ohne falsche Annahmen über Schreibrechte.
+- Autosync & Control Panel: Nach einem SQLite-Write landet der gleiche Stand in SQLite bzw. wird im Panel lesend konsistent dargestellt, ohne falsche Annahmen über Schreibrechte.
 - Mirror & Doku: Änderungen an Modulen, c++-Spiegeln und Dokumentation bleiben zueinander synchronisiert; veraltete Pfade und tote Verweise sind nicht mehr enthalten.
 
 ## 📊 Verifikation und Einschränkungen
@@ -400,11 +400,11 @@ Dieser Container ist nicht die reale Produktionsumgebung; dort müssen die echte
 - Include-/Abhängigkeitsprüfung
 - DB-Schema- und SQL-Constraint-Review
 - Hook-/Lifecycle-Logik-Review
-- Dini-first-/Fallback-Review und kritische Übergangspunkte
+- SQLite-only-/Fallback-Review und kritische Übergangspunkte
 - Kontrollpanel- und API-Checks auf projektinternes Setup
 - Sanierung kritischer Makro-/Include-Definitionskonflikte, damit die Core-, DB- und Guard-Layer in einer deterministischen Reihenfolge verwendbar sind
 
-Ergebnis: Die Build- und Architektur-Validierung ist sauber, aber die vollständige Live-Prüfung auf der Ubuntu-VM mit `pawncc`, `qemu-i386`, `samp.service` und den realen Dini-Pfaden ist der entscheidende letzte Gate.
+Ergebnis: Die Build- und Architektur-Validierung ist sauber, aber die vollständige Live-Prüfung auf der Ubuntu-VM mit `pawncc`, `qemu-i386`, `samp.service` und den realen SQLite-Pfaden ist der entscheidende letzte Gate.
 
 ## 📊 Stabilisierung und Release-Status
 
@@ -415,10 +415,10 @@ Zusätzlich wurden die kritischen Übergänge auf einen konsistenten Datenfluss 
 - DB-Transaktions-Wrapper für optionale SQL-Sync-/Audit-Pfade
 - definierte Hook-Reihenfolge im Connect-/Disconnect-Lifecycle
 - Guards für Array-Slots und Stack-Grenzen
-- State-Kassensystem als gemeinsame Single Source of Truth im Dini-first-Livepfad
+- State-Kassensystem als gemeinsame Single Source of Truth im SQLite-only-Livepfad
 - Schema-Definitionen für Inventar, House-Safe und UBB-Fahrzeuge mit validierten Constraints
 
-Damit bleibt das Projekt als modularer, erweiterbarer Ausgangspunkt für ein reales 3-Staaten-Reallife-System nachvollziehbar, sauber strukturiert und für die letzte reale Ubuntu-VM-Validierung vorbereitet. Ein formeller Release-Status gilt erst mit erfolgreichem Live-Start, sauberem `pawncc`-Build und erfolgreichem Dini-/SQLite-/Control-Panel-Check auf der Ziel-VM.
+Damit bleibt das Projekt als modularer, erweiterbarer Ausgangspunkt für ein reales 3-Staaten-Reallife-System nachvollziehbar, sauber strukturiert und für die letzte reale Ubuntu-VM-Validierung vorbereitet. Ein formeller Release-Status gilt erst mit erfolgreichem Live-Start, sauberem `pawncc`-Build und erfolgreichem SQLite-/Control-Panel-Check auf der Ziel-VM.
 
 ## 📘 Projekt-Dokumentation
 
@@ -452,7 +452,7 @@ Damit bleibt das Projekt als modularer, erweiterbarer Ausgangspunkt für ein rea
 
 ## 📘 Abschluss
 
-Die Projektbasis ist jetzt als konsistenter modularer RP-Framework-Stand dokumentiert und für den aktuellen Build-/Architektur-Abschnitt verifiziert. Die Dokumentation ist breit genug für echtes Reallife-Gameplay, stabil genug für produktionsnahe Architekturreflexionen und modular genug, um künftig einzelne Komponenten ohne kompletten Rewrite zu erweitern. Eine formelle Live-Release-Freigabe bleibt jedoch explizit offen, bis der echte Ubuntu-VM-Produktionslauf mit Kompilierung, Dini-Persistenz, Autosync, Panel-Validierung und Server-Daemonen bestanden ist. Der im Repository gültige Runtime-Contract bleibt der 7780-Tree unter `Compiler/samp03/`, nicht Port 7777.
+Die Projektbasis ist jetzt als konsistenter modularer RP-Framework-Stand dokumentiert und für den aktuellen Build-/Architektur-Abschnitt verifiziert. Die Dokumentation ist breit genug für echtes Reallife-Gameplay, stabil genug für produktionsnahe Architekturreflexionen und modular genug, um künftig einzelne Komponenten ohne kompletten Rewrite zu erweitern. Eine formelle Live-Release-Freigabe bleibt jedoch explizit offen, bis der echte Ubuntu-VM-Produktionslauf mit Kompilierung, SQLite-Persistenz, Autosync, Panel-Validierung und Server-Daemonen bestanden ist. Der im Repository gültige Runtime-Contract bleibt der 7780-Tree unter `Compiler/samp03/`, nicht Port 7777.
 
 ---
 
@@ -467,7 +467,7 @@ Der aktuelle Stand des Repositorys ist bewusst auf Stabilität, Source-Validity 
 - `INSERT OR IGNORE` und 0-Schutz bei kritischen State-Werten erhalten
 - `strmid`-basierte Token-Extraktion beibehalten
 - `INVALID_TEXT_DRAW`- und `SetCameraBehindPlayer()`-Baselines erhalten
-- Dini-first-Temp/Validate/Rename-Pfade für kritische Transfers sowie SQLite-Read-Only-Sicht konsistent dokumentiert
+- SQLite-only-Temp/Validate/Rename-Pfade für kritische Transfers sowie SQLite-Read-Only-Sicht konsistent dokumentiert
 - qemu-i386-Hotpath-Guards für `TextWars_Tick`, `UBBVehicleSystem_Connect` und ähnliche Laufzeit-Sensiblitäten beibehalten
 
 ### 📊 Offener, aber klar definierter Status
@@ -486,7 +486,7 @@ Diese Notiz ergänzt die bisherigen Dokumentationsabschnitte ohne sie zu übersc
 
 - Reale Build-Blocker direkt im Quellbaum bereinigt: fehlende `GetServerTime()`-Aufrufe wurden auf das in der Pawn-Toolchain verfügbare `gettime()`-Contract zurückgeführt; dadurch entfielen echte Compile-Fehler unter `qemu-i386`.
 - Fehlende DB-Schnittstelle behoben: `DB_GetPlayerHomeState()` wurde in `gamemodes/modules/db/db_interface.inc` ergänzt, damit `state_system.inc` und die Connect-/Rehydrate-Pfade gegen gültige `home_state`-Werte wieder konsistent laufen.
-- Premium-Persistenz bleibt Dini-first: `premium_system.inc` nutzt weiterhin den scriptfiles-/Dini-Pfad und validiert Ablauf-/Tierzustände ohne parallelen Shadow-State.
+- Premium-Persistenz bleibt SQLite-only: `premium_system.inc` nutzt weiterhin den scriptfiles-/SQLite-Pfad und validiert Ablauf-/Tierzustände ohne parallelen Shadow-State.
 - Build-Check wieder grün: `bash scripts/build_gamemode.sh` lief erfolgreich durch und erzeugte `Compiler/samp03/gamemodes/gtasa_reallife.amx` ohne Live-Serverstart.
 - Offline-Checks liefen durch: Python-Compile, Shell-Syntax, JS-Check (falls verfügbar) und die statischen Guard-Skripte blieben ohne Fehler.
 - Offener Status bleibt bewusst unverändert: echte Live-Validierung auf Port 7780 muss weiterhin auf der realen Ubuntu-VM erfolgen; sie wurde hier nicht unterstellt.
@@ -500,11 +500,11 @@ Diese Ergänzung erweitert die vorhandene Dokumentation ohne bestehende Abschnit
 - Gesamt-Stand: Der Quellbaum ist als modularer Gamemode mit klarer Kern-/State-/DB-/UI-Architektur aktiv. Der zentrale Build- und Laufzeitcontract bleibt auf `Compiler/samp03/gamemodes/gtasa_reallife.amx`, `gamemode0 gtasa_reallife 1` und `port 7780` fixiert; Port `7777` bleibt kein aktiver Projekt-Contract.
 - Core-/State-Quelle: `Compiler/samp03/gamemodes/modules/core/core.inc` bleibt die Single Source of Truth für `state`, `home_state`, Bank, Admin-/Projektleiterrechte und gemeinsame Validierung. Das gilt auch für `Core_IsValidState()`, `Core_GetValidStateOrDefault()`, `Core_SetPlayerState()` und `Core_SetPlayerHomeState()`.
 - Lifecycle: `Compiler/samp03/gamemodes/gamemode.pwn` setzt die aktive Reihenfolge `BOOT -> DB_READY -> STATE_READY -> AUTH_READY -> WORLD_READY -> RUNTIME_READY`, mit Include- und Initialisierungsreihenfolge in der beschriebenen Architektur. Die Strukturen sind im derzeitigen Source-Stand aktiviert und konsistent.
-- Dini-/SQLite-/MySQL: `Compiler/samp03/scriptfiles/` bleibt der Dini-first/Laufzeitpersistenzpfad mit `temp -> validate -> rename`-Design; `control-panel/server.js` liest `data/db/gtasa_reallife.db` schreibgeschützt und dient der Betriebsansicht. MySQL ist im aktuellen Quellbaum nur als Stub-/Nachlauf-Backend vorhanden und nicht als aktive Write-Route verknüpft.
+- SQLite-/MySQL: `Compiler/samp03/scriptfiles/` bleibt der SQLite-only/Laufzeitpersistenzpfad mit `temp -> validate -> rename`-Design; `control-panel/server.js` liest `data/db/gtasa_reallife.db` schreibgeschützt und dient der Betriebsansicht. MySQL ist im aktuellen Quellbaum nur als Stub-/Nachlauf-Backend vorhanden und nicht als aktive Write-Route verknüpft.
 - State-Guard: Die 0-Reset-Schutzlogik ist im Core-/State-/Login-/Disconnect-Stack aktiv. Gültige `state_id`- und `home_state`-Werte werden nicht auf 0 normiert; stattdessen werden Fallbacks auf valide Zustände verwendet.
 - Guardrails: `TextWars_Tick`, frühe `If -> Return`-Guards, `SetCameraBehindPlayer()`, `TogglePlayerControllable`, `INVALID_TEXT_DRAW`-Konventionen und Wohn-/State-Normalisierung sind im Code als aktive Schutzmechanismen vorhanden.
 - Build-Status: Der aktuelle Container fehlt die 32-Bit-Pawn-Toolchain; `bash build_server.sh` endet mit `qemu-i386: command not found` und `Compiler/samp03/gamemodes/gtasa_reallife.amx` ist im Container nicht produziert. Das betrifft die reale Kompilierung, nicht die Source-/Architektur-Analyse.
-- Open Gaps: Der echte Live-Test auf Port 7780, die vollständige Dini-zu-SQLite-Transparenz in der Laufzeit, die finale AMX-Kompilierung und die tatsächliche serverseitige Prüfung der `scriptfiles/`-Struktur bleiben für die Zielumgebung offen und sind keine Release-Freigaben.
+- Open Gaps: Der echte Live-Test auf Port 7780, die vollständige SQLite-zu-SQLite-Transparenz in der Laufzeit, die finale AMX-Kompilierung und die tatsächliche serverseitige Prüfung der `scriptfiles/`-Struktur bleiben für die Zielumgebung offen und sind keine Release-Freigaben.
 
 ---
 
@@ -513,10 +513,10 @@ Diese Ergänzung erweitert die vorhandene Dokumentation ohne bestehende Abschnit
 Diese Ergänzung erweitert den vorhandenen Status ohne bestehende Abschnitte zu verändern.
 
 - Source-Härtung: In `Compiler/samp03/gamemodes/modules/auth/login_system.inc` und `Compiler/samp03/gamemodes/modules/core/core.inc` wurden frühe Connect-/Disconnect-Guards verschärft, damit gültige `state_id`/`home_state`-Werte nicht durch vorzeitige Default-Resets verworfen werden. Die Logik nutzt `Core_GetValidStateOrDefault()` vor einer Normalisierung oder einem Reset.
-- SQLite-/Persistenzstand: `data/db/gtasa_reallife.db` wird als lokale Grundlage für die lesende Control-Panel-Perspektive behandelt; die Laufzeit-Persistenz bleibt Dini-first unter `Compiler/samp03/scriptfiles/` mit atomarem `temp -> validate -> rename`-Muster und ohne Live-Serverstart.
+- SQLite-/Persistenzstand: `data/db/gtasa_reallife.db` wird als lokale Grundlage für die lesende Control-Panel-Perspektive behandelt; die Laufzeit-Persistenz bleibt SQLite-only unter `Compiler/samp03/scriptfiles/` mit atomarem `temp -> validate -> rename`-Muster und ohne Live-Serverstart.
 - Offline-Checks: `tools/qemu_7780_readiness_check.py` und `tools/audit_modules_and_guards.py` wurden ausgeführt. Der statische Check bestätigt die 7780-Architektur- und Single-Target-Contract-Regeln, während der Build-Pfad durch das fehlende `qemu-i386`-Binary in der aktuellen Umgebung blockiert ist.
 - Build-Status: `bash build_server.sh` endet aktuell mit `qemu-i386: command not found`; damit bleibt die Quellvalidierung sauber, aber die reale AMX-Kompilierung auf `Compiler/samp03/gamemodes/gtasa_reallife.amx` in dieser Umgebung ausgesetzt.
-- Freigabe-Gate: Kein Live-Server auf Port 7780 oder 7777 wurde gestartet; der verbleibende Testbedarf ist weiterhin ein echter Laufzeit-Check auf Port 7780 mit funktionierendem `qemu-i386`/Pawn-Toolchain, validierter Scriptfiles-Struktur und auslaufender SQLite-/Dini-Abgleichung.
+- Freigabe-Gate: Kein Live-Server auf Port 7780 oder 7777 wurde gestartet; der verbleibende Testbedarf ist weiterhin ein echter Laufzeit-Check auf Port 7780 mit funktionierendem `qemu-i386`/Pawn-Toolchain, validierter Scriptfiles-Struktur und auslaufender SQLite-Abgleichung.
 
 ---
 
@@ -609,6 +609,6 @@ Diese Erweiterung dient dazu, den bisherigen Dokumentationsstand noch weiter auf
 - Tutorial: `TUTORIAL_SCENE_TIME` auf 11500 ms, Schutz gegen Start ohne Passwort/Geschlecht.
 - Skin-Flow: `LoginSystem_ShowSkinPicker()` zeigt geschlechtsabhängige 10–15 Skins, validiert `0..311`, setzt `SetPlayerSkin` vor finalem Spawn.
 - Spawn-Order: Home-State/State validiert, `StateSpawnSystem_Apply(...)` erst nach Skin-Setzung, dann `CameraSystem_ExitCameraMode`, `SetCameraBehindPlayer`, `TogglePlayerControllable(playerid, true)`, `RoleplayUI_ShowDashboard(playerid)`.
-- Compile: `bash scripts/build_gamemode.sh` erfolgreich; `gtasa_reallife.amx` wird ohne neue Errors gebaut (nur legacy warning in `includes/dini.inc`).
-- Dini-first + state-safe Fallback: gültige State-/Home-State-Werte werden nicht auf 0 zurückgesetzt; Fallback ist `STATE_LOS_SANTOS`.
+- Compile: `bash scripts/build_gamemode.sh` erfolgreich; `gtasa_reallife.amx` wird ohne neue Errors gebaut.
+- SQLite-only + state-safe Fallback: gültige State-/Home-State-Werte werden nicht auf 0 zurückgesetzt; Fallback ist `STATE_LOS_SANTOS`.
 

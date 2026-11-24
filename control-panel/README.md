@@ -7,7 +7,7 @@
 ## ✅ Wichtig zu wissen
 
 - Technische Fakten, Befehle, Pfade und Projektregeln bleiben bewusst unverändert.
-- Port- und Systemtrennung bleiben konsistent, insbesondere für den 7780-Contract und den Dini-first-Pfad.
+- Port- und Systemtrennung bleiben konsistent, insbesondere für den 7780-Contract und den SQLite-only-Pfad.
 - Die optische Aufwertung dient nur der Lesbarkeit, nicht der inhaltlichen Interpretation.
 
 ---
@@ -74,7 +74,7 @@ Danach ist das Dashboard unter `http://localhost:3001/` erreichbar.
 
 ## 📘 Projektweite Integration
 
-Das Panel ist bewusst ein optionales Betriebsmodul, nicht der primäre Spielzustand. Die zentrale Produktionsquelle bleibt der SA:MP-Gamemode mit Dini-first-Saves unter `Compiler/samp03/scriptfiles/`, während die Dashboard-Sicht lesend auf `data/db/gtasa_reallife.db` basiert.
+Das Panel ist bewusst ein optionales Betriebsmodul, nicht der primäre Spielzustand. Die zentrale Produktionsquelle bleibt der SA:MP-Gamemode mit SQLite-only-Saves unter `Compiler/samp03/scriptfiles/`, während die Dashboard-Sicht lesend auf `data/db/gtasa_reallife.db` basiert.
 
 Wenn das Panel auf dem Zielsystem nicht erreichbar ist, sollte der Server-Deploy nicht an dieser Abhängigkeit hängen. Der Projekt-Workflow ist daher:
 
@@ -117,24 +117,24 @@ Unter dieser Logik ist das Panel ein kontrollierter Zusatz-Worker: wenn `node`/`
 - Fallbacks bei leeren bzw. unvollständigen Tabellen
 - State-Normalisierung auf LS/SF/LV
 - geteilte Datenbasis mit dem Gamemode, ohne direkte Asset-/Runtime-Abhängigkeiten
-- reale Live-Validierung nur über die gleiche Zustandsquelle wie der Gamemode; bei Dini-first Persistenz muss SQLite entweder synchronisiert werden oder das Panel muss die INI-Dateien direkt lesen, sonst bleiben Staatskassen und House-/Player-Status veraltet
+- reale Live-Validierung nur über die gleiche Zustandsquelle wie der Gamemode; bei SQLite-only Persistenz muss SQLite entweder synchronisiert werden oder das Panel muss die INI-Dateien direkt lesen, sonst bleiben Staatskassen und House-/Player-Status veraltet
 - die Datenbasis des Panels ist keine primäre Speicherquelle, sondern eine lesende Betriebsansicht; fehlende Synchronisation zählt als produktiver Mismatch, nicht als normaler Zustand
-- der Panel-Read-Only-Zugriff ist im echten Betrieb nur dann korrekt, wenn der Dini-first-Save-Pfad mit einem validen SQLite-Upsert oder einer direkten INI-Lese-Sicherheitslage konsistent bleibt
+- der Panel-Read-Only-Zugriff ist im echten Betrieb nur dann korrekt, wenn der SQLite-only-Save-Pfad mit einem validen SQLite-Upsert oder einer direkten INI-Lese-Sicherheitslage konsistent bleibt
 
-## ✅ Produktionshinweis: Dini-first vs. SQLite-Read-Only
+## ✅ Produktionshinweis: SQLite-only vs. SQLite-Read-Only
 
-Das Panel ist bewusst lesend auf SQLite ausgelegt, aber der Gamemode läuft in der aktuellen Architektur Dini-first über `Compiler/samp03/scriptfiles/`. Das bedeutet für den echten Betrieb:
+Das Panel ist bewusst lesend auf SQLite ausgelegt, aber der Gamemode läuft in der aktuellen Architektur SQLite-only über `Compiler/samp03/scriptfiles/`. Das bedeutet für den echten Betrieb:
 
-- Jeder Dini-Save-Vorgang muss in SQLite als Upsert oder in einer synchronen Replication-Schicht nachvollzogen werden
+- Jeder SQLite-Save-Vorgang muss in SQLite als Upsert oder in einer synchronen Replication-Schicht nachvollzogen werden
 - Ohne diese Korrelation zeigt `control-panel/server.js` veraltete Werte für Kassen, Häuser, Fahrzeuge und Spieler an
-- Kritische Transfers müssen atomar sein: kein halber Write in Dini, sonst liefert das Panel falsche Zahlen aus einer älteren oder leeren Datenbank
-- Das Panel ist keine Ersatzquelle für den State, sondern eine lesende Betriebsansicht auf dieselbe Produktionsdatenbasis; seine Existenz ist nur dann korrekt, wenn Dini- und SQLite-Laufpfad konsistent synchronisiert sind
+- Kritische Transfers müssen atomar sein: kein halber Write in SQLite, sonst liefert das Panel falsche Zahlen aus einer älteren oder leeren Datenbank
+- Das Panel ist keine Ersatzquelle für den State, sondern eine lesende Betriebsansicht auf dieselbe Produktionsdatenbasis; seine Existenz ist nur dann korrekt, wenn SQLite-Laufpfad konsistent synchronisiert sind
 
 Das Panel ist also keine Ersatzquelle für den State, sondern eine lesende Betriebsansicht auf dieselbe Produktionsdatenbasis.
 
 ## 📊 Veröffentlichungsstand
 
-Das Control Panel ist als modernes Betriebs- und Monitoringmodul für den aktuellen Projektstand dokumentiert und auf den erweiterten RP-Stand des Projekts abgestimmt. Es bildet die betriebliche Sicht für Treasury, State-Management, Fahrzeug-Ownership, House-/Property-Status und Admin-Informationen. Ein echter Produktionsbetrieb ist nur freigegeben, wenn der Dini-first-Save-Pfad und der SQLite-/Autosync-Pfad auf der Ziel-VM konsistent synchronisiert sind.
+Das Control Panel ist als modernes Betriebs- und Monitoringmodul für den aktuellen Projektstand dokumentiert und auf den erweiterten RP-Stand des Projekts abgestimmt. Es bildet die betriebliche Sicht für Treasury, State-Management, Fahrzeug-Ownership, House-/Property-Status und Admin-Informationen. Ein echter Produktionsbetrieb ist nur freigegeben, wenn der SQLite-only-Save-Pfad und der SQLite-/Autosync-Pfad auf der Ziel-VM konsistent synchronisiert sind.
 
 ## 📌 Erweiterungsplan
 
@@ -158,6 +158,6 @@ Das Panel ist bewusst nur als Betriebs- und Managementschicht konzipiert. Die ei
 - Tutorial: `TUTORIAL_SCENE_TIME` auf 11500 ms, Schutz gegen Start ohne Passwort/Geschlecht.
 - Skin-Flow: `LoginSystem_ShowSkinPicker()` zeigt geschlechtsabhängige 10–15 Skins, validiert `0..311`, setzt `SetPlayerSkin` vor finalem Spawn.
 - Spawn-Order: Home-State/State validiert, `StateSpawnSystem_Apply(...)` erst nach Skin-Setzung, dann `CameraSystem_ExitCameraMode`, `SetCameraBehindPlayer`, `TogglePlayerControllable(playerid, true)`, `RoleplayUI_ShowDashboard(playerid)`.
-- Compile: `bash scripts/build_gamemode.sh` erfolgreich; `gtasa_reallife.amx` wird ohne neue Errors gebaut (nur legacy warning in `includes/dini.inc`).
-- Dini-first + state-safe Fallback: gültige State-/Home-State-Werte werden nicht auf 0 zurückgesetzt; Fallback ist `STATE_LOS_SANTOS`.
+- Compile: `bash scripts/build_gamemode.sh` erfolgreich; `gtasa_reallife.amx` wird ohne neue Errors gebaut.
+- SQLite-only + state-safe Fallback: gültige State-/Home-State-Werte werden nicht auf 0 zurückgesetzt; Fallback ist `STATE_LOS_SANTOS`.
 

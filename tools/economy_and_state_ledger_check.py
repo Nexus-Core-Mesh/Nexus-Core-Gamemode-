@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Read-only ledger and state consistency scanner.
 
-Checks SQLite state data and Dini/scriptfiles folders for obvious value drift,
+Checks SQLite state data and SQLite/scriptfiles folders for obvious value drift,
 negative balances, and zero-value anomalies without starting the server.
 """
 
@@ -106,7 +106,7 @@ def write_snapshot(path: Path, payload: dict):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Prüft SQLite- und Dini-/Scriptfiles-Zustände ohne Serverstart.")
+    parser = argparse.ArgumentParser(description="Prüft SQLite-/Scriptfiles-Zustände ohne Serverstart.")
     parser.add_argument("--root", default=".", help="Projektwurzel")
     parser.add_argument("--snapshot", default="", help="Optionaler Pfad für einen JSON-Snapshot")
     args = parser.parse_args()

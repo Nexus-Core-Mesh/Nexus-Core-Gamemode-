@@ -7,7 +7,7 @@
 ## ✅ Wichtig zu wissen
 
 - Technische Fakten, Befehle, Pfade und Projektregeln bleiben bewusst unverändert.
-- Port- und Systemtrennung bleiben konsistent, insbesondere für den 7780-Contract und den Dini-first-Pfad.
+- Port- und Systemtrennung bleiben konsistent, insbesondere für den 7780-Contract und den SQLite-only-Pfad.
 - Die optische Aufwertung dient nur der Lesbarkeit, nicht der inhaltlichen Interpretation.
 
 ---
@@ -48,7 +48,7 @@ Diese Dateien wurden vor dem Ablegen als ELF-32-Bit-Shared-Objects verifiziert u
 
 Die Laufzeitstruktur bleibt strikt auf den 7780-Contract ausgerichtet: `gamemode0 gtasa_reallife 1` und `port 7780` sind die gültigen Werte; kein `7777`-Eintrag darf im Serverkonfig-/Runtime-Pfad aktiv sein. Der Plugin-Ordner dient nicht als Live-Start, sondern als statische Laufzeit-/Doc-Collection für den QEMU-i386-/Linux-32-Bit-Host. Die im Repository vorhandenen `.so`-Dateien wurden verifiziert und sind als reale ELF-32-Bit-Binaries markiert; keine Platzhalter, 404-HTML-Seiten oder Fake-Mechaniken wurden als Plugin-Dateien gespeichert.
 
-Die physische Dini-/Persistenzstruktur unter `Compiler/samp03/scriptfiles/` wurde ebenfalls ergänzt. Dadurch bleiben Laufzeitpfade wie `players`, `houses`, `safes`, `vehicles`, `ubb_vehicles`, `state/LS`, `state/SF`, `state/LV`, `state_kasse/*` und `temp` trotz offline-Validierung immer vorhanden und bereit für das sichere `temp -> validate -> rename`-Schema.
+Die physische SQLite-/Persistenzstruktur unter `Compiler/samp03/scriptfiles/` wurde ebenfalls ergänzt. Dadurch bleiben Laufzeitpfade wie `players`, `houses`, `safes`, `vehicles`, `ubb_vehicles`, `state/LS`, `state/SF`, `state/LV`, `state_kasse/*` und `temp` trotz offline-Validierung immer vorhanden und bereit für das sichere `temp -> validate -> rename`-Schema.
 
 Für den reproduzierbaren Build-/Runtime-Contract des Projekts gilt:
 
@@ -90,8 +90,8 @@ Diese Prüfungen dienen als statische Sicherheits- und Konsistenzlayer ohne Live
 
 - Quellbaum- und Offline-Validierung wurden direkt im Projektbaum ausgeführt, ohne Live-Server-/7780-Zugriff.
 - `gamemodes/gamemode.pwn` und `gamemodes/modules/events/season_system.inc` wurden mit einer Source-Integration des Season-Systems erweitert und als Laufzeit-/State-Kern im Projekt-Contract verankert.
-- `Compiler/samp03/scriptfiles/` wurde auf die vollständige Dini-first-Struktur mit den state- und state_kasse-Ordnern konsistent ergänzt, inklusive `.gitkeep`-Marker und `temp -> validate -> rename`-Pfadlogik.
-- `control-panel/server.js` und `control-panel/public/app.js` wurden um eine Season-/State-API und entsprechende UI-Darstellung erweitert, mit deutlich markiertem Read-Only-/Dini-first-Statement.
+- `Compiler/samp03/scriptfiles/` wurde auf die vollständige SQLite-only-Struktur mit den state- und state_kasse-Ordnern konsistent ergänzt, inklusive `.gitkeep`-Marker und `temp -> validate -> rename`-Pfadlogik.
+- `control-panel/server.js` und `control-panel/public/app.js` wurden um eine Season-/State-API und entsprechende UI-Darstellung erweitert, mit deutlich markiertem Read-Only-/SQLite-only-Statement.
 - Offline-Checks unter `tools/` wurden für die Single-Target-Contract-Richtlinien und die scriptfiles-/State-Integrität validiert.
 - Verifizierte Plugin-Binaries im Projekt verbleiben auf dem nachweisbaren 32-Bit-Linux-Stack (`crashdetect.so`, `streamer.so`, `sscanf.so`, `mysql.so`); die restlichen Stack-Plugins bleiben offen, da keine verifizierbaren 32-Bit-ELF-Artefakte reproduzierbar bestätigt wurden.
 
@@ -104,6 +104,6 @@ Diese Prüfungen dienen als statische Sicherheits- und Konsistenzlayer ohne Live
 - Tutorial: `TUTORIAL_SCENE_TIME` auf 11500 ms, Schutz gegen Start ohne Passwort/Geschlecht.
 - Skin-Flow: `LoginSystem_ShowSkinPicker()` zeigt geschlechtsabhängige 10–15 Skins, validiert `0..311`, setzt `SetPlayerSkin` vor finalem Spawn.
 - Spawn-Order: Home-State/State validiert, `StateSpawnSystem_Apply(...)` erst nach Skin-Setzung, dann `CameraSystem_ExitCameraMode`, `SetCameraBehindPlayer`, `TogglePlayerControllable(playerid, true)`, `RoleplayUI_ShowDashboard(playerid)`.
-- Compile: `bash scripts/build_gamemode.sh` erfolgreich; `gtasa_reallife.amx` wird ohne neue Errors gebaut (nur legacy warning in `includes/dini.inc`).
-- Dini-first + state-safe Fallback: gültige State-/Home-State-Werte werden nicht auf 0 zurückgesetzt; Fallback ist `STATE_LOS_SANTOS`.
+- Compile: `bash scripts/build_gamemode.sh` erfolgreich; `gtasa_reallife.amx` wird ohne neue Errors gebaut.
+- SQLite-only + state-safe Fallback: gültige State-/Home-State-Werte werden nicht auf 0 zurückgesetzt; Fallback ist `STATE_LOS_SANTOS`.
 

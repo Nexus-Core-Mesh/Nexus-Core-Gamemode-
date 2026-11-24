@@ -5,7 +5,7 @@
 #include <a_sampdb>
 
 // Reines SQLite-Backend. Alle Laufzeit-Lese-/Schreibpfade laufen ueber diese
-// einzige Datenbankdatei. Es gibt keinen Dini-/INI-Fallback mehr.
+// einzige Datenbankdatei. Es gibt keinen INI-Fallback mehr.
 #define DB_SQLITE_FILE "data/db/gtasa_reallife.db"
 
 new DB:gSQLiteDB = DB:0;

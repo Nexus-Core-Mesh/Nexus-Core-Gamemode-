@@ -5,7 +5,7 @@ The project keeps the Pawn runtime source-first and does not require a live
 7780 server or runtime to be available while the source tree is being updated.
 This helper simply prepares and starts the read-only dashboard used for
 monitoring the project state, backed by SQLite while the gamemode itself stays
-Dini-first under Compiler/samp03/scriptfiles/.
+SQLite-only under Compiler/samp03/scriptfiles/.
 """
 
 from __future__ import annotations

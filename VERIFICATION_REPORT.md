@@ -7,7 +7,7 @@
 ## ✅ Wichtig zu wissen
 
 - Technische Fakten, Befehle, Pfade und Projektregeln bleiben bewusst unverändert.
-- Port- und Systemtrennung bleiben konsistent, insbesondere für den 7780-Contract und den Dini-first-Pfad.
+- Port- und Systemtrennung bleiben konsistent, insbesondere für den 7780-Contract und den SQLite-only-Pfad.
 - Die optische Aufwertung dient nur der Lesbarkeit, nicht der inhaltlichen Interpretation.
 
 ### Runtime-Härtung, Login-/TextDraw- und DB-Fix (aktualisiert)
@@ -41,7 +41,7 @@ Wichtigstes Ergebnis der Validierung: Die Single-Target-Build-Architektur ist te
 - `python3 -m py_compile tools/*.py` ausgeführt und ohne Fehler durchgelaufen.
 - `bash -n build_server.sh` und die relevanten Shell-Skripte geprüft.
 - Single-Target-Build auf `Compiler/samp03/gamemodes/gtasa_reallife.amx` mit dem verankerten Befehl ausgeführt und erfolgreich abgeschlossen.
-- Validierungsergebnis: `Exit-Code 0`; ein nicht blockierender Compiler-Hinweis bleibt in `includes/dini.inc` (`warning 224`).
+- Validierungsergebnis: `Exit-Code 0`; der Build ist warnungsfrei (0 Warnings).
 - Live-Server-Start auf Port 7780 blieb bewusst aus und ist für spätere explizite Freigabe offen.
 ---
 
@@ -220,7 +220,7 @@ Status: Bestanden
 - Der gezielte Build in der 7780-Target-Umgebung wurde erneut mit:
   `LD_LIBRARY_PATH="$PWD/Compiler/pawncc${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" qemu-i386 Compiler/pawncc/pawncc -o"$PWD/Compiler/samp03/gamemodes/gtasa_reallife.amx" gamemodes/gamemode.pwn -iincludes -iCompiler/samp03/include -d3`
   ausgeführt und erfolgreich abgeschlossen.
-- Erfasstes Ergebnis: `Exit-Code 0`, eine Warnung aus `includes/dini.inc` (`warning 224: indeterminate array size in "sizeof" expression (symbol "maxlength")`) und keine kritischen Buildfehler.
+- Erfasstes Ergebnis: `Exit-Code 0`, 0 Warnings und keine kritischen Buildfehler.
 - Der Source-/Build-Lauf blieb bewusst auf Quellvalidierung und AMX-Compile begrenzt; kein Start des SA:MP-Prozesses, kein Live-Test und kein Commit wurden in diesem Lauf ausgeführt.
 
 ### 🔧 4.3 Bewertung der Build-Pipeline
@@ -395,7 +395,7 @@ Die technische Grundlage für einen produktiven Einsatz ist sauber vorbereitet:
 - Konfiguration stimmt mit dem Build überein
 - SQLite-Pfad ist vorhanden und initialisiert
 - Keine redundanten `.amx`-Duplikate im Server-Verzeichnis
-- Dini-first-Architektur ist dokumentiert und als primäre Laufzeitquelle klar eingeordnet
+- SQLite-only-Architektur ist dokumentiert und als primäre Laufzeitquelle klar eingeordnet
 
 Die produktive Startfreigabe kann in einer echten SA-MP-Laufzeitumgebung erfolgen, wenn der Serverhost die erforderlichen 32-Bit- und Host-Abhängigkeiten vollständig bereitstellt. In der aktuellen Sandbox ist die Verifikation auf das Build-/Config-/Dokumentations-Level erfolgreich; der echte Live-Start kann hier nicht final bestätigt werden und bleibt als expliziter Release-Gate auf der Ubuntu-VM offen.
 
@@ -408,17 +408,17 @@ Die reale Übergabe in den Live-Betrieb muss auf der Ubuntu-VM mit den produktiv
 3. `Compiler/samp03/scriptfiles/` inklusive `players/`, `houses/`, `safes/`, `vehicles/`, `ubb/`, `backups/` und `state/{ls,sf,lv}/` physisch anlegen und mit Berechtigungen versehen
 4. `samp.service`, `samp2.service` oder `omp-server.service` mit `server.cfg` starten
 5. `control-panel/server.js` gegen die Live-Daten prüfen und Staleness/Leeren Zuständen als Fehler bewerten
-6. Registrierungen, Home-State-Wahl LS/SF/LV, Inventar-/Safe-Belegung, Fahrzeug-/UBB-Daten und Reconnects gegen die Dini-Dateien validieren
+6. Registrierungen, Home-State-Wahl LS/SF/LV, Inventar-/Safe-Belegung, Fahrzeug-/UBB-Daten und Reconnects gegen die SQLite-Dateien validieren
 
 Abnahmekriterien:
 
 - Kompilierung: Der reale `pawncc`-Build läuft ohne blockierende Fehler, erzeugt die aktuelle `.amx` und bleibt im Single-Target-Vertrag.
 - Persistenz & Reconnect: Spieler- und State-Daten werden in `scriptfiles/` korrekt als INI-/Textdateien geschrieben und beim Reconnect identisch wieder geladen.
-- Autosync & Control Panel: Ein Dini-Write muss entweder in SQLite mit Upsert konsistent landen oder das Panel muss die entsprechenden INI-Dateien direkt lesen; veraltete Kassen-/House-/Player-Status gelten als nicht bestanden.
+- Autosync & Control Panel: Ein SQLite-Write muss entweder in SQLite mit Upsert konsistent landen oder das Panel muss die entsprechenden INI-Dateien direkt lesen; veraltete Kassen-/House-/Player-Status gelten als nicht bestanden.
 - Critical paths: StateLedger-, Haus-Safe-, Inventar- und Fahrzeug-Transfers müssen nach einem Crash keine halben Zustände hinterlassen.
 - `production_guard.inc` und die Include-Reihenfolge müssen mit dem echten `pawncc`-Build gegen die Live-Toolchain geprüft werden.
 
-Damit ist der Übergang vom Container-Check zur realen Ubuntu-VM-Validierung klar definiert: Der Build darf nicht nur strukturell sauber sein, sondern muss auf der echten Service-/Runtime-Umgebung mit den tatsächlichen Dini-Pfaden und Daemons laufen.
+Damit ist der Übergang vom Container-Check zur realen Ubuntu-VM-Validierung klar definiert: Der Build darf nicht nur strukturell sauber sein, sondern muss auf der echten Service-/Runtime-Umgebung mit den tatsächlichen SQLite-Pfaden und Daemons laufen.
 
 ### 🔧 7.4 Empfehlung für produktiven Start
 
@@ -461,7 +461,7 @@ Die DB- und State-Schicht blieb in der wesentlichen Form stabil:
 - `INSERT OR IGNORE` blieb erhalten und sorgt dafür, dass gültige Werte nicht versehentlich durch einen Default-Insert verloren gehen.
 - `state_id` und `home_state` werden an kritischen Stellen geschützt, sodass `0` keine gültige State-Zuweisung ersetzt.
 - Rehydrationspfade bleiben an `Core_IsValidState()` und die dazugehörigen State-/default-Guards gebunden, damit ein bereits gültiger Home-State oder State nach Reconnect nicht erneut durch einen Startpfad verschoben wird.
-- Der Dini-first-Ansatz bleibt im Dateisystem der primäre Persistenzpfad, während SQLite als sichtbarer Konsistenzpfad für Web-/Admin-Read-Only-Sichten fungiert.
+- Der SQLite-only-Ansatz bleibt im Dateisystem der primäre Persistenzpfad, während SQLite als sichtbarer Konsistenzpfad für Web-/Admin-Read-Only-Sichten fungiert.
 
 ### 📘 9.3 Login-/Tutorial-/Spawn-Validierung
 
@@ -588,6 +588,6 @@ Diese Erweiterung dient dazu, den bisherigen Dokumentationsstand noch weiter auf
 - Tutorial: `TUTORIAL_SCENE_TIME` auf 11500 ms, Schutz gegen Start ohne Passwort/Geschlecht.
 - Skin-Flow: `LoginSystem_ShowSkinPicker()` zeigt geschlechtsabhängige 10–15 Skins, validiert `0..311`, setzt `SetPlayerSkin` vor finalem Spawn.
 - Spawn-Order: Home-State/State validiert, `StateSpawnSystem_Apply(...)` erst nach Skin-Setzung, dann `CameraSystem_ExitCameraMode`, `SetCameraBehindPlayer`, `TogglePlayerControllable(playerid, true)`, `RoleplayUI_ShowDashboard(playerid)`.
-- Compile: `bash scripts/build_gamemode.sh` erfolgreich; `gtasa_reallife.amx` wird ohne neue Errors gebaut (nur legacy warning in `includes/dini.inc`).
-- Dini-first + state-safe Fallback: gültige State-/Home-State-Werte werden nicht auf 0 zurückgesetzt; Fallback ist `STATE_LOS_SANTOS`.
+- Compile: `bash scripts/build_gamemode.sh` erfolgreich; `gtasa_reallife.amx` wird ohne neue Errors gebaut.
+- SQLite-only + state-safe Fallback: gültige State-/Home-State-Werte werden nicht auf 0 zurückgesetzt; Fallback ist `STATE_LOS_SANTOS`.
 

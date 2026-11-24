@@ -139,7 +139,7 @@ Voraussetzung für Tutorial-Start:
 - Passwort gesetzt
 - Geschlecht gewählt (`M` oder `W`)
 - Geschlecht im Spielerprofil gespeichert
-- gegebenenfalls DB-/Dini-Write abgeschlossen
+- gegebenenfalls DB-/SQLite-Write abgeschlossen
 
 Wenn diese nicht erfüllt sind:
 

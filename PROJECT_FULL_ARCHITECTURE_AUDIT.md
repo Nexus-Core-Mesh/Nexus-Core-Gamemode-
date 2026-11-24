@@ -7,7 +7,7 @@
 ## ✅ Wichtig zu wissen
 
 - Technische Fakten, Befehle, Pfade und Projektregeln bleiben bewusst unverändert.
-- Port- und Systemtrennung bleiben konsistent, insbesondere für den 7780-Contract und den Dini-first-Pfad.
+- Port- und Systemtrennung bleiben konsistent, insbesondere für den 7780-Contract und den SQLite-only-Pfad.
 - Die optische Aufwertung dient nur der Lesbarkeit, nicht der inhaltlichen Interpretation.
 
 ---
@@ -32,7 +32,7 @@ Important facts observed in the code:
 - `core.inc` is the canonical state source, and the code mostly respects that contract.
 - Include order and lifecycle markers are present in `Compiler/samp03/gamemodes/gamemode.pwn` and align with the documented contract.
 - `state_id` and `home_state` protections are present in the core/state guards and in the login/disconnect hardening paths.
-- Dini is the persisted runtime-first path under `Compiler/samp03/scriptfiles/`, with an explicit `temp -> validate -> rename` pattern in the documentation and project structure, but the actual runtime code for file writes is not fully proven in this environment.
+- SQLite is the persisted runtime-first path under `Compiler/samp03/scriptfiles/`, with an explicit `temp -> validate -> rename` pattern in the documentation and project structure, but the actual runtime code for file writes is not fully proven in this environment.
 - SQLite is wired as a local read-only operational view through `control-panel/server.js` and `data/db/gtasa_reallife.db`.
 - MySQL is present as a backend stub / later-stage alternative, not as an active runtime write path.
 - There are multiple project documents and tool scripts that describe a production-safe or live-ready target, but they do not replace actual runtime validation.
@@ -221,11 +221,11 @@ Examples:
 
 This is active and directionally aligned with the resource constraints, but without compile/runtime confirmation it is not proven fully live-safe.
 
-## 📘 4. Dini vs SQLite vs MySQL: actual active wiring
+## 📘 4. SQLite vs SQLite vs MySQL: actual active wiring
 
-### 📘 4.1 Dini and scriptfiles path
+### 📘 4.1 SQLite and scriptfiles path
 
-The project structure documents a Dini-first persistence model under `Compiler/samp03/scriptfiles/`.
+The project structure documents a SQLite-only persistence model under `Compiler/samp03/scriptfiles/`.
 
 The intended runtime scriptfiles tree includes physical folders for:
 
@@ -244,11 +244,11 @@ The intended runtime scriptfiles tree includes physical folders for:
 - backup/
 - logs/
 
-This is described in documentation and tracked as a runtime-first persistence structure. From the repository state, the presence of the directories is real in the project tree, but the actual Dini write path is not directly proven in this environment beyond documentation and module conventions.
+This is described in documentation and tracked as a runtime-first persistence structure. From the repository state, the presence of the directories is real in the project tree, but the actual SQLite write path is not directly proven in this environment beyond documentation and module conventions.
 
 The project explicitly expects an atomic write sequence: `temp -> validate -> rename`.
 
-This is an architectural requirement, not a file-by-file verified runtime commit in the current container. The code is written to prefer valid, atomic Dini-style save logic, but the actual runtime persistence path is only partially validated here.
+This is an architectural requirement, not a file-by-file verified runtime commit in the current container. The code is written to prefer valid, atomic SQLite-style save logic, but the actual runtime persistence path is only partially validated here.
 
 ### 🧩 4.2 SQLite persistence and control-panel read-only view
 
@@ -321,7 +321,7 @@ The codebase contains state-ledger/transfer logic under:
 
 - `/Compiler/samp03/gamemodes/modules/management/state_ledger_system.inc`
 
-Transfer-style operations are conceptually present, but the repository state does not show a confirmed end-to-end runtime ledger sync between Dini and SQLite. This remains a live or runtime verification gap, not necessarily a code absence.
+Transfer-style operations are conceptually present, but the repository state does not show a confirmed end-to-end runtime ledger sync between SQLite and SQLite. This remains a live or runtime verification gap, not necessarily a code absence.
 
 Important: atomic transfers (`temp -> validate -> rename`) are documented as the expected persistence model; the implementation details for each critical save path are not shown as a fully completed live sync path in this source tree.
 
@@ -338,19 +338,19 @@ The active panel is a direct operational read interface over SQLite:
 
 This is definitely active and consistent with the documentation requirement that SQLite is the operational read base for the control panel.
 
-### 📘 5.2 Role of SQLite vs Dini
+### 📘 5.2 Role of SQLite vs SQLite
 
 The code is internally consistent in assigning roles:
 
 - SQLite: local operational state view + dashboard backend source.
-- Dini: runtime persistence and save-first backup/restore path under scriptfiles.
+- SQLite: runtime persistence and save-first backup/restore path under scriptfiles.
 - MySQL: separate external or later backend, not active in the present code path.
 
 This is the intended stateful split.
 
 ### 🖥️ 5.3 Live risk / sync gap
 
-The risk is not that the SQLite panel is writing data incorrectly; it is read-only and thus behaves safely. The real gap is that the system has not demonstrated a fully synchronized end-to-end flow where Dini writes, SQLite reads, and panel views remain consistent after live state changes. That sync and fall-back quality is not proven here, though the intended design is clear.
+The risk is not that the SQLite panel is writing data incorrectly; it is read-only and thus behaves safely. The real gap is that the system has not demonstrated a fully synchronized end-to-end flow where SQLite writes, SQLite reads, and panel views remain consistent after live state changes. That sync and fall-back quality is not proven here, though the intended design is clear.
 
 ## ✅ 6. Runtime guards, onboarding, UI and qemu-i386 constraints
 
@@ -461,7 +461,7 @@ The following remain open and must be validated on a proper target environment w
 - `Compiler/samp03/gamemodes/gtasa_reallife.amx` successfully generated
 - actual server launch on port 7780
 - scriptfiles directory fully present and writable
-- Dini persistence writes passing `temp -> validate -> rename`
+- SQLite persistence writes passing `temp -> validate -> rename`
 - SQLite reads matching runtime state
 - control-panel read view matching state values
 - no live crash under qemu-i386 resource limits
@@ -471,7 +471,7 @@ The following remain open and must be validated on a proper target environment w
 The current repository contains a strong architecture and a clear source contract, but several things remain source-only and not fully runtime-validated:
 
 1. The Pawn DB layer is mostly a stub layer, while the Node panel expects SQLite to be real and operational.
-2. The Dini persistence path is architecturally documented and intended, but the actual runtime file-write integration is not proven in this container.
+2. The SQLite persistence path is architecturally documented and intended, but the actual runtime file-write integration is not proven in this container.
 3. The code contains valid guard logic for state values and player state resets, but not all runtime-save and reload paths have been live-tested.
 4. `gtasa_reallife.amx` is expected as the only target but is absent in this environment, so no actual compiled binary exists here.
 5. The project has repeated documentation that says “build confirmed” or “compile success,” but those claims are not valid in this environment without a working `qemu-i386` toolchain and actual build output.
@@ -479,7 +479,7 @@ The current repository contains a strong architecture and a clear source contrac
 
 ## 📘 9. Bottom line
 
-The repository is currently in a disciplined source architecture state with clear state-source, lifecycle, and runtime-target rules. The core code is shaped to preserve valid state/home-state values, the lifecycle stages are in order, the include structure is consistent, and the control panel is clearly read-only against SQLite. Dini remains the intended runtime persistence path and MySQL is not active.
+The repository is currently in a disciplined source architecture state with clear state-source, lifecycle, and runtime-target rules. The core code is shaped to preserve valid state/home-state values, the lifecycle stages are in order, the include structure is consistent, and the control panel is clearly read-only against SQLite. SQLite remains the intended runtime persistence path and MySQL is not active.
 
 The main outstanding issue is not code architecture drift; it is environment-level runtime validation. Without working Pawn toolchain support (`qemu-i386` and compiler), the actual AMX output and live 7780 runtime verification cannot be completed here.
 
@@ -571,6 +571,6 @@ Diese Erweiterung dient dazu, den bisherigen Dokumentationsstand noch weiter auf
 - Tutorial: `TUTORIAL_SCENE_TIME` auf 11500 ms, Schutz gegen Start ohne Passwort/Geschlecht.
 - Skin-Flow: `LoginSystem_ShowSkinPicker()` zeigt geschlechtsabhängige 10–15 Skins, validiert `0..311`, setzt `SetPlayerSkin` vor finalem Spawn.
 - Spawn-Order: Home-State/State validiert, `StateSpawnSystem_Apply(...)` erst nach Skin-Setzung, dann `CameraSystem_ExitCameraMode`, `SetCameraBehindPlayer`, `TogglePlayerControllable(playerid, true)`, `RoleplayUI_ShowDashboard(playerid)`.
-- Compile: `bash scripts/build_gamemode.sh` erfolgreich; `gtasa_reallife.amx` wird ohne neue Errors gebaut (nur legacy warning in `includes/dini.inc`).
-- Dini-first + state-safe Fallback: gültige State-/Home-State-Werte werden nicht auf 0 zurückgesetzt; Fallback ist `STATE_LOS_SANTOS`.
+- Compile: `bash scripts/build_gamemode.sh` erfolgreich; `gtasa_reallife.amx` wird ohne neue Errors gebaut.
+- SQLite-only + state-safe Fallback: gültige State-/Home-State-Werte werden nicht auf 0 zurückgesetzt; Fallback ist `STATE_LOS_SANTOS`.
 

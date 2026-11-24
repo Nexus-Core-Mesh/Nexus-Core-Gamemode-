@@ -12,7 +12,7 @@ Der Gamemode hat eine zentrale DB-Abstraktionsschicht in:
 
 Die Kernidee ist:
 
-- Dini/Fallback-File-Storage ist der primäre Laufzeitpfad
+- SQLite/Fallback-File-Storage ist der primäre Laufzeitpfad
 - SQLite/MySQL sind als Backup-, Auto-Sync- oder Dashboard-Layer vorgesehen
 - `DB_Initialize()` und `DB_RepairCriticalTables()` sollen die wichtigsten Speicherbereiche idempotent sichern
 
@@ -27,11 +27,11 @@ Der aktive Backend-Status ist standardmäßig auf SQLite gesetzt:
 
 - `new gDBBackend = DB_BACKEND_SQLITE;`
 
-Das bedeutet: Das Projekt ist derzeit auf eine SQLite-/Dini-Hybridlogik ausgerichtet, statt einen live aktiven MySQL-Write-Stack zu benutzen.
+Das bedeutet: Das Projekt ist derzeit auf eine SQLite-Hybridlogik ausgerichtet, statt einen live aktiven MySQL-Write-Stack zu benutzen.
 
-## 3. Dini-first-Strategie
+## 3. SQLite-only-Strategie
 
-Der Projektkontext und die Doku betonen: Der reale primäre Persistenzpfad ist Dini unter `Compiler/samp03/scriptfiles/`.
+Der Projektkontext und die Doku betonen: Der reale primäre Persistenzpfad ist SQLite unter `Compiler/samp03/scriptfiles/`.
 
 Die relevanten Laufzeit-/Verzeichnisbereiche sind:
 
@@ -52,14 +52,14 @@ Die relevanten Laufzeit-/Verzeichnisbereiche sind:
 
 Dieser Pfad ist in der Architektur-Doku explizit beschrieben und als primäre Persistenzlogik vorgesehen.
 
-## 3.1 Gewichtung SQLite vs. Dini (51/49)
+## 3.1 Gewichtung SQLite vs. SQLite (51/49)
 
 Die projektweit vereinbarte Lastverteilung lautet:
 
 - SQLite: 51 % – für DB-Interface, Schema-Repair, Transaktionen, Upserts und die produktive Synchronisation mit `data/db/gtasa_reallife.db` sowie `control-panel/server.js`.
-- Dini: 49 % – für durehafte INI-/Dateisaves unter `Compiler/samp03/scriptfiles/` inklusive `temp -> validate -> rename`, Repairs, Fallbacks und Dateistruktur-Erhaltung.
+- SQLite: 49 % – für durehafte INI-/Dateisaves unter `Compiler/samp03/scriptfiles/` inklusive `temp -> validate -> rename`, Repairs, Fallbacks und Dateistruktur-Erhaltung.
 
-Wesentlicher Punkt: Dini bleibt der stabile Dateisystem-Laufpfad, aber `core.inc` bleibt immer die einzige State-Quelle für `state_id`, `home_state`, Bank/Cash, Admin-Ränge (`1–5`) und `Core_IsProjectLeader()`. SQLite und Dini dienen zur Konsistenz, nicht zum parallelen Shadow-State-System.
+Wesentlicher Punkt: SQLite bleibt der stabile Dateisystem-Laufpfad, aber `core.inc` bleibt immer die einzige State-Quelle für `state_id`, `home_state`, Bank/Cash, Admin-Ränge (`1–5`) und `Core_IsProjectLeader()`. SQLite dient zur Konsistenz, nicht zum parallelen Shadow-State-System.
 
 ## 4. Runtime-Caches
 
@@ -148,7 +148,7 @@ Das ist ein klares Architekturmerkmal:
 
 - SQLite wird laufend als lokale Basis oder Sync-Layer genutzt
 - MySQL ist für spätere Ausbaustufen vorbereitet
-- Dini bleibt im primären Produktivpfad robust und unabhängig
+- SQLite bleibt im primären Produktivpfad robust und unabhängig
 
 ## 8. Verbindung zum Core
 
@@ -211,7 +211,7 @@ Die DB-Architektur ist bewusst nicht eine rohe „direkte SQL-Schicht“, sonder
 2. Runtime-Caches
 3. DB-Adapter-und-Schema-Checks
 4. Save/Load-APIs
-5. Dini- oder SQLite-Backing-Storage
+5. SQLite- oder SQLite-Backing-Storage
 
 Das ist ein starkes Design für einen modulares SA:MP-Projekt.
 
@@ -306,6 +306,6 @@ Diese Erweiterung dient dazu, den bisherigen Dokumentationsstand noch weiter auf
 - Tutorial: `TUTORIAL_SCENE_TIME` auf 11500 ms, Schutz gegen Start ohne Passwort/Geschlecht.
 - Skin-Flow: `LoginSystem_ShowSkinPicker()` zeigt geschlechtsabhängige 10–15 Skins, validiert `0..311`, setzt `SetPlayerSkin` vor finalem Spawn.
 - Spawn-Order: Home-State/State validiert, `StateSpawnSystem_Apply(...)` erst nach Skin-Setzung, dann `CameraSystem_ExitCameraMode`, `SetCameraBehindPlayer`, `TogglePlayerControllable(playerid, true)`, `RoleplayUI_ShowDashboard(playerid)`.
-- Compile: `bash scripts/build_gamemode.sh` erfolgreich; `gtasa_reallife.amx` wird ohne neue Errors gebaut (nur legacy warning in `includes/dini.inc`).
-- Dini-first + state-safe Fallback: gültige State-/Home-State-Werte werden nicht auf 0 zurückgesetzt; Fallback ist `STATE_LOS_SANTOS`.
+- Compile: `bash scripts/build_gamemode.sh` erfolgreich; `gtasa_reallife.amx` wird ohne neue Errors gebaut.
+- SQLite-only + state-safe Fallback: gültige State-/Home-State-Werte werden nicht auf 0 zurückgesetzt; Fallback ist `STATE_LOS_SANTOS`.
 

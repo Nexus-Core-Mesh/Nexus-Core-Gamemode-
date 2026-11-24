@@ -12,8 +12,8 @@ Details zu Commands: `COMMANDS.md`, zu TextDraws: `TEXTDRAWS.md`.
 | Production Guard | `core/production_guard.inc` | Begrenzungen (Inventar-Slots, Haus-Storage, UBB-Fahrzeuge) und Sicherheits-Checks |
 | Runtime Registry | `core/runtime_registry.inc` | Laufzeit-Registry der Systeme/Zustände |
 | Module Contract | `core/module_contract.inc` | Lifecycle-Verträge (`minStage`, max. 48 Module) |
-| DB Interface | `db/db_interface.inc` | Persistenz-API, **Dini-First** (Caches + Dini-Fallback), größte Datei (~1000 Zeilen) |
-| DB SQLite | `db/db_sqlite.inc` | SQLite-Backend (vorhanden; Autostart läuft über Dini) |
+| DB Interface | `db/db_interface.inc` | Persistenz-API, **SQLite-First** (Caches + SQLite-Fallback), größte Datei (~1000 Zeilen) |
+| DB SQLite | `db/db_sqlite.inc` | SQLite-Backend (vorhanden; Autostart läuft über SQLite) |
 | DB MySQL | `db/db_mysql.inc` | MySQL-4.1-Adapter, **bereit aber nicht aktiv** |
 
 ## 2. Auth / Onboarding / Kamera
@@ -230,6 +230,6 @@ Diese Erweiterung dient dazu, den bisherigen Dokumentationsstand noch weiter auf
 - Tutorial: `TUTORIAL_SCENE_TIME` auf 11500 ms, Schutz gegen Start ohne Passwort/Geschlecht.
 - Skin-Flow: `LoginSystem_ShowSkinPicker()` zeigt geschlechtsabhängige 10–15 Skins, validiert `0..311`, setzt `SetPlayerSkin` vor finalem Spawn.
 - Spawn-Order: Home-State/State validiert, `StateSpawnSystem_Apply(...)` erst nach Skin-Setzung, dann `CameraSystem_ExitCameraMode`, `SetCameraBehindPlayer`, `TogglePlayerControllable(playerid, true)`, `RoleplayUI_ShowDashboard(playerid)`.
-- Compile: `bash scripts/build_gamemode.sh` erfolgreich; `gtasa_reallife.amx` wird ohne neue Errors gebaut (nur legacy warning in `includes/dini.inc`).
-- Dini-first + state-safe Fallback: gültige State-/Home-State-Werte werden nicht auf 0 zurückgesetzt; Fallback ist `STATE_LOS_SANTOS`.
+- Compile: `bash scripts/build_gamemode.sh` erfolgreich; `gtasa_reallife.amx` wird ohne neue Errors gebaut.
+- SQLite-only + state-safe Fallback: gültige State-/Home-State-Werte werden nicht auf 0 zurückgesetzt; Fallback ist `STATE_LOS_SANTOS`.
 

@@ -7,7 +7,7 @@
 ## ✅ Wichtig zu wissen
 
 - Technische Fakten, Befehle, Pfade und Projektregeln bleiben bewusst unverändert.
-- Port- und Systemtrennung bleiben konsistent, insbesondere für den 7780-Contract und den Dini-first-Pfad.
+- Port- und Systemtrennung bleiben konsistent, insbesondere für den 7780-Contract und den SQLite-only-Pfad.
 - Die optische Aufwertung dient nur der Lesbarkeit, nicht der inhaltlichen Interpretation.
 
 ---
@@ -520,7 +520,7 @@ Das ist das Kernprinzip von Nexus-Core-Gamemode.
 
 ## 📊 13. Finaler Stand vor der Live-Validierung
 
-Der aktuelle Spiel- und Server-Stand ist auf einen stabilen, konsistenten Source-Level ausgerichtet, aber die finale Freigabe bleibt explizit ein Live-Validation-Gate auf der Ubuntu-VM. Die Kernregel bleibt: keine ungebremste Live-Startfreigabe auf Basis eines reinen Source-Checks, sondern echte Verifikation mit Logs, DB-Status, Dini-Persistenz und Clientflow.
+Der aktuelle Spiel- und Server-Stand ist auf einen stabilen, konsistenten Source-Level ausgerichtet, aber die finale Freigabe bleibt explizit ein Live-Validation-Gate auf der Ubuntu-VM. Die Kernregel bleibt: keine ungebremste Live-Startfreigabe auf Basis eines reinen Source-Checks, sondern echte Verifikation mit Logs, DB-Status, SQLite-Persistenz und Clientflow.
 
 ### 📘 13.1 Was bereits stabilisiert wurde
 
@@ -529,14 +529,14 @@ Der aktuelle Spiel- und Server-Stand ist auf einen stabilen, konsistenten Source
 - Spawns laufen über den kontrollierten Pfad und nicht durch wiederholte Fallbacks
 - Camera-Reset und controls werden sauber wieder freigegeben
 - UI und HUD behalten die erwünschte Zonierung, mit freier unterer linker Zone für Radar/Mobile-Controls
-- Dini-/SQLite-Persistenz bleibt im Projekt als kritischer Pfad dokumentiert
+- SQLite-Persistenz bleibt im Projekt als kritischer Pfad dokumentiert
 - Runtime-Hotpaths wurden reduziert, damit sie innerhalb der qemu-i386-Umgebung nicht unnötig belastend werden
 
 ### 🖥️ 13.2 Was noch nicht als live-freigegeben gilt
 
 - echtes Login-/Register-/Spawn-Verhalten auf einer laufenden SA:MP-/OMP-Instanz
 - reale State- und Home-State-Checks in `gtasa_reallife.db`
-- reale scriptfiles-/Dini-Validierung nach Crash oder Reconnect
+- reale scriptfiles-/SQLite-Validierung nach Crash oder Reconnect
 - echte Client- und HUD-Tests unter realem UI-/Mobil-Layout
 
 ### 🔧 13.3 Freigabe- und Startkriterien
@@ -630,6 +630,6 @@ Diese Erweiterung dient dazu, den bisherigen Dokumentationsstand noch weiter auf
 - Tutorial: `TUTORIAL_SCENE_TIME` auf 11500 ms, Schutz gegen Start ohne Passwort/Geschlecht.
 - Skin-Flow: `LoginSystem_ShowSkinPicker()` zeigt geschlechtsabhängige 10–15 Skins, validiert `0..311`, setzt `SetPlayerSkin` vor finalem Spawn.
 - Spawn-Order: Home-State/State validiert, `StateSpawnSystem_Apply(...)` erst nach Skin-Setzung, dann `CameraSystem_ExitCameraMode`, `SetCameraBehindPlayer`, `TogglePlayerControllable(playerid, true)`, `RoleplayUI_ShowDashboard(playerid)`.
-- Compile: `bash scripts/build_gamemode.sh` erfolgreich; `gtasa_reallife.amx` wird ohne neue Errors gebaut (nur legacy warning in `includes/dini.inc`).
-- Dini-first + state-safe Fallback: gültige State-/Home-State-Werte werden nicht auf 0 zurückgesetzt; Fallback ist `STATE_LOS_SANTOS`.
+- Compile: `bash scripts/build_gamemode.sh` erfolgreich; `gtasa_reallife.amx` wird ohne neue Errors gebaut.
+- SQLite-only + state-safe Fallback: gültige State-/Home-State-Werte werden nicht auf 0 zurückgesetzt; Fallback ist `STATE_LOS_SANTOS`.
 

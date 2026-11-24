@@ -7,7 +7,7 @@
 ## ✅ Wichtig zu wissen
 
 - Technische Fakten, Befehle, Pfade und Projektregeln bleiben bewusst unverändert.
-- Port- und Systemtrennung bleiben konsistent, insbesondere für den 7780-Contract und den Dini-first-Pfad.
+- Port- und Systemtrennung bleiben konsistent, insbesondere für den 7780-Contract und den SQLite-only-Pfad.
 - Die optische Aufwertung dient nur der Lesbarkeit, nicht der inhaltlichen Interpretation.
 
 ---
@@ -92,7 +92,7 @@ Wichtige Einzelheiten:
 - `gamemodes/modules/` enthält das komplette modulare Spielsystem
 - `Compiler/pawncc/pawncc` ist der lokale 32-Bit-Pawn-Compiler
 - `Compiler/samp03/` ist der echte Server-Root für SA:MP
-- `Compiler/samp03/scriptfiles/` ist der Dini-/INI-Speicherort für das Start- und Persistenz-Fallback
+- `Compiler/samp03/scriptfiles/` ist der SQLite-/INI-Speicherort für das Start- und Persistenz-Fallback
 - `data/db/` bleibt nur optionaler SQLite-/Autosync-Pfad, darf die Serverinitialisierung aber nicht erzwingen
 
 ---
@@ -361,7 +361,7 @@ Deshalb muss die Datei immer genau den Namen `gtasa_reallife.amx` tragen.
 
 ## 📘 11. SQLite-Datenbank vorbereiten
 
-Das Projekt nutzt eine lokale Dini-/INI-Base als primäre Persistenz, die im Laufzeitroot unter `Compiler/samp03/scriptfiles/` liegen soll. Optional kann weiterhin eine lokale SQLite-Datenbank unter `data/db/` existieren, aber sie darf den Bootstrap nicht erzwingen.
+Das Projekt nutzt eine lokale SQLite-/INI-Base als primäre Persistenz, die im Laufzeitroot unter `Compiler/samp03/scriptfiles/` liegen soll. Optional kann weiterhin eine lokale SQLite-Datenbank unter `data/db/` existieren, aber sie darf den Bootstrap nicht erzwingen.
 
 ### 📘 11.1 Verzeichnis anlegen
 
@@ -693,7 +693,7 @@ Pfad:
 - `data/db/`
 - `data/sql/`
 
-Das Projekt ist Dini-first aufgebaut. Das heißt, die primäre Persistenz erfolgt über lokale INI-/Datei-Storage im Laufzeitroot unter `Compiler/samp03/scriptfiles/`. Optional kann eine SQLite-/MySQL-Autosync-Schicht im laufenden Betrieb aktiviert werden, aber sie darf die Serverinitialisierung nicht erzwingen.
+Das Projekt ist SQLite-only aufgebaut. Das heißt, die primäre Persistenz erfolgt über lokale INI-/Datei-Storage im Laufzeitroot unter `Compiler/samp03/scriptfiles/`. Optional kann eine SQLite-/MySQL-Autosync-Schicht im laufenden Betrieb aktiviert werden, aber sie darf die Serverinitialisierung nicht erzwingen.
 
 Typische Dateien:
 
@@ -1296,6 +1296,6 @@ Diese Erweiterung dient dazu, den bisherigen Dokumentationsstand noch weiter auf
 - Tutorial: `TUTORIAL_SCENE_TIME` auf 11500 ms, Schutz gegen Start ohne Passwort/Geschlecht.
 - Skin-Flow: `LoginSystem_ShowSkinPicker()` zeigt geschlechtsabhängige 10–15 Skins, validiert `0..311`, setzt `SetPlayerSkin` vor finalem Spawn.
 - Spawn-Order: Home-State/State validiert, `StateSpawnSystem_Apply(...)` erst nach Skin-Setzung, dann `CameraSystem_ExitCameraMode`, `SetCameraBehindPlayer`, `TogglePlayerControllable(playerid, true)`, `RoleplayUI_ShowDashboard(playerid)`.
-- Compile: `bash scripts/build_gamemode.sh` erfolgreich; `gtasa_reallife.amx` wird ohne neue Errors gebaut (nur legacy warning in `includes/dini.inc`).
-- Dini-first + state-safe Fallback: gültige State-/Home-State-Werte werden nicht auf 0 zurückgesetzt; Fallback ist `STATE_LOS_SANTOS`.
+- Compile: `bash scripts/build_gamemode.sh` erfolgreich; `gtasa_reallife.amx` wird ohne neue Errors gebaut.
+- SQLite-only + state-safe Fallback: gültige State-/Home-State-Werte werden nicht auf 0 zurückgesetzt; Fallback ist `STATE_LOS_SANTOS`.
 
