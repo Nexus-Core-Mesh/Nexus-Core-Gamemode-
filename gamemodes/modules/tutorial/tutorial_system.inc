@@ -11,7 +11,6 @@
 #define TUTORIAL_SCENE_COUNT 9
 #define TUTORIAL_SCENE_TIME 11500
 
-new gTutorialStage[MAX_PLAYERS];
 new Text:gTutorialTD[MAX_PLAYERS][4];
 new gTutorialToken[MAX_PLAYERS];
 
@@ -83,34 +82,46 @@ stock TutorialSystem_Start(playerid)
         return;
     }
 
-    if (!LoginSystem_IsRegistered(playerid) && !gPlayerGenderSelected[playerid])
+    if (gPlayerLoginState[playerid] == LOGIN_STATE_ACTIVE)
     {
+        return;
+    }
+
+    if (gPlayerLoginState[playerid] != LOGIN_STATE_REGISTER)
+    {
+        return;
+    }
+
+    if (!gPlayerPasswordReady[playerid])
+    {
+        SendClientMessage(playerid, 0xFF6666AA, "[TUTORIAL] Passwort muss vor dem Tutorial gesetzt sein.");
+        UiHub_ShowPasswordInput(playerid);
+        return;
+    }
+
+    if (!LoginSystem_HasRequiredGender(playerid))
+    {
+        SendClientMessage(playerid, 0xFF6666AA, "[TUTORIAL] Geschlecht muss vor dem Tutorial gesetzt sein.");
         LoginSystem_RequireGenderSelection(playerid);
         return;
     }
 
-    if (!gPlayerPasswordReady[playerid] || !LoginSystem_HasRequiredGender(playerid))
+    if (gTutorialStage[playerid] >= TUTORIAL_STAGE_FINISH)
     {
-        SendClientMessage(playerid, 0xFF6666AA, "[TUTORIAL] Passwort und Geschlecht müssen vor dem Tutorial gesetzt sein.");
-        if (!gPlayerPasswordReady[playerid])
-        {
-            UiHub_ShowPasswordInput(playerid);
-        }
-        else
-        {
-            LoginSystem_RequireGenderSelection(playerid);
-        }
+        TutorialSystem_MarkFinished(playerid);
         return;
     }
 
-    new homeState = Core_GetValidStateOrDefault(Core_GetPlayerHomeState(playerid), Core_GetPlayerState(playerid));
-    if (gTutorialStage[playerid] >= TUTORIAL_STAGE_FINISH && Core_IsValidState(homeState))
+    if (gTutorialStage[playerid] > TUTORIAL_STAGE_NONE && gTutorialStage[playerid] < TUTORIAL_STAGE_FINISH)
     {
         return;
     }
 
     TutorialSystem_Reset(playerid);
     gTutorialStage[playerid] = TUTORIAL_STAGE_INTRO;
+    LoginSystem_HideLoginScreen(playerid);
+    LoginSystem_HideRegisterScreen(playerid);
+    CancelSelectTextDraw(playerid);
     CameraSystem_Reset(playerid);
     SetPlayerInterior(playerid, 0);
     SetPlayerVirtualWorld(playerid, 0);
@@ -234,17 +245,27 @@ stock TutorialSystem_Next(playerid)
         return;
     }
 
-    if (!gPlayerPasswordReady[playerid] || !LoginSystem_HasRequiredGender(playerid))
+    if (gPlayerLoginState[playerid] == LOGIN_STATE_ACTIVE)
     {
-        SendClientMessage(playerid, 0xFF6666AA, "[TUTORIAL] Passwort und Geschlecht müssen vor dem Tutorial beendet werden.");
-        if (!gPlayerPasswordReady[playerid])
-        {
-            UiHub_ShowPasswordInput(playerid);
-        }
-        else
-        {
-            LoginSystem_RequireGenderSelection(playerid);
-        }
+        return;
+    }
+
+    if (gPlayerLoginState[playerid] != LOGIN_STATE_REGISTER)
+    {
+        return;
+    }
+
+    if (!gPlayerPasswordReady[playerid])
+    {
+        SendClientMessage(playerid, 0xFF6666AA, "[TUTORIAL] Passwort muss vor dem Tutorial beendet werden.");
+        UiHub_ShowPasswordInput(playerid);
+        return;
+    }
+
+    if (!LoginSystem_HasRequiredGender(playerid))
+    {
+        SendClientMessage(playerid, 0xFF6666AA, "[TUTORIAL] Geschlecht muss vor dem Tutorial beendet werden.");
+        LoginSystem_RequireGenderSelection(playerid);
         return;
     }
 
@@ -257,16 +278,17 @@ stock TutorialSystem_Next(playerid)
         gTutorialStage[playerid] = TUTORIAL_STAGE_FINISH;
     }
 
-    TutorialSystem_ShowStage(playerid, gTutorialStage[playerid]);
-
     if (gTutorialStage[playerid] == TUTORIAL_STAGE_FINISH)
     {
         TutorialSystem_HideStage(playerid);
         CameraSystem_Reset(playerid);
         TogglePlayerControllable(playerid, false);
         LoginSystem_ShowSkinPicker(playerid);
+        SendClientMessage(playerid, 0x00FF00AA, "[TUTORIAL] Tutorial abgeschlossen. Skin-Auswahl folgt.");
         return;
     }
+
+    TutorialSystem_ShowStage(playerid, gTutorialStage[playerid]);
 }
 
 stock int:TutorialSystem_GetCurrentStage(playerid)

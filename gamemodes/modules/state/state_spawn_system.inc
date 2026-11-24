@@ -94,17 +94,37 @@ stock StateSpawnSystem_Apply(playerid, stateid)
     DB_SetPlayerState(playerid, safeState);
     DB_SavePlayerState(playerid, safeState);
 
+    new skinid = Core_GetPlayerSkin(playerid);
+    if (skinid < 0 || skinid > 311)
+    {
+        skinid = gPlayerData[playerid][E_PLAYER_SKIN];
+    }
+    if (skinid < 0 || skinid > 311)
+    {
+        skinid = (Core_GetPlayerGender(playerid) == GENDER_FEMALE ? 9 : 2);
+    }
+    if (skinid >= 0 && skinid <= 311)
+    {
+        SetPlayerSkin(playerid, skinid);
+        Core_SetPlayerSkin(playerid, skinid);
+        gPlayerData[playerid][E_PLAYER_SKIN] = skinid;
+    }
+
     SetPlayerInterior(playerid, 0);
     SetPlayerVirtualWorld(playerid, 0);
+    CancelSelectTextDraw(playerid);
+    LoginSystem_HideLoginScreen(playerid);
+    LoginSystem_HideRegisterScreen(playerid);
+    TutorialSystem_HideStage(playerid);
+    CameraSystem_ExitCameraMode(playerid);
+    CameraSystem_Reset(playerid);
+    SetCameraBehindPlayer(playerid);
+    TogglePlayerControllable(playerid, 1);
 
     if (gStateSpawnCount[safeState] <= 0)
     {
-        SetPlayerInterior(playerid, 0);
-        SetPlayerVirtualWorld(playerid, 0);
         StateSystem_SpawnPlayerForState(playerid, safeState);
-        CameraSystem_ExitCameraMode(playerid);
-        SetCameraBehindPlayer(playerid);
-        TogglePlayerControllable(playerid, 1);
+        RoleplayUI_ShowDashboard(playerid);
         return true;
     }
 
@@ -112,16 +132,12 @@ stock StateSpawnSystem_Apply(playerid, stateid)
     new stateName[32];
     StateSystem_GetStateName(safeState, stateName, sizeof(stateName));
 
-    SetPlayerInterior(playerid, 0);
-    SetPlayerVirtualWorld(playerid, 0);
     SetPlayerPos(playerid,
         gStateSpawnXByState[safeState][slot],
         gStateSpawnYByState[safeState][slot],
         gStateSpawnZByState[safeState][slot]);
     SetPlayerFacingAngle(playerid, gStateSpawnHeadingByState[safeState][slot]);
-    CameraSystem_ExitCameraMode(playerid);
-    SetCameraBehindPlayer(playerid);
-    TogglePlayerControllable(playerid, 1);
+    RoleplayUI_ShowDashboard(playerid);
 
     new msg[128];
     format(msg, sizeof(msg), "[STATE] Spawn gesetzt: %s", stateName);
