@@ -546,6 +546,52 @@ stock DB_EnsureHouseRecord(houseid, stateid, owner_player_id, const name[])
     return DB_Execute(query);
 }
 
+// Persistenter Hausbesitz: owner_player_id traegt die stabile Account-Zeilen-ID
+// (players.id), nicht die fluechtige Runtime-playerid. -1 = frei.
+stock DB_SaveHouseOwner(houseid, accountId, stateid, locked)
+{
+    if (houseid < 0 || houseid >= MAX_HOUSES)
+    {
+        return false;
+    }
+    new safeState = Core_GetValidStateOrDefault(stateid, STATE_LOS_SANTOS);
+    DB_EnsureHouseRecord(houseid, safeState, accountId, "");
+
+    new query[192];
+    format(query, sizeof(query),
+        "UPDATE houses SET owner_player_id = %d, state_id = %d, locked = %d WHERE id = %d;",
+        accountId, safeState, (locked != 0) ? 1 : 0, houseid);
+    return DB_Execute(query);
+}
+
+stock DB_GetHouseOwnerAccount(houseid)
+{
+    if (houseid < 0 || houseid >= MAX_HOUSES)
+    {
+        return -1;
+    }
+    if (!DB_SQLite_IsReady())
+    {
+        return -1;
+    }
+
+    new query[128];
+    format(query, sizeof(query), "SELECT owner_player_id FROM houses WHERE id = %d LIMIT 1;", houseid);
+    new DBResult:result = db_query(gSQLiteDB, query);
+    new accountId = -1;
+    if (result)
+    {
+        if (db_num_rows(result) > 0)
+        {
+            new field[16];
+            db_get_field_assoc(result, "owner_player_id", field, sizeof(field));
+            accountId = strval(field);
+        }
+        db_free_result(result);
+    }
+    return accountId;
+}
+
 stock DB_SetPlayerState(playerid, stateid)
 {
     if (playerid < 0 || playerid >= MAX_PLAYERS)
@@ -1106,8 +1152,14 @@ stock DB_RemovePlayerInventoryItem(playerid, itemid, quantity)
         return false;
     }
 
+    new accountId = DB_GetAccountId(playerid);
+    if (accountId <= 0)
+    {
+        return false;
+    }
+
     new query[192];
-    format(query, sizeof(query), "UPDATE player_inventory SET quantity = quantity - %d WHERE player_id = %d AND item_id = %d AND quantity >= %d", quantity, playerid, itemid, quantity);
+    format(query, sizeof(query), "UPDATE player_inventory SET quantity = quantity - %d WHERE player_id = %d AND item_id = %d AND quantity >= %d", quantity, accountId, itemid, quantity);
     return DB_Execute(query);
 }
 
@@ -1146,8 +1198,14 @@ stock DB_SavePlayerVehicle(playerid, vehicleid, modelid, stateid, price_paid, fu
         return false;
     }
 
+    new accountId = DB_GetAccountId(playerid);
+    if (accountId <= 0)
+    {
+        return false;
+    }
+
     new query[512];
-    format(query, sizeof(query), "INSERT OR REPLACE INTO player_vehicles (player_id, vehicle_id, model_id, state_id, price_paid, fuel, locked, health, position_x, position_y, position_z, angle, color_1, color_2, updated_at) VALUES (%d, %d, %d, %d, %d, %d, %d, %.2f, %.2f, %.2f, %.2f, %.2f, %d, %d, datetime('now'))", playerid, vehicleid, modelid, stateid, price_paid, fuel, locked, health, x, y, z, angle, color1, color2);
+    format(query, sizeof(query), "INSERT OR REPLACE INTO player_vehicles (player_id, vehicle_id, model_id, state_id, price_paid, fuel, locked, health, position_x, position_y, position_z, angle, color_1, color_2, updated_at) VALUES (%d, %d, %d, %d, %d, %d, %d, %.2f, %.2f, %.2f, %.2f, %.2f, %d, %d, datetime('now'))", accountId, vehicleid, modelid, stateid, price_paid, fuel, locked, health, x, y, z, angle, color1, color2);
     return DB_Execute(query);
 }
 
@@ -1158,8 +1216,14 @@ stock DB_SaveAccessory(playerid, accessory_type, color, equipped)
         return false;
     }
 
+    new accountId = DB_GetAccountId(playerid);
+    if (accountId <= 0)
+    {
+        return false;
+    }
+
     new query[256];
-    format(query, sizeof(query), "INSERT OR REPLACE INTO player_accessories (player_id, accessory_type, color, equipped, updated_at) VALUES (%d, %d, %d, %d, datetime('now'))", playerid, accessory_type, color, equipped);
+    format(query, sizeof(query), "INSERT OR REPLACE INTO player_accessories (player_id, accessory_type, color, equipped, updated_at) VALUES (%d, %d, %d, %d, datetime('now'))", accountId, accessory_type, color, equipped);
     return DB_Execute(query);
 }
 
@@ -1170,8 +1234,14 @@ stock DB_AddPlayerContact(playerid, const contact_name[], const phone_number[])
         return false;
     }
 
+    new accountId = DB_GetAccountId(playerid);
+    if (accountId <= 0)
+    {
+        return false;
+    }
+
     new query[256];
-    format(query, sizeof(query), "INSERT INTO player_contacts (player_id, contact_name, phone_number) VALUES (%d, '%s', '%s')", playerid, contact_name, phone_number);
+    format(query, sizeof(query), "INSERT INTO player_contacts (player_id, contact_name, phone_number) VALUES (%d, '%s', '%s')", accountId, contact_name, phone_number);
     return DB_Execute(query);
 }
 
@@ -1186,8 +1256,14 @@ stock DB_RegisterProperty(playerid, property_type, property_id, stateid, value)
         return false;
     }
 
+    new accountId = DB_GetAccountId(playerid);
+    if (accountId <= 0)
+    {
+        return false;
+    }
+
     new query[320];
-    format(query, sizeof(query), "INSERT OR REPLACE INTO player_properties (player_id, property_type, property_id, state_id, value, created_at) VALUES (%d, %d, %d, %d, %d, datetime('now'))", playerid, property_type, property_id, stateid, value);
+    format(query, sizeof(query), "INSERT OR REPLACE INTO player_properties (player_id, property_type, property_id, state_id, value, created_at) VALUES (%d, %d, %d, %d, %d, datetime('now'))", accountId, property_type, property_id, stateid, value);
     return DB_Execute(query);
 }
 
@@ -1198,8 +1274,14 @@ stock DB_AddCriminalRecord(playerid, stateid, const offense[], wanted_level, bai
         return false;
     }
 
+    new accountId = DB_GetAccountId(playerid);
+    if (accountId <= 0)
+    {
+        return false;
+    }
+
     new query[320];
-    format(query, sizeof(query), "INSERT INTO criminal_records (player_id, state_id, offense, wanted_level, bail_amount, prison_seconds, officer_name) VALUES (%d, %d, '%s', %d, %d, %d, '%s')", playerid, stateid, offense, wanted_level, bail_amount, prison_seconds, officer_name);
+    format(query, sizeof(query), "INSERT INTO criminal_records (player_id, state_id, offense, wanted_level, bail_amount, prison_seconds, officer_name) VALUES (%d, %d, '%s', %d, %d, %d, '%s')", accountId, stateid, offense, wanted_level, bail_amount, prison_seconds, officer_name);
     return DB_Execute(query);
 }
 

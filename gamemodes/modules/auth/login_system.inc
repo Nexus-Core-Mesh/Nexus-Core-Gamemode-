@@ -834,6 +834,8 @@ stock LoginSystem_ActivateSession(playerid, stateid)
     InventorySystem_OnPlayerAuthenticated(playerid);
     // Persistenten Admin-Rang in den In-Memory-Spiegel uebernehmen.
     AdminSystem_OnPlayerAuthenticated(playerid);
+    // Haeuser dieses Accounts mit der aktuellen Runtime-playerid verknuepfen.
+    HouseSystem_OnPlayerAuthenticated(playerid);
 }
 
 stock int:LoginSystem_GetHomeState(playerid)
