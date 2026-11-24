@@ -9,7 +9,7 @@
 #define TUTORIAL_STAGE_GOV 3
 #define TUTORIAL_STAGE_FINISH 10
 #define TUTORIAL_SCENE_COUNT 9
-#define TUTORIAL_SCENE_TIME 11000
+#define TUTORIAL_SCENE_TIME 11500
 
 new gTutorialStage[MAX_PLAYERS];
 new Text:gTutorialTD[MAX_PLAYERS][4];
@@ -80,6 +80,26 @@ stock TutorialSystem_Start(playerid)
 {
     if (!Core_IsValidPlayerId(playerid))
     {
+        return;
+    }
+
+    if (!LoginSystem_IsRegistered(playerid) && !gPlayerGenderSelected[playerid])
+    {
+        LoginSystem_RequireGenderSelection(playerid);
+        return;
+    }
+
+    if (!gPlayerPasswordReady[playerid] || !LoginSystem_HasRequiredGender(playerid))
+    {
+        SendClientMessage(playerid, 0xFF6666AA, "[TUTORIAL] Passwort und Geschlecht müssen vor dem Tutorial gesetzt sein.");
+        if (!gPlayerPasswordReady[playerid])
+        {
+            UiHub_ShowPasswordInput(playerid);
+        }
+        else
+        {
+            LoginSystem_RequireGenderSelection(playerid);
+        }
         return;
     }
 
@@ -214,6 +234,20 @@ stock TutorialSystem_Next(playerid)
         return;
     }
 
+    if (!gPlayerPasswordReady[playerid] || !LoginSystem_HasRequiredGender(playerid))
+    {
+        SendClientMessage(playerid, 0xFF6666AA, "[TUTORIAL] Passwort und Geschlecht müssen vor dem Tutorial beendet werden.");
+        if (!gPlayerPasswordReady[playerid])
+        {
+            UiHub_ShowPasswordInput(playerid);
+        }
+        else
+        {
+            LoginSystem_RequireGenderSelection(playerid);
+        }
+        return;
+    }
+
     if (gTutorialStage[playerid] < TUTORIAL_STAGE_FINISH)
     {
         gTutorialStage[playerid]++;
@@ -230,7 +264,7 @@ stock TutorialSystem_Next(playerid)
         TutorialSystem_HideStage(playerid);
         CameraSystem_Reset(playerid);
         TogglePlayerControllable(playerid, false);
-        UiHub_ShowStatePick(playerid);
+        LoginSystem_ShowSkinPicker(playerid);
         return;
     }
 }

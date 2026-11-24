@@ -69,6 +69,10 @@ stock UiHub_Ready(playerid)
 
     if (gTutorialStage[playerid] < TUTORIAL_STAGE_FINISH)
     {
+        if (LoginSystem_IsRegistered(playerid))
+        {
+            return true;
+        }
         return false;
     }
 
@@ -839,8 +843,7 @@ stock UiHub_OnDialogResponse(playerid, dialogid, response, listitem, const input
             if (!LoginSystem_IsActive(playerid))
             {
                 LoginSystem_SelectHomeState(playerid, listitem);
-                LoginSystem_ShowRegisterScreen(playerid);
-                UiHub_ShowPasswordInput(playerid);
+                LoginSystem_ShowSkinPicker(playerid);
                 return true;
             }
 
@@ -853,9 +856,9 @@ stock UiHub_OnDialogResponse(playerid, dialogid, response, listitem, const input
             Core_SetPlayerHomeState(playerid, listitem);
             DB_SetPlayerState(playerid, listitem);
             DB_SavePlayerState(playerid, listitem);
+            LoginSystem_ShowSkinPicker(playerid);
             CameraSystem_Reset(playerid);
-            StateSpawnSystem_Apply(playerid, listitem);
-            SendClientMessage(playerid, 0x00FF99AA, "[UI] Stadt und Spawn aktualisiert.");
+            SendClientMessage(playerid, 0x00FF99AA, "[UI] Stadt gewählt. Jetzt wird der Skin gesetzt, bevor der finale Spawn erfolgt.");
         }
         case DIALOG_UI_INV_LIST:
         {
@@ -1261,6 +1264,7 @@ stock UiHub_OnDialogResponse(playerid, dialogid, response, listitem, const input
                 return true;
             }
 
+            gPlayerPasswordReady[playerid] = true;
             if (gPlayerLoginState[playerid] == LOGIN_STATE_REGISTER)
             {
                 new defaultHome = Core_GetValidStateOrDefault(Core_GetPlayerHomeState(playerid), Core_GetPlayerState(playerid));
@@ -1271,11 +1275,41 @@ stock UiHub_OnDialogResponse(playerid, dialogid, response, listitem, const input
                 Core_SetPlayerHomeState(playerid, defaultHome);
                 Core_SetPlayerState(playerid, defaultHome);
                 DB_SavePlayerState(playerid, defaultHome);
-                LoginSystem_ShowSkinPicker(playerid);
+                LoginSystem_RequireGenderSelection(playerid);
                 return true;
             }
 
             LoginSystem_CompleteLogin(playerid);
+        }
+        case DIALOG_UI_GENDER_PICK:
+        {
+            if (!response)
+            {
+                LoginSystem_RequireGenderSelection(playerid);
+                return true;
+            }
+
+            if (listitem == 0)
+            {
+                LoginSystem_SetPlayerGender(playerid, GENDER_MALE);
+            }
+            else if (listitem == 1)
+            {
+                LoginSystem_SetPlayerGender(playerid, GENDER_FEMALE);
+            }
+            else
+            {
+                return true;
+            }
+
+            if (gPlayerLoginState[playerid] == LOGIN_STATE_REGISTER)
+            {
+                LoginSystem_ShowSkinPicker(playerid);
+            }
+            else
+            {
+                LoginSystem_ShowSkinPicker(playerid);
+            }
         }
         case DIALOG_UI_SKIN_PICK:
         {
@@ -1288,12 +1322,45 @@ stock UiHub_OnDialogResponse(playerid, dialogid, response, listitem, const input
                 return true;
             }
 
-            if (listitem < 0 || listitem > 5)
+            if (listitem < 0)
             {
                 return true;
             }
 
-            LoginSystem_ApplySkinChoice(playerid, listitem + 1);
+            new gender = Core_GetPlayerGender(playerid);
+            new skinIndex = listitem;
+            new selectedSkin = 0;
+            if (gender == GENDER_MALE)
+            {
+                new const malePool[15] = {2, 4, 7, 23, 26, 30, 45, 73, 78, 96, 102, 104, 109, 124, 130};
+                if (skinIndex >= 0 && skinIndex < sizeof(malePool))
+                {
+                    selectedSkin = malePool[skinIndex];
+                }
+            }
+            else if (gender == GENDER_FEMALE)
+            {
+                new const femalePool[15] = {9, 10, 11, 12, 14, 15, 16, 17, 18, 20, 21, 22, 25, 27, 29};
+                if (skinIndex >= 0 && skinIndex < sizeof(femalePool))
+                {
+                    selectedSkin = femalePool[skinIndex];
+                }
+            }
+            else
+            {
+                new const fallbackPool[15] = {2, 9, 14, 15, 23, 26, 29, 30, 45, 73, 78, 96, 104, 130, 212};
+                if (skinIndex >= 0 && skinIndex < sizeof(fallbackPool))
+                {
+                    selectedSkin = fallbackPool[skinIndex];
+                }
+            }
+
+            if (selectedSkin < 0 || selectedSkin > 311)
+            {
+                selectedSkin = (gender == GENDER_FEMALE ? 9 : 2);
+            }
+
+            LoginSystem_ApplySkinChoice(playerid, selectedSkin);
             if (gPlayerLoginState[playerid] == LOGIN_STATE_REGISTER)
             {
                 LoginSystem_CompleteReg(playerid);

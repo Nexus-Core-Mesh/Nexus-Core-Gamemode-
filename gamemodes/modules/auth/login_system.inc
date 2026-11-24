@@ -29,6 +29,9 @@ new gLoginAccountExists[MAX_PLAYERS];
 new Text:gLoginTD[MAX_PLAYERS][12];
 new gPlayerSkinChoice[MAX_PLAYERS];
 new bool:gPlayerSkinSelected[MAX_PLAYERS];
+new gPlayerGender[MAX_PLAYERS];
+new bool:gPlayerGenderSelected[MAX_PLAYERS];
+new bool:gPlayerPasswordReady[MAX_PLAYERS];
 new gPlayerWeather[MAX_PLAYERS];
 new bool:gLoginSpawned[MAX_PLAYERS];
 new bool:gLoginSpawnPending[MAX_PLAYERS];
@@ -171,6 +174,10 @@ stock LoginSystem_AutoResolveFlow(playerid)
     if (registered)
     {
         gPlayerLoginState[playerid] = LOGIN_STATE_LOGIN;
+        if (TutorialSystem_GetCurrentStage(playerid) < TUTORIAL_STAGE_FINISH)
+        {
+            TutorialSystem_MarkFinished(playerid);
+        }
         LoginSystem_HideLoginScreen(playerid);
         LoginSystem_HideRegisterScreen(playerid);
         LoginSystem_ShowLoginScreen(playerid);
@@ -567,6 +574,47 @@ stock LoginSystem_SetPlayerHomeState(playerid, stateid)
     LoginSystem_HideRegisterScreen(playerid);
 }
 
+stock LoginSystem_SetPlayerGender(playerid, gender)
+{
+    if (!Core_IsValidPlayerId(playerid))
+    {
+        return;
+    }
+
+    if (!Core_IsValidGender(gender))
+    {
+        gender = GENDER_NONE;
+    }
+
+    gPlayerGender[playerid] = gender;
+    gPlayerGenderSelected[playerid] = (gender == GENDER_MALE || gender == GENDER_FEMALE);
+    Core_SetPlayerGender(playerid, gender);
+    gPlayerData[playerid][E_PLAYER_GENDER] = gender;
+}
+
+stock LoginSystem_RequireGenderSelection(playerid)
+{
+    if (!Core_IsValidPlayerId(playerid))
+    {
+        return;
+    }
+
+    new const title[] = "Geschlecht";
+    new const list[] = "Männlich\nWeiblich";
+    UiDialog_Show(playerid, DIALOG_UI_GENDER_PICK, DIALOG_STYLE_LIST, title, list, UI_DIALOG_BUTTON_OK, UI_DIALOG_BUTTON_BACK);
+}
+
+stock bool:LoginSystem_HasRequiredGender(playerid)
+{
+    if (!Core_IsValidPlayerId(playerid))
+    {
+        return false;
+    }
+
+    new gender = Core_GetPlayerGender(playerid);
+    return (gender == GENDER_MALE || gender == GENDER_FEMALE);
+}
+
 stock LoginSystem_ShowSkinPicker(playerid)
 {
     if (!Core_IsValidPlayerId(playerid))
@@ -574,10 +622,34 @@ stock LoginSystem_ShowSkinPicker(playerid)
         return;
     }
 
+    if (!LoginSystem_HasRequiredGender(playerid))
+    {
+        LoginSystem_RequireGenderSelection(playerid);
+        return;
+    }
+
     gPlayerSkinSelected[playerid] = false;
     gPlayerSkinChoice[playerid] = 0;
-    new const title[] = "Charakterauswahl";
-    new const skinList[] = "Skin 1 - Sportlich\nSkin 2 - Relaxed\nSkin 3 - Hoodie\nSkin 4 - Normal\nSkin 5 - Worker\nSkin 6 - Casual";
+
+    new title[64];
+    new skinList[512];
+    new gender = Core_GetPlayerGender(playerid);
+    if (gender == GENDER_MALE)
+    {
+        format(title, sizeof(title), "Männliche Skin-Auswahl");
+        format(skinList, sizeof(skinList), "Skin 2\nSkin 4\nSkin 7\nSkin 23\nSkin 26\nSkin 30\nSkin 45\nSkin 73\nSkin 78\nSkin 96\nSkin 102\nSkin 104\nSkin 109\nSkin 124\nSkin 130");
+    }
+    else if (gender == GENDER_FEMALE)
+    {
+        format(title, sizeof(title), "Weibliche Skin-Auswahl");
+        format(skinList, sizeof(skinList), "Skin 9\nSkin 10\nSkin 11\nSkin 12\nSkin 14\nSkin 15\nSkin 16\nSkin 17\nSkin 18\nSkin 20\nSkin 21\nSkin 22\nSkin 25\nSkin 27\nSkin 29");
+    }
+    else
+    {
+        format(title, sizeof(title), "Skin-Auswahl");
+        format(skinList, sizeof(skinList), "Skin 2\nSkin 9\nSkin 14\nSkin 15\nSkin 23\nSkin 26\nSkin 29\nSkin 30\nSkin 45\nSkin 73\nSkin 78\nSkin 96\nSkin 104\nSkin 130\nSkin 212");
+    }
+
     UiDialog_Show(playerid, DIALOG_UI_SKIN_PICK, DIALOG_STYLE_LIST, title, skinList, UI_DIALOG_BUTTON_OK, UI_DIALOG_BUTTON_BACK);
 }
 
@@ -588,16 +660,17 @@ stock LoginSystem_ApplySkinChoice(playerid, skinid)
         return;
     }
 
-    if (skinid < 1 || skinid > 6)
+    if (skinid < 0 || skinid > 311)
     {
-        skinid = 1;
+        skinid = 0;
     }
 
-    new const skinPool[6] = {1, 2, 3, 4, 5, 6};
-    gPlayerSkinChoice[playerid] = skinPool[skinid - 1];
+    gPlayerSkinChoice[playerid] = skinid;
     gPlayerSkinSelected[playerid] = true;
-    SetPlayerSkin(playerid, gPlayerSkinChoice[playerid]);
-    SendClientMessage(playerid, 0x00FF99AA, "[LOGIN] Skin ausgewählt. Der Spawn wird jetzt mit deinem Charakter fortgesetzt.");
+    SetPlayerSkin(playerid, skinid);
+    Core_SetPlayerSkin(playerid, skinid);
+    gPlayerData[playerid][E_PLAYER_SKIN] = skinid;
+    SendClientMessage(playerid, 0x00FF99AA, "[LOGIN] Skin ausgewählt. Der finale Spawn setzt den Charakter sauber durch.");
 }
 
 stock LoginSystem_PrepareSpawnInfo(playerid, stateid)
@@ -697,6 +770,19 @@ stock LoginSystem_FinishAuth(playerid, const message[])
         homeState = STATE_LOS_SANTOS;
     }
 
+    if (!LoginSystem_HasRequiredGender(playerid))
+    {
+        LoginSystem_RequireGenderSelection(playerid);
+        return;
+    }
+
+    if (!gPlayerPasswordReady[playerid])
+    {
+        SendClientMessage(playerid, 0xFF6666AA, "[AUTH] Passwort muss gesetzt sein, bevor Tutorial oder Spawn weiterlaufen.");
+        UiHub_ShowPasswordInput(playerid);
+        return;
+    }
+
     LoginSystem_HideLoginScreen(playerid);
     LoginSystem_HideRegisterScreen(playerid);
     CancelSelectTextDraw(playerid);
@@ -717,6 +803,12 @@ stock LoginSystem_FinishAuth(playerid, const message[])
             return;
         }
 
+        if (!gPlayerSkinSelected[playerid])
+        {
+            LoginSystem_ShowSkinPicker(playerid);
+            return;
+        }
+
         if (!gLoginSpawned[playerid])
         {
             gLoginSpawnPending[playerid] = true;
@@ -726,6 +818,7 @@ stock LoginSystem_FinishAuth(playerid, const message[])
 
         SetPlayerInterior(playerid, 0);
         SetPlayerVirtualWorld(playerid, 0);
+        SetPlayerSkin(playerid, gPlayerSkinChoice[playerid]);
         StateSpawnSystem_Apply(playerid, homeState);
         CameraSystem_Reset(playerid);
         TogglePlayerControllable(playerid, true);
@@ -750,6 +843,12 @@ stock LoginSystem_FinishAuth(playerid, const message[])
         return;
     }
 
+    if (!gPlayerSkinSelected[playerid])
+    {
+        LoginSystem_ShowSkinPicker(playerid);
+        return;
+    }
+
     if (!gLoginSpawned[playerid])
     {
         gLoginSpawnPending[playerid] = true;
@@ -759,6 +858,7 @@ stock LoginSystem_FinishAuth(playerid, const message[])
 
     SetPlayerInterior(playerid, 0);
     SetPlayerVirtualWorld(playerid, 0);
+    SetPlayerSkin(playerid, gPlayerSkinChoice[playerid]);
     StateSpawnSystem_Apply(playerid, homeState);
     CameraSystem_Reset(playerid);
     TogglePlayerControllable(playerid, true);
@@ -826,6 +926,7 @@ stock LoginSystem_CompleteLogin(playerid)
     }
 
     gPlayerLoginState[playerid] = LOGIN_STATE_ACTIVE;
+    gPlayerPasswordReady[playerid] = true;
     LoginSystem_FinishAuth(playerid, "[LOGIN] Login erfolgreich.");
 }
 
@@ -836,7 +937,14 @@ stock LoginSystem_CompleteReg(playerid)
         return;
     }
 
+    if (!LoginSystem_HasRequiredGender(playerid))
+    {
+        LoginSystem_RequireGenderSelection(playerid);
+        return;
+    }
+
     gPlayerLoginState[playerid] = LOGIN_STATE_ACTIVE;
+    gPlayerPasswordReady[playerid] = true;
     if (!gPlayerSkinSelected[playerid])
     {
         LoginSystem_ShowSkinPicker(playerid);

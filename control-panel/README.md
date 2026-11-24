@@ -148,3 +148,16 @@ Das Control Panel ist als modernes Betriebs- und Monitoringmodul für den aktuel
 ## ⚠️ Wichtig
 
 Das Panel ist bewusst nur als Betriebs- und Managementschicht konzipiert. Die eigentliche Spiel- und Besitzlogik bleibt im SA:MP-Gamemode, während das Panel als sichere, lesende Schnittstelle für Zustände, Kassen und Statusdaten dient.
+
+
+---
+
+## Aktualisierter Stand (2026-11-24)
+
+- Registrierungsflow: Passwort-Gate vor Tutorial/Spawn, M/W-Auswahl vor Skin-Picker, `DIALOG_UI_GENDER_PICK` aktiv.
+- Tutorial: `TUTORIAL_SCENE_TIME` auf 11500 ms, Schutz gegen Start ohne Passwort/Geschlecht.
+- Skin-Flow: `LoginSystem_ShowSkinPicker()` zeigt geschlechtsabhängige 10–15 Skins, validiert `0..311`, setzt `SetPlayerSkin` vor finalem Spawn.
+- Spawn-Order: Home-State/State validiert, `StateSpawnSystem_Apply(...)` erst nach Skin-Setzung, dann `CameraSystem_ExitCameraMode`, `SetCameraBehindPlayer`, `TogglePlayerControllable(playerid, true)`, `RoleplayUI_ShowDashboard(playerid)`.
+- Compile: `bash scripts/build_gamemode.sh` erfolgreich; `gtasa_reallife.amx` wird ohne neue Errors gebaut (nur legacy warning in `includes/dini.inc`).
+- Dini-first + state-safe Fallback: gültige State-/Home-State-Werte werden nicht auf 0 zurückgesetzt; Fallback ist `STATE_LOS_SANTOS`.
+
