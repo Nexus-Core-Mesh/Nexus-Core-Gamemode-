@@ -101,7 +101,7 @@ stock Core_ResetPlayerData(playerid)
 
     gPlayerData[playerid][E_PLAYER_STATE] = STATE_LOS_SANTOS;
     gPlayerData[playerid][E_PLAYER_HOME_STATE] = STATE_LOS_SANTOS;
-    gPlayerData[playerid][E_PLAYER_LEVEL] = 1;
+    gPlayerData[playerid][E_PLAYER_LEVEL] = 0;
     gPlayerData[playerid][E_PLAYER_BANK] = 2500;
     gPlayerBank[playerid] = 2500;
     gPlayerCash[playerid] = 2500;
