@@ -122,6 +122,7 @@ public OnGameModeInit()
     print("~w~ " SERVER_NAME " initialisiert");
     print("==================================================");
 
+    AddPlayerClass(0, 1500.0, -1710.0, 13.5, 0.0, 0, 0, 0, 0, 0, 0);
     Core_SetLifecycleStage(CORE_LIFECYCLE_BOOT);
     Core_RegisterModuleContract("core");
     Core_RegisterModuleContract("db");
@@ -287,13 +288,26 @@ public OnGameModeExit()
 public OnPlayerConnect(playerid)
 {
     Core_RunPlayerConnectHooks(playerid);
+    LoginSystem_BeginSession(playerid);
     LoginSystem_OnPlayerConnect(playerid);
     CameraSystem_PlayIntroScene(playerid);
     return 1;
 }
 
+public OnPlayerRequestClass(playerid, classid)
+{
+    if (LoginSystem_IsActive(playerid))
+    {
+        LoginSystem_PrepareSpawnInfo(playerid, Core_GetPlayerHomeState(playerid));
+        SpawnPlayer(playerid);
+    }
+    return 1;
+}
+
 public OnPlayerDisconnect(playerid, reason)
 {
+    gLoginSpawned[playerid] = false;
+    gLoginSpawnPending[playerid] = false;
     Core_RunPlayerDisconnectHooks(playerid, reason);
     CameraSystem_ExitCameraMode(playerid);
     CameraSystem_Reset(playerid);
@@ -575,6 +589,11 @@ public OnPlayerSpawn(playerid)
     LoginSystem_HideLoginScreen(playerid);
     LoginSystem_HideRegisterScreen(playerid);
     TutorialSystem_HideStage(playerid);
+
+    if (LoginSystem_OnPlayerSpawn(playerid))
+    {
+        return 1;
+    }
 
     new stateid = Core_GetPlayerState(playerid);
     new homeState = Core_GetPlayerHomeState(playerid);

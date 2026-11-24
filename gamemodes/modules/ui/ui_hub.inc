@@ -52,26 +52,38 @@ stock UiHub_Ready(playerid)
         return false;
     }
 
-    if (!LoginSystem_IsActive(playerid))
+    if (LoginSystem_IsActive(playerid))
     {
-        new loginPhase = gPlayerLoginState[playerid];
-        if (loginPhase == LOGIN_STATE_LOGIN || loginPhase == LOGIN_STATE_REGISTER || gTutorialStage[playerid] < TUTORIAL_STAGE_FINISH ||
-            (gTutorialStage[playerid] >= TUTORIAL_STAGE_FINISH && Core_IsValidState(Core_GetPlayerHomeState(playerid))))
+        if (!Core_IsValidState(Core_GetPlayerHomeState(playerid)) && !Core_IsValidState(Core_GetPlayerState(playerid)))
         {
-            return true;
+            return false;
         }
-
-        SendClientMessage(playerid, 0xFF6666AA, "[UI] Bitte zuerst einloggen.");
-        return false;
+        return true;
     }
 
-    if (!Core_IsValidState(Core_GetPlayerHomeState(playerid)) && !Core_IsValidState(Core_GetPlayerState(playerid)))
+    new loginPhase = gPlayerLoginState[playerid];
+    if (loginPhase == LOGIN_STATE_LOGIN || loginPhase == LOGIN_STATE_REGISTER)
     {
-        SendClientMessage(playerid, 0xFF6666AA, "[UI] Spielerstatus noch nicht initialisiert.");
         return false;
     }
 
-    return true;
+    if (gTutorialStage[playerid] < TUTORIAL_STAGE_FINISH)
+    {
+        return false;
+    }
+
+    if (Core_IsValidState(Core_GetPlayerHomeState(playerid)) || Core_IsValidState(Core_GetPlayerState(playerid)))
+    {
+        return true;
+    }
+
+    if (gPlayerLoginState[playerid] == LOGIN_STATE_ACTIVE)
+    {
+        return true;
+    }
+
+    SendClientMessage(playerid, 0xFF6666AA, "[UI] Bitte zuerst einloggen.");
+    return false;
 }
 
 stock UiHub_ShowMain(playerid)
@@ -216,10 +228,25 @@ stock UiHub_ShowPasswordInput(playerid)
 
 stock UiHub_ShowStatePick(playerid)
 {
+    if (gPlayerLoginState[playerid] == LOGIN_STATE_REGISTER || gPlayerLoginState[playerid] == LOGIN_STATE_LOGIN)
+    {
+        return;
+    }
+
+    if (gTutorialStage[playerid] < TUTORIAL_STAGE_FINISH)
+    {
+        return;
+    }
+
     if (!UiHub_Ready(playerid))
     {
-        if (gPlayerLoginState[playerid] == LOGIN_STATE_REGISTER || gPlayerLoginState[playerid] == LOGIN_STATE_LOGIN || gTutorialStage[playerid] < TUTORIAL_STAGE_FINISH)
+        if (!Core_IsValidState(Core_GetPlayerHomeState(playerid)) && !Core_IsValidState(Core_GetPlayerState(playerid)))
         {
+            CameraSystem_ExitCameraMode(playerid);
+            RoleplayUI_Hide(playerid);
+            new stateList[128];
+            format(stateList, sizeof(stateList), "Los Santos\nSan Fierro\nLas Venturas");
+            UiDialog_Show(playerid, DIALOG_UI_STATE_PICK, DIALOG_STYLE_LIST, "Stadt & Spawn", stateList, UI_DIALOG_BUTTON_OK, UI_DIALOG_BUTTON_BACK);
             return;
         }
         return;
@@ -795,12 +822,25 @@ stock UiHub_OnDialogResponse(playerid, dialogid, response, listitem, const input
         {
             if (!response)
             {
+                if (!LoginSystem_IsActive(playerid))
+                {
+                    UiHub_ShowStatePick(playerid);
+                    return true;
+                }
                 UiHub_ShowMain(playerid);
                 return true;
             }
 
             if (listitem < 0 || listitem >= STATE_COUNT)
             {
+                return true;
+            }
+
+            if (!LoginSystem_IsActive(playerid))
+            {
+                LoginSystem_SelectHomeState(playerid, listitem);
+                LoginSystem_ShowRegisterScreen(playerid);
+                UiHub_ShowPasswordInput(playerid);
                 return true;
             }
 
@@ -1194,6 +1234,13 @@ stock UiHub_OnDialogResponse(playerid, dialogid, response, listitem, const input
                 }
             }
         }
+        case DIALOG_UI_TUTORIAL:
+        {
+            if (gTutorialStage[playerid] > TUTORIAL_STAGE_NONE && gTutorialStage[playerid] < TUTORIAL_STAGE_FINISH)
+            {
+                TutorialSystem_Next(playerid);
+            }
+        }
         case DIALOG_UI_AUTH_PASSWORD:
         {
             if (!response)
@@ -1224,12 +1271,37 @@ stock UiHub_OnDialogResponse(playerid, dialogid, response, listitem, const input
                 Core_SetPlayerHomeState(playerid, defaultHome);
                 Core_SetPlayerState(playerid, defaultHome);
                 DB_SavePlayerState(playerid, defaultHome);
-                LoginSystem_SetPlayerHomeState(playerid, defaultHome);
-                LoginSystem_CompleteReg(playerid);
+                LoginSystem_ShowSkinPicker(playerid);
                 return true;
             }
 
             LoginSystem_CompleteLogin(playerid);
+        }
+        case DIALOG_UI_SKIN_PICK:
+        {
+            if (!response)
+            {
+                if (gPlayerLoginState[playerid] == LOGIN_STATE_REGISTER)
+                {
+                    LoginSystem_ShowSkinPicker(playerid);
+                }
+                return true;
+            }
+
+            if (listitem < 0 || listitem > 5)
+            {
+                return true;
+            }
+
+            LoginSystem_ApplySkinChoice(playerid, listitem + 1);
+            if (gPlayerLoginState[playerid] == LOGIN_STATE_REGISTER)
+            {
+                LoginSystem_CompleteReg(playerid);
+            }
+            else
+            {
+                LoginSystem_CompleteLogin(playerid);
+            }
         }
     }
     return true;

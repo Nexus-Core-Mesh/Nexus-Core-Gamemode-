@@ -51,6 +51,7 @@
 #define UI_REGISTRY_AUTH_MAIN        9079  // Login-/Register-Hauptdialog
 #define UI_REGISTRY_AUTH_PASSWORD    9080  // Passwort-Eingabe (optional, aber sicher)
 #define UI_REGISTRY_AUTH_STATE       9081  // Staatswahl / Login-Startzustand
+#define UI_REGISTRY_TUTORIAL         9082  // Tutorial-Weiter-Dialog
 
 // JOBS / Job-Dialoge: 9100..9119
 // Zuordnungen: Job-Zentrum, Job-Admin-Status, Job-Aktionen, Quit-Flow.
