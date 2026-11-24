@@ -758,7 +758,7 @@ stock DB_EnsureStateSchema()
 
 stock DB_EnsureStateBankSchema()
 {
-    return true;
+    return DB_Execute("CREATE TABLE IF NOT EXISTS state_bank (state_id INTEGER PRIMARY KEY,balance INTEGER NOT NULL DEFAULT 0,updated_at TEXT);");
 }
 
 stock DB_SetStateTreasury(stateid, amount)
@@ -828,7 +828,7 @@ stock DB_EnsureHouseSchema()
 
 stock DB_EnsureHouseStorageSchema()
 {
-    return true;
+    return DB_Execute("CREATE TABLE IF NOT EXISTS house_storage_items (id INTEGER PRIMARY KEY AUTOINCREMENT,house_id INTEGER NOT NULL,item_id INTEGER NOT NULL,slot_index INTEGER NOT NULL,quantity INTEGER NOT NULL DEFAULT 0,metadata TEXT DEFAULT 'NONE',updated_at TEXT,UNIQUE(house_id, slot_index));");
 }
 
 stock DB_EnsureHouseStorageIntegrity()
@@ -838,27 +838,27 @@ stock DB_EnsureHouseStorageIntegrity()
 
 stock DB_EnsureAccessorySchema()
 {
-    return true;
+    return DB_Execute("CREATE TABLE IF NOT EXISTS player_accessories (id INTEGER PRIMARY KEY AUTOINCREMENT,player_id INTEGER NOT NULL,accessory_type INTEGER NOT NULL,color INTEGER NOT NULL DEFAULT 0,equipped INTEGER NOT NULL DEFAULT 0,updated_at TEXT,UNIQUE(player_id, accessory_type));");
 }
 
 stock DB_EnsurePlayerVehicleSchema()
 {
-    return true;
+    return DB_Execute("CREATE TABLE IF NOT EXISTS player_vehicles (vehicle_id INTEGER PRIMARY KEY,player_id INTEGER NOT NULL,model_id INTEGER NOT NULL DEFAULT 0,state_id INTEGER NOT NULL DEFAULT 0,price_paid INTEGER NOT NULL DEFAULT 0,fuel INTEGER NOT NULL DEFAULT 100,locked INTEGER NOT NULL DEFAULT 1,health REAL NOT NULL DEFAULT 1000.0,position_x REAL DEFAULT 0.0,position_y REAL DEFAULT 0.0,position_z REAL DEFAULT 0.0,angle REAL DEFAULT 0.0,color_1 INTEGER DEFAULT 0,color_2 INTEGER DEFAULT 0,updated_at TEXT);");
 }
 
 stock DB_EnsurePropertySchema()
 {
-    return true;
+    return DB_Execute("CREATE TABLE IF NOT EXISTS player_properties (id INTEGER PRIMARY KEY AUTOINCREMENT,player_id INTEGER NOT NULL,property_type INTEGER NOT NULL,property_id INTEGER NOT NULL,state_id INTEGER NOT NULL DEFAULT 0,value INTEGER NOT NULL DEFAULT 0,created_at TEXT,UNIQUE(property_type, property_id));");
 }
 
 stock DB_EnsureFuelStationSchema()
 {
-    return true;
+    return DB_Execute("CREATE TABLE IF NOT EXISTS fuel_stations (id INTEGER PRIMARY KEY AUTOINCREMENT,state_id INTEGER NOT NULL DEFAULT 0,x REAL DEFAULT 0.0,y REAL DEFAULT 0.0,z REAL DEFAULT 0.0,price INTEGER NOT NULL DEFAULT 0,updated_at TEXT);");
 }
 
 stock DB_EnsureVehicleModsSchema()
 {
-    return true;
+    return DB_Execute("CREATE TABLE IF NOT EXISTS vehicle_mods (id INTEGER PRIMARY KEY AUTOINCREMENT,vehicle_id INTEGER NOT NULL,component_id INTEGER NOT NULL,mod_id INTEGER NOT NULL DEFAULT 0,value INTEGER NOT NULL DEFAULT 0,updated_at TEXT,UNIQUE(vehicle_id, component_id));");
 }
 
 stock DB_EnsureUBBVehicleSchema()
@@ -873,7 +873,7 @@ stock DB_EnsureUBBVehicleIntegrity()
 
 stock DB_EnsureWebAccountSchema()
 {
-    return true;
+    return DB_Execute("CREATE TABLE IF NOT EXISTS web_account_sync (player_name TEXT PRIMARY KEY COLLATE NOCASE,ucp_username TEXT DEFAULT '',password_hash TEXT DEFAULT '',synced_at TEXT);");
 }
 
 stock DB_EnsureMapSchema()
@@ -903,12 +903,12 @@ stock DB_SaveMapZone(const name[], stateid, Float:minX, Float:minY, Float:maxX, 
 
 stock DB_EnsureContactSchema()
 {
-    return true;
+    return DB_Execute("CREATE TABLE IF NOT EXISTS player_contacts (id INTEGER PRIMARY KEY AUTOINCREMENT,player_id INTEGER NOT NULL,contact_name TEXT DEFAULT '',phone_number TEXT DEFAULT '');");
 }
 
 stock DB_EnsureCriminalRecordSchema()
 {
-    return true;
+    return DB_Execute("CREATE TABLE IF NOT EXISTS criminal_records (id INTEGER PRIMARY KEY AUTOINCREMENT,player_id INTEGER NOT NULL,state_id INTEGER NOT NULL DEFAULT 0,offense TEXT DEFAULT '',wanted_level INTEGER NOT NULL DEFAULT 0,bail_amount INTEGER NOT NULL DEFAULT 0,prison_seconds INTEGER NOT NULL DEFAULT 0,officer_name TEXT DEFAULT '',created_at TEXT DEFAULT (datetime('now')));");
 }
 
 stock DB_LoadPlayerInventory(playerid)
@@ -927,11 +927,48 @@ stock DB_LoadPlayerInventory(playerid)
 
     new query[192];
     format(query, sizeof(query), "SELECT item_id, slot_index, quantity, metadata FROM player_inventory WHERE player_id = %d ORDER BY slot_index ASC;", playerid);
-    if (!DB_Query(query))
+
+    if (!DB_SQLite_IsReady())
     {
         return false;
     }
 
+    new mutableQuery[224];
+    strcat(mutableQuery, query, sizeof(mutableQuery));
+    new DBResult:result = db_query(gSQLiteDB, mutableQuery);
+    if (!result)
+    {
+        return false;
+    }
+
+    new field[48];
+    new rows = db_num_rows(result);
+    for (new r = 0; r < rows; r++)
+    {
+        db_get_field_assoc(result, "slot_index", field, sizeof(field));
+        new slot = strval(field);
+        if (slot < 0 || slot >= MAX_INVENTORY_SLOTS)
+        {
+            db_next_row(result);
+            continue;
+        }
+
+        db_get_field_assoc(result, "item_id", field, sizeof(field));
+        gDBPlayerInventoryCache[playerid][slot] = strval(field);
+
+        db_get_field_assoc(result, "quantity", field, sizeof(field));
+        gDBPlayerInventoryQtyCache[playerid][slot] = strval(field);
+
+        db_get_field_assoc(result, "metadata", gDBPlayerInventoryMetaCache[playerid][slot], 32);
+        if (strlen(gDBPlayerInventoryMetaCache[playerid][slot]) == 0)
+        {
+            format(gDBPlayerInventoryMetaCache[playerid][slot], 32, "NONE");
+        }
+
+        db_next_row(result);
+    }
+
+    db_free_result(result);
     return true;
 }
 
@@ -975,11 +1012,48 @@ stock DB_LoadHouseStorage(houseid)
 
     new query[192];
     format(query, sizeof(query), "SELECT item_id, slot_index, quantity, metadata FROM house_storage_items WHERE house_id = %d ORDER BY slot_index ASC;", houseid);
-    if (!DB_Query(query))
+
+    if (!DB_SQLite_IsReady())
     {
         return false;
     }
 
+    new mutableQuery[224];
+    strcat(mutableQuery, query, sizeof(mutableQuery));
+    new DBResult:result = db_query(gSQLiteDB, mutableQuery);
+    if (!result)
+    {
+        return false;
+    }
+
+    new field[48];
+    new rows = db_num_rows(result);
+    for (new r = 0; r < rows; r++)
+    {
+        db_get_field_assoc(result, "slot_index", field, sizeof(field));
+        new slot = strval(field);
+        if (slot < 0 || slot >= MAX_HOUSE_STORAGE_SLOTS)
+        {
+            db_next_row(result);
+            continue;
+        }
+
+        db_get_field_assoc(result, "item_id", field, sizeof(field));
+        gDBHouseStorageCache[houseid][slot] = strval(field);
+
+        db_get_field_assoc(result, "quantity", field, sizeof(field));
+        gDBHouseStorageQtyCache[houseid][slot] = strval(field);
+
+        db_get_field_assoc(result, "metadata", gDBHouseStorageMetaCache[houseid][slot], 32);
+        if (strlen(gDBHouseStorageMetaCache[houseid][slot]) == 0)
+        {
+            format(gDBHouseStorageMetaCache[houseid][slot], 32, "NONE");
+        }
+
+        db_next_row(result);
+    }
+
+    db_free_result(result);
     return true;
 }
 
