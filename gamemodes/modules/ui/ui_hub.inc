@@ -54,36 +54,17 @@ stock UiHub_Ready(playerid)
 
     if (LoginSystem_IsActive(playerid))
     {
-        if (!Core_IsValidState(Core_GetPlayerHomeState(playerid)) && !Core_IsValidState(Core_GetPlayerState(playerid)))
-        {
-            return false;
-        }
         return true;
     }
 
-    new loginPhase = gPlayerLoginState[playerid];
-    if (loginPhase == LOGIN_STATE_LOGIN || loginPhase == LOGIN_STATE_REGISTER)
+    if (gPlayerLoginState[playerid] == LOGIN_STATE_LOGIN || gPlayerLoginState[playerid] == LOGIN_STATE_REGISTER)
     {
         return false;
     }
 
-    if (gTutorialStage[playerid] < TUTORIAL_STAGE_FINISH)
+    if (gTutorialStage[playerid] > TUTORIAL_STAGE_NONE && gTutorialStage[playerid] < TUTORIAL_STAGE_FINISH)
     {
-        if (LoginSystem_IsRegistered(playerid))
-        {
-            return true;
-        }
         return false;
-    }
-
-    if (Core_IsValidState(Core_GetPlayerHomeState(playerid)) || Core_IsValidState(Core_GetPlayerState(playerid)))
-    {
-        return true;
-    }
-
-    if (gPlayerLoginState[playerid] == LOGIN_STATE_ACTIVE)
-    {
-        return true;
     }
 
     SendClientMessage(playerid, 0xFF6666AA, "[UI] Bitte zuerst einloggen.");
@@ -216,6 +197,16 @@ stock UiHub_ShowAuthMenu(playerid)
 {
     if (!LoginSystem_IsActive(playerid))
     {
+        if (gPlayerLoginState[playerid] == LOGIN_STATE_LOGIN)
+        {
+            LoginSystem_ShowLoginScreen(playerid);
+            return;
+        }
+        if (gPlayerLoginState[playerid] == LOGIN_STATE_REGISTER)
+        {
+            LoginSystem_ShowRegisterScreen(playerid);
+            return;
+        }
         LoginSystem_AutoResolveFlow(playerid);
         return;
     }
@@ -840,7 +831,7 @@ stock UiHub_OnDialogResponse(playerid, dialogid, response, listitem, const input
             if (!LoginSystem_IsActive(playerid))
             {
                 LoginSystem_SelectHomeState(playerid, listitem);
-                LoginSystem_ShowSkinPicker(playerid);
+                LoginSystem_CompleteReg(playerid);
                 return true;
             }
 
@@ -1264,16 +1255,6 @@ stock UiHub_OnDialogResponse(playerid, dialogid, response, listitem, const input
             gPlayerPasswordReady[playerid] = true;
             if (gPlayerLoginState[playerid] == LOGIN_STATE_REGISTER)
             {
-                new defaultHome = Core_GetValidStateOrDefault(Core_GetPlayerHomeState(playerid), Core_GetPlayerState(playerid));
-                if (!Core_IsValidState(defaultHome))
-                {
-                    defaultHome = STATE_LOS_SANTOS;
-                }
-                Core_SetPlayerHomeState(playerid, defaultHome);
-                Core_SetPlayerState(playerid, defaultHome);
-                gPlayerData[playerid][E_PLAYER_HOME_STATE] = defaultHome;
-                gPlayerData[playerid][E_PLAYER_STATE] = defaultHome;
-                DB_SavePlayerState(playerid, defaultHome);
                 LoginSystem_CompleteReg(playerid);
                 return true;
             }
@@ -1303,12 +1284,11 @@ stock UiHub_OnDialogResponse(playerid, dialogid, response, listitem, const input
 
             if (gPlayerLoginState[playerid] == LOGIN_STATE_REGISTER)
             {
-                LoginSystem_ShowSkinPicker(playerid);
+                LoginSystem_CompleteReg(playerid);
+                return true;
             }
-            else
-            {
-                LoginSystem_ShowSkinPicker(playerid);
-            }
+
+            LoginSystem_ShowSkinPicker(playerid);
         }
         case DIALOG_UI_SKIN_PICK:
         {
