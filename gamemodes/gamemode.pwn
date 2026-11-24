@@ -289,7 +289,6 @@ public OnPlayerConnect(playerid)
 {
     Core_RunPlayerConnectHooks(playerid);
     LoginSystem_BeginSession(playerid);
-    LoginSystem_OnPlayerConnect(playerid);
     CameraSystem_PlayIntroScene(playerid);
     return 1;
 }
@@ -326,56 +325,6 @@ public OnPlayerCommandText(playerid, cmdtext[])
 {
     if (cmdtext[0] == '\0')
         return 0;
-
-    if (strcmp(cmdtext, "/login", true, 6) == 0)
-    {
-        new offset = 6;
-        while (cmdtext[offset] == ' ' && cmdtext[offset] != '\0')
-        {
-            offset++;
-        }
-
-        if (cmdtext[offset] == '\0')
-        {
-            if (!LoginSystem_IsActive(playerid))
-            {
-                LoginSystem_AutoResolveFlow(playerid);
-            }
-            else
-            {
-                UiHub_ShowPasswordInput(playerid);
-            }
-            return 1;
-        }
-
-        gPlayerLoginState[playerid] = LOGIN_STATE_LOGIN;
-        UiHub_ShowPasswordInput(playerid);
-        SendClientMessage(playerid, 0x00D9FFFF, "[LOGIN] Passwort-Input aktiv. Bitte das Passwort im Dialog eingeben.");
-        return 1;
-    }
-
-    if (strcmp(cmdtext, "/register", true, 9) == 0)
-    {
-        new offset = 9;
-        while (cmdtext[offset] == ' ' && cmdtext[offset] != '\0')
-        {
-            offset++;
-        }
-
-        if (cmdtext[offset] == '\0')
-        {
-            gPlayerLoginState[playerid] = LOGIN_STATE_REGISTER;
-            LoginSystem_ShowRegisterScreen(playerid);
-            UiHub_ShowPasswordInput(playerid);
-            SendClientMessage(playerid, 0x00D9FFFF, "[REGISTER] Bitte ein Passwort im Dialog eingeben.");
-            return 1;
-        }
-
-        gPlayerLoginState[playerid] = LOGIN_STATE_REGISTER;
-        UiHub_ShowPasswordInput(playerid);
-        SendClientMessage(playerid, 0x00D9FFFF, "[REGISTER] Passwort-Input aktiv. Bitte das Passwort im Dialog eingeben.");
-        return 1;
-    }
 
     if (UiHub_HandleCommand(playerid, cmdtext))
         return 1;
@@ -450,11 +399,6 @@ public OnPlayerCommandText(playerid, cmdtext[])
     if (strcmp(cmdtext, "/treasury", true) == 0)
     {
         StateBudgetSystem_ShowOverview(playerid, StateSystem_GetPlayerState(playerid));
-        return 1;
-    }
-    if (strcmp(cmdtext, "/spawn", true) == 0)
-    {
-        StateSpawnSystem_Apply(playerid, StateSystem_GetPlayerState(playerid));
         return 1;
     }
     if (strcmp(cmdtext, "/state", true) == 0)

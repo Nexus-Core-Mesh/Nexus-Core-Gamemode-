@@ -1274,6 +1274,8 @@ stock UiHub_OnDialogResponse(playerid, dialogid, response, listitem, const input
                 }
                 Core_SetPlayerHomeState(playerid, defaultHome);
                 Core_SetPlayerState(playerid, defaultHome);
+                gPlayerData[playerid][E_PLAYER_HOME_STATE] = defaultHome;
+                gPlayerData[playerid][E_PLAYER_STATE] = defaultHome;
                 DB_SavePlayerState(playerid, defaultHome);
                 LoginSystem_RequireGenderSelection(playerid);
                 return true;
@@ -1410,22 +1412,6 @@ stock UiHub_HandleCommand(playerid, const cmdtext[])
     if (strcmp(cmdtext, "/hudhide", true) == 0)
     {
         RoleplayUI_Hide(playerid);
-        return true;
-    }
-    if (strcmp(cmdtext, "/spawn", true) == 0)
-    {
-        if (UiHub_Ready(playerid))
-        {
-            new stateid = StateSystem_GetPlayerState(playerid);
-            if (Core_IsValidState(stateid))
-            {
-                StateSpawnSystem_Apply(playerid, stateid);
-            }
-            else
-            {
-                LoginSystem_SetPlayerHomeState(playerid, STATE_LOS_SANTOS);
-            }
-        }
         return true;
     }
     if (strcmp(cmdtext, "/inv", true) == 0 || strcmp(cmdtext, "/inventory", true) == 0)

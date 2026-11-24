@@ -25,6 +25,7 @@
 #define LOGIN_STATE_ACTIVE 3
 
 new gPlayerLoginState[MAX_PLAYERS];
+new gTutorialStage[MAX_PLAYERS];
 new gLoginAccountExists[MAX_PLAYERS];
 new Text:gLoginTD[MAX_PLAYERS][12];
 new gPlayerSkinChoice[MAX_PLAYERS];
@@ -167,6 +168,15 @@ stock LoginSystem_AutoResolveFlow(playerid)
 
     gPlayerLoginState[playerid] = LOGIN_STATE_NONE;
     gLoginAccountExists[playerid] = false;
+    gPlayerPasswordReady[playerid] = false;
+    gPlayerSkinSelected[playerid] = false;
+    gPlayerGenderSelected[playerid] = false;
+    gLoginSpawned[playerid] = false;
+    gLoginSpawnPending[playerid] = false;
+    LoginSystem_HideLoginScreen(playerid);
+    LoginSystem_HideRegisterScreen(playerid);
+    TutorialSystem_HideStage(playerid);
+    CancelSelectTextDraw(playerid);
 
     new registered = LoginSystem_IsRegistered(playerid);
     gLoginAccountExists[playerid] = registered;
@@ -174,22 +184,18 @@ stock LoginSystem_AutoResolveFlow(playerid)
     if (registered)
     {
         gPlayerLoginState[playerid] = LOGIN_STATE_LOGIN;
-        if (TutorialSystem_GetCurrentStage(playerid) < TUTORIAL_STAGE_FINISH)
-        {
-            TutorialSystem_MarkFinished(playerid);
-        }
         LoginSystem_HideLoginScreen(playerid);
         LoginSystem_HideRegisterScreen(playerid);
         LoginSystem_ShowLoginScreen(playerid);
+        CancelSelectTextDraw(playerid);
         UiHub_ShowPasswordInput(playerid);
         TogglePlayerControllable(playerid, false);
-        SendClientMessage(playerid, 0x00D9FFFF, "[LOGIN] Bestehender Account erkannt. Bitte Passwort eingeben und mit Weiter fortfahren.");
+        SendClientMessage(playerid, 0x00D9FFFF, "[LOGIN] Bestehender Account erkannt. Bitte Passwort eingeben.");
         return;
     }
 
-    new defaultState = Core_GetValidStateOrDefault(Core_GetPlayerState(playerid), STATE_LOS_SANTOS);
-    new defaultHomeState = Core_GetValidStateOrDefault(Core_GetPlayerHomeState(playerid), defaultState);
-
+    new defaultState = Core_GetValidStateOrDefault(gPlayerData[playerid][E_PLAYER_STATE], STATE_LOS_SANTOS);
+    new defaultHomeState = Core_GetValidStateOrDefault(gPlayerData[playerid][E_PLAYER_HOME_STATE], defaultState);
     if (!Core_IsValidState(defaultState))
     {
         defaultState = STATE_LOS_SANTOS;
@@ -207,9 +213,12 @@ stock LoginSystem_AutoResolveFlow(playerid)
     gPlayerLoginState[playerid] = LOGIN_STATE_REGISTER;
     LoginSystem_HideLoginScreen(playerid);
     LoginSystem_HideRegisterScreen(playerid);
-    TutorialSystem_Start(playerid);
+    TutorialSystem_Reset(playerid);
+    CameraSystem_Reset(playerid);
     TogglePlayerControllable(playerid, false);
-    SendClientMessage(playerid, 0x00D9FFFF, "[LOGIN] Neuer Spieler erkannt. Zuerst das Tutorial, danach Stadtwahl und Account-Erstellung.");
+    CancelSelectTextDraw(playerid);
+    UiHub_ShowPasswordInput(playerid);
+    SendClientMessage(playerid, 0x00D9FFFF, "[LOGIN] Neuer Spieler erkannt. Passwort eingeben, danach Tutorial und abschliessender Spawn.");
 }
 
 stock LoginSystem_CompleteRegistrationFlow(playerid)
@@ -219,13 +228,14 @@ stock LoginSystem_CompleteRegistrationFlow(playerid)
         return;
     }
 
-    gPlayerLoginState[playerid] = LOGIN_STATE_ACTIVE;
-    if (TutorialSystem_GetCurrentStage(playerid) < TUTORIAL_STAGE_FINISH)
-    {
-        TutorialSystem_MarkFinished(playerid);
-    }
-    UiHub_ShowStatePick(playerid);
-    SendClientMessage(playerid, 0x00FF00AA, "[REGISTER] Registrierung abgeschlossen. Bitte Stadt wählen.");
+    gPlayerLoginState[playerid] = LOGIN_STATE_REGISTER;
+    TutorialSystem_Reset(playerid);
+    LoginSystem_HideLoginScreen(playerid);
+    LoginSystem_HideRegisterScreen(playerid);
+    CameraSystem_Reset(playerid);
+    TogglePlayerControllable(playerid, false);
+    SendClientMessage(playerid, 0x00FF00AA, "[REGISTER] Passwort gesetzt. Tutorial startet jetzt sauber in der korrekten Reihenfolge.");
+    TutorialSystem_Start(playerid);
 }
 
 stock LoginSystem_AdvanceToStateSelection(playerid)
@@ -236,6 +246,20 @@ stock LoginSystem_AdvanceToStateSelection(playerid)
     }
 
     CameraSystem_Reset(playerid);
+    LoginSystem_HideLoginScreen(playerid);
+    LoginSystem_HideRegisterScreen(playerid);
+    CancelSelectTextDraw(playerid);
+
+    if (gPlayerLoginState[playerid] != LOGIN_STATE_REGISTER)
+    {
+        return;
+    }
+
+    if (!LoginSystem_HasRequiredGender(playerid))
+    {
+        LoginSystem_RequireGenderSelection(playerid);
+        return;
+    }
 
     if (TutorialSystem_GetCurrentStage(playerid) < TUTORIAL_STAGE_FINISH)
     {
@@ -245,12 +269,11 @@ stock LoginSystem_AdvanceToStateSelection(playerid)
 
     if (!Core_IsValidState(Core_GetPlayerHomeState(playerid)))
     {
-        gPlayerLoginState[playerid] = LOGIN_STATE_ACTIVE;
         UiHub_ShowStatePick(playerid);
         return;
     }
 
-    gPlayerLoginState[playerid] = LOGIN_STATE_ACTIVE;
+    LoginSystem_ActivateSession(playerid, Core_GetPlayerHomeState(playerid));
     StateSpawnSystem_Apply(playerid, Core_GetPlayerHomeState(playerid));
     RoleplayUI_ShowDashboard(playerid);
 }
@@ -264,6 +287,11 @@ stock LoginSystem_OnPlayerConnect(playerid)
 
     gPlayerLoginState[playerid] = LOGIN_STATE_NONE;
     gLoginAccountExists[playerid] = false;
+    gPlayerPasswordReady[playerid] = false;
+    gPlayerSkinSelected[playerid] = false;
+    gPlayerGenderSelected[playerid] = false;
+    gLoginSpawned[playerid] = false;
+    gLoginSpawnPending[playerid] = false;
 
     new defaultState = Core_GetValidStateOrDefault(gPlayerData[playerid][E_PLAYER_STATE], STATE_LOS_SANTOS);
     new defaultHomeState = Core_GetValidStateOrDefault(gPlayerData[playerid][E_PLAYER_HOME_STATE], defaultState);
@@ -283,6 +311,8 @@ stock LoginSystem_OnPlayerConnect(playerid)
     Core_NormalizePlayerState(playerid);
     LoginSystem_HideLoginScreen(playerid);
     LoginSystem_HideRegisterScreen(playerid);
+    TutorialSystem_HideStage(playerid);
+    CancelSelectTextDraw(playerid);
     gPlayerLoginState[playerid] = LOGIN_STATE_NONE;
     LoginSystem_AutoResolveFlow(playerid);
 }
@@ -296,9 +326,16 @@ stock LoginSystem_OnPlayerDisconnect(playerid, reason)
 
     LoginSystem_HideRegisterScreen(playerid);
     LoginSystem_HideLoginScreen(playerid);
+    TutorialSystem_HideStage(playerid);
     CancelSelectTextDraw(playerid);
     gPlayerLoginState[playerid] = LOGIN_STATE_NONE;
     gLoginAccountExists[playerid] = false;
+    gPlayerPasswordReady[playerid] = false;
+    gPlayerSkinSelected[playerid] = false;
+    gPlayerGenderSelected[playerid] = false;
+    gLoginSpawned[playerid] = false;
+    gLoginSpawnPending[playerid] = false;
+    gTutorialStage[playerid] = TUTORIAL_STAGE_NONE;
 
     new preservedState = Core_GetValidStateOrDefault(gPlayerData[playerid][E_PLAYER_STATE], STATE_LOS_SANTOS);
     new preservedHomeState = Core_GetValidStateOrDefault(gPlayerData[playerid][E_PLAYER_HOME_STATE], preservedState);
@@ -317,6 +354,9 @@ stock LoginSystem_OnPlayerDisconnect(playerid, reason)
     gPlayerData[playerid][E_PLAYER_STATE] = preservedState;
     Core_NormalizePlayerState(playerid);
     gPlayerLoginState[playerid] = LOGIN_STATE_NONE;
+    CameraSystem_Reset(playerid);
+    TogglePlayerControllable(playerid, true);
+    RoleplayUI_Hide(playerid);
 }
 
 stock LoginSystem_ShowLoginScreen(playerid)
@@ -599,6 +639,11 @@ stock LoginSystem_RequireGenderSelection(playerid)
         return;
     }
 
+    LoginSystem_HideLoginScreen(playerid);
+    LoginSystem_HideRegisterScreen(playerid);
+    CancelSelectTextDraw(playerid);
+    TutorialSystem_HideStage(playerid);
+
     new const title[] = "Geschlecht";
     new const list[] = "Männlich\nWeiblich";
     UiDialog_Show(playerid, DIALOG_UI_GENDER_PICK, DIALOG_STYLE_LIST, title, list, UI_DIALOG_BUTTON_OK, UI_DIALOG_BUTTON_BACK);
@@ -621,6 +666,11 @@ stock LoginSystem_ShowSkinPicker(playerid)
     {
         return;
     }
+
+    LoginSystem_HideLoginScreen(playerid);
+    LoginSystem_HideRegisterScreen(playerid);
+    CancelSelectTextDraw(playerid);
+    TutorialSystem_HideStage(playerid);
 
     if (!LoginSystem_HasRequiredGender(playerid))
     {
@@ -662,7 +712,7 @@ stock LoginSystem_ApplySkinChoice(playerid, skinid)
 
     if (skinid < 0 || skinid > 311)
     {
-        skinid = 0;
+        skinid = (gPlayerGender[playerid] == GENDER_FEMALE ? 9 : 2);
     }
 
     gPlayerSkinChoice[playerid] = skinid;
@@ -675,22 +725,53 @@ stock LoginSystem_ApplySkinChoice(playerid, skinid)
 
 stock LoginSystem_PrepareSpawnInfo(playerid, stateid)
 {
-    new safeState = Core_GetValidStateOrDefault(stateid, STATE_LOS_SANTOS);
+    new safeState = Core_GetValidStateOrDefault(stateid, Core_GetPlayerHomeState(playerid));
+    if (!Core_IsValidState(safeState))
+    {
+        safeState = Core_GetValidStateOrDefault(Core_GetPlayerState(playerid), STATE_LOS_SANTOS);
+    }
     if (!Core_IsValidState(safeState))
     {
         safeState = STATE_LOS_SANTOS;
     }
 
-    new Float:x = float(gStateSpawnX[safeState]);
-    new Float:y = float(gStateSpawnY[safeState]);
-    new Float:z = float(gStateSpawnZ[safeState]);
+    new Float:x = 0.0;
+    new Float:y = 0.0;
+    new Float:z = 0.0;
     new Float:angle = 0.0;
     if (gStateSpawnCount[safeState] > 0)
     {
         StateSpawnSystem_GetStateSpawn(safeState, gStateSpawnCount[safeState] - 1, x, y, z, angle);
     }
+    else
+    {
+        x = 1500.0; y = -1710.0; z = 13.0; angle = 0.0;
+    }
 
-    SetSpawnInfo(playerid, 255, 0, x, y, z + 0.5, angle, 0, 0, 0, 0, 0, 0);
+    new skinid = gPlayerSkinChoice[playerid];
+    if (skinid < 0 || skinid > 311)
+    {
+        skinid = Core_GetPlayerSkin(playerid);
+    }
+    if (skinid < 0 || skinid > 311)
+    {
+        skinid = gPlayerData[playerid][E_PLAYER_SKIN];
+    }
+    if (skinid < 0 || skinid > 311)
+    {
+        skinid = (gPlayerGender[playerid] == GENDER_FEMALE ? 9 : 2);
+    }
+    if (skinid < 0 || skinid > 311)
+    {
+        skinid = (gPlayerGender[playerid] == GENDER_FEMALE ? 9 : 2);
+    }
+
+    gPlayerSkinChoice[playerid] = skinid;
+    gPlayerSkinSelected[playerid] = true;
+    SetPlayerSkin(playerid, skinid);
+    Core_SetPlayerSkin(playerid, skinid);
+    gPlayerData[playerid][E_PLAYER_SKIN] = skinid;
+    SetSpawnInfo(playerid, 255, skinid, x, y, z + 0.5, angle, 0, 0, 0, 0, 0, 0);
 }
 
 stock LoginSystem_BeginSession(playerid)
@@ -770,15 +851,9 @@ stock LoginSystem_FinishAuth(playerid, const message[])
         homeState = STATE_LOS_SANTOS;
     }
 
-    if (!LoginSystem_HasRequiredGender(playerid))
-    {
-        LoginSystem_RequireGenderSelection(playerid);
-        return;
-    }
-
     if (!gPlayerPasswordReady[playerid])
     {
-        SendClientMessage(playerid, 0xFF6666AA, "[AUTH] Passwort muss gesetzt sein, bevor Tutorial oder Spawn weiterlaufen.");
+        SendClientMessage(playerid, 0xFF6666AA, "[AUTH] Passwort muss gesetzt sein, bevor der Flow weiterlaufen darf.");
         UiHub_ShowPasswordInput(playerid);
         return;
     }
@@ -789,13 +864,17 @@ stock LoginSystem_FinishAuth(playerid, const message[])
 
     if (isRegisterFlow)
     {
-        if (TutorialSystem_GetCurrentStage(playerid) < TUTORIAL_STAGE_FINISH)
+        if (!LoginSystem_HasRequiredGender(playerid))
         {
-            TutorialSystem_MarkFinished(playerid);
+            LoginSystem_RequireGenderSelection(playerid);
+            return;
         }
 
-        LoginSystem_ActivateSession(playerid, homeState);
-        SendClientMessage(playerid, 0x00FF00AA, message);
+        if (TutorialSystem_GetCurrentStage(playerid) < TUTORIAL_STAGE_FINISH)
+        {
+            TutorialSystem_Start(playerid);
+            return;
+        }
 
         if (!Core_IsValidState(Core_GetPlayerHomeState(playerid)))
         {
@@ -816,25 +895,10 @@ stock LoginSystem_FinishAuth(playerid, const message[])
             return;
         }
 
-        SetPlayerInterior(playerid, 0);
-        SetPlayerVirtualWorld(playerid, 0);
-        SetPlayerSkin(playerid, gPlayerSkinChoice[playerid]);
+        LoginSystem_ActivateSession(playerid, homeState);
+        SendClientMessage(playerid, 0x00FF00AA, message);
         StateSpawnSystem_Apply(playerid, homeState);
-        CameraSystem_Reset(playerid);
-        TogglePlayerControllable(playerid, true);
-        RoleplayUI_ShowDashboard(playerid);
         return;
-    }
-
-    LoginSystem_ActivateSession(playerid, homeState);
-    SendClientMessage(playerid, 0x00FF00AA, message);
-
-    if (Core_IsValidState(homeState))
-    {
-        Core_SetPlayerState(playerid, homeState);
-        Core_SetPlayerHomeState(playerid, homeState);
-        gPlayerData[playerid][E_PLAYER_STATE] = homeState;
-        gPlayerData[playerid][E_PLAYER_HOME_STATE] = homeState;
     }
 
     if (!Core_IsValidState(Core_GetPlayerHomeState(playerid)))
@@ -843,7 +907,7 @@ stock LoginSystem_FinishAuth(playerid, const message[])
         return;
     }
 
-    if (!gPlayerSkinSelected[playerid])
+    if (!gPlayerSkinSelected[playerid] && Core_GetPlayerSkin(playerid) <= 0)
     {
         LoginSystem_ShowSkinPicker(playerid);
         return;
@@ -856,13 +920,9 @@ stock LoginSystem_FinishAuth(playerid, const message[])
         return;
     }
 
-    SetPlayerInterior(playerid, 0);
-    SetPlayerVirtualWorld(playerid, 0);
-    SetPlayerSkin(playerid, gPlayerSkinChoice[playerid]);
+    LoginSystem_ActivateSession(playerid, homeState);
+    SendClientMessage(playerid, 0x00FF00AA, message);
     StateSpawnSystem_Apply(playerid, homeState);
-    CameraSystem_Reset(playerid);
-    TogglePlayerControllable(playerid, true);
-    RoleplayUI_ShowDashboard(playerid);
 }
 
 stock LoginSystem_IsActive(playerid)
@@ -880,6 +940,10 @@ stock LoginSystem_ActivateSession(playerid, stateid)
     new safeState = Core_GetValidStateOrDefault(stateid, Core_GetPlayerState(playerid));
     if (!Core_IsValidState(safeState))
     {
+        safeState = Core_GetValidStateOrDefault(Core_GetPlayerHomeState(playerid), STATE_LOS_SANTOS);
+    }
+    if (!Core_IsValidState(safeState))
+    {
         safeState = STATE_LOS_SANTOS;
     }
 
@@ -889,13 +953,9 @@ stock LoginSystem_ActivateSession(playerid, stateid)
         safeHomeState = safeState;
     }
 
-    if (!Core_IsValidState(safeState))
+    if (!Core_IsValidState(safeState) || !Core_IsValidState(safeHomeState))
     {
-        safeState = STATE_LOS_SANTOS;
-    }
-    if (!Core_IsValidState(safeHomeState))
-    {
-        safeHomeState = safeState;
+        return;
     }
 
     Core_SetPlayerState(playerid, safeState);
@@ -905,9 +965,11 @@ stock LoginSystem_ActivateSession(playerid, stateid)
     gPlayerLoginState[playerid] = LOGIN_STATE_ACTIVE;
     gLoginAccountExists[playerid] = true;
     TogglePlayerControllable(playerid, true);
-
     LoginSystem_HideLoginScreen(playerid);
     LoginSystem_HideRegisterScreen(playerid);
+    CancelSelectTextDraw(playerid);
+    TutorialSystem_HideStage(playerid);
+    CameraSystem_Reset(playerid);
 
     DB_ValidateStateTransfer(playerid, safeState, safeHomeState);
     DB_SavePlayerState(playerid, safeState);
@@ -925,7 +987,6 @@ stock LoginSystem_CompleteLogin(playerid)
         return;
     }
 
-    gPlayerLoginState[playerid] = LOGIN_STATE_ACTIVE;
     gPlayerPasswordReady[playerid] = true;
     LoginSystem_FinishAuth(playerid, "[LOGIN] Login erfolgreich.");
 }
@@ -943,7 +1004,6 @@ stock LoginSystem_CompleteReg(playerid)
         return;
     }
 
-    gPlayerLoginState[playerid] = LOGIN_STATE_ACTIVE;
     gPlayerPasswordReady[playerid] = true;
     if (!gPlayerSkinSelected[playerid])
     {
