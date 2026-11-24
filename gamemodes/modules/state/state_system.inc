@@ -205,8 +205,14 @@ stock StateSystem_OnPlayerDisconnect(playerid, reason)
         stateid = STATE_LOS_SANTOS;
     }
 
+    new homeState = Core_GetValidStateOrDefault(Core_GetPlayerHomeState(playerid), stateid);
+    if (!Core_IsValidState(homeState))
+    {
+        homeState = stateid;
+    }
+
     Core_SetPlayerState(playerid, stateid);
-    Core_SetPlayerHomeState(playerid, stateid);
+    Core_SetPlayerHomeState(playerid, homeState);
     Core_SetPlayerCash(playerid, gPlayerCash[playerid]);
     DB_SavePlayerState(playerid, stateid);
 }

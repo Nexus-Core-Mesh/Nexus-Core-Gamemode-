@@ -116,6 +116,7 @@ stock StateSpawnSystem_Apply(playerid, stateid)
     LoginSystem_HideLoginScreen(playerid);
     LoginSystem_HideRegisterScreen(playerid);
     TutorialSystem_HideStage(playerid);
+    TogglePlayerSpectating(playerid, false);
     CameraSystem_ExitCameraMode(playerid);
     CameraSystem_Reset(playerid);
     SetCameraBehindPlayer(playerid);

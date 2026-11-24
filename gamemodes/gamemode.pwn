@@ -539,44 +539,28 @@ public OnPlayerSpawn(playerid)
         return 1;
     }
 
-    new stateid = Core_GetPlayerState(playerid);
-    new homeState = Core_GetPlayerHomeState(playerid);
-    new bool:hasCompletedOnboarding = (gTutorialStage[playerid] >= TUTORIAL_STAGE_FINISH);
-    new bool:hasValidState = Core_IsValidState(stateid) && Core_IsValidState(homeState);
-
     if (!LoginSystem_IsActive(playerid))
     {
         return 1;
     }
 
-    if (!hasValidState)
+    new stateid = Core_GetValidStateOrDefault(Core_GetPlayerState(playerid), Core_GetPlayerHomeState(playerid));
+    new homeState = Core_GetValidStateOrDefault(Core_GetPlayerHomeState(playerid), stateid);
+    if (!Core_IsValidState(stateid))
     {
-        stateid = Core_GetValidStateOrDefault(stateid, homeState);
-        homeState = Core_GetValidStateOrDefault(homeState, stateid);
-        Core_SetPlayerState(playerid, stateid);
-        Core_SetPlayerHomeState(playerid, homeState);
-        DB_ValidateStateTransfer(playerid, stateid, homeState);
-        DB_SavePlayerState(playerid, stateid);
-        hasValidState = Core_IsValidState(stateid) && Core_IsValidState(homeState);
+        stateid = STATE_LOS_SANTOS;
+    }
+    if (!Core_IsValidState(homeState))
+    {
+        homeState = stateid;
     }
 
-    if (!hasCompletedOnboarding && !hasValidState)
-    {
-        CameraSystem_Reset(playerid);
-        StateSpawnSystem_Apply(playerid, Core_GetValidStateOrDefault(homeState, stateid));
-        RoleplayUI_ShowDashboard(playerid);
-        PhoneSystem_OnPlayerConnect(playerid);
-        PrisonSystem_OnPlayerConnect(playerid);
-        return 1;
-    }
-
-    if (!hasCompletedOnboarding && hasValidState)
-    {
-        return 1;
-    }
-
+    Core_SetPlayerState(playerid, stateid);
+    Core_SetPlayerHomeState(playerid, homeState);
+    DB_ValidateStateTransfer(playerid, stateid, homeState);
+    DB_SavePlayerState(playerid, stateid);
     CameraSystem_Reset(playerid);
-    StateSpawnSystem_Apply(playerid, Core_GetValidStateOrDefault(homeState, stateid));
+    StateSpawnSystem_Apply(playerid, homeState);
     RoleplayUI_ShowDashboard(playerid);
     return 1;
 }

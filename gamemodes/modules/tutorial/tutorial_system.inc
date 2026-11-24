@@ -115,6 +115,7 @@ stock TutorialSystem_Start(playerid)
     LoginSystem_HideLoginScreen(playerid);
     LoginSystem_HideRegisterScreen(playerid);
     CancelSelectTextDraw(playerid);
+    CameraSystem_ExitCameraMode(playerid);
     CameraSystem_Reset(playerid);
     SetPlayerInterior(playerid, 0);
     SetPlayerVirtualWorld(playerid, 0);
