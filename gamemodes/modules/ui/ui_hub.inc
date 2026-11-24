@@ -227,34 +227,27 @@ stock UiHub_ShowAuthMenu(playerid)
 
 stock UiHub_ShowPasswordInput(playerid)
 {
+    LoginSystem_HideLoginScreen(playerid);
+    LoginSystem_HideRegisterScreen(playerid);
+    CancelSelectTextDraw(playerid);
     UiDialog_Show(playerid, DIALOG_UI_AUTH_PASSWORD, DIALOG_STYLE_INPUT, "Passwort", "Bitte Passwort nur als freie Texteingabe eingeben. Weitere Auswahl erfolgt im Menü.", "Weiter", "Zurück");
 }
 
 stock UiHub_ShowStatePick(playerid)
 {
-    if (gPlayerLoginState[playerid] == LOGIN_STATE_REGISTER || gPlayerLoginState[playerid] == LOGIN_STATE_LOGIN)
+    if (gPlayerLoginState[playerid] == LOGIN_STATE_LOGIN)
     {
         return;
     }
 
-    if (gTutorialStage[playerid] < TUTORIAL_STAGE_FINISH)
+    if (gTutorialStage[playerid] < TUTORIAL_STAGE_FINISH && gPlayerLoginState[playerid] != LOGIN_STATE_REGISTER)
     {
         return;
     }
 
-    if (!UiHub_Ready(playerid))
-    {
-        if (!Core_IsValidState(Core_GetPlayerHomeState(playerid)) && !Core_IsValidState(Core_GetPlayerState(playerid)))
-        {
-            CameraSystem_ExitCameraMode(playerid);
-            RoleplayUI_Hide(playerid);
-            new stateList[128];
-            format(stateList, sizeof(stateList), "Los Santos\nSan Fierro\nLas Venturas");
-            UiDialog_Show(playerid, DIALOG_UI_STATE_PICK, DIALOG_STYLE_LIST, "Stadt & Spawn", stateList, UI_DIALOG_BUTTON_OK, UI_DIALOG_BUTTON_BACK);
-            return;
-        }
-        return;
-    }
+    LoginSystem_HideLoginScreen(playerid);
+    LoginSystem_HideRegisterScreen(playerid);
+    CancelSelectTextDraw(playerid);
 
     CameraSystem_ExitCameraMode(playerid);
     RoleplayUI_Hide(playerid);
@@ -777,7 +770,11 @@ stock UiHub_OnDialogResponse(playerid, dialogid, response, listitem, const input
     {
         return false;
     }
-    if (!UiHub_Ready(playerid))
+    if (gPlayerLoginState[playerid] != LOGIN_STATE_ACTIVE && gPlayerLoginState[playerid] != LOGIN_STATE_NONE)
+    {
+        // Auth flows must always process their own dialogs regardless of general UI readiness.
+    }
+    else if (!UiHub_Ready(playerid))
     {
         return true;
     }
@@ -1277,7 +1274,7 @@ stock UiHub_OnDialogResponse(playerid, dialogid, response, listitem, const input
                 gPlayerData[playerid][E_PLAYER_HOME_STATE] = defaultHome;
                 gPlayerData[playerid][E_PLAYER_STATE] = defaultHome;
                 DB_SavePlayerState(playerid, defaultHome);
-                LoginSystem_RequireGenderSelection(playerid);
+                LoginSystem_CompleteReg(playerid);
                 return true;
             }
 

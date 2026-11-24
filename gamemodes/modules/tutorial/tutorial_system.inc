@@ -99,13 +99,6 @@ stock TutorialSystem_Start(playerid)
         return;
     }
 
-    if (!LoginSystem_HasRequiredGender(playerid))
-    {
-        SendClientMessage(playerid, 0xFF6666AA, "[TUTORIAL] Geschlecht muss vor dem Tutorial gesetzt sein.");
-        LoginSystem_RequireGenderSelection(playerid);
-        return;
-    }
-
     if (gTutorialStage[playerid] >= TUTORIAL_STAGE_FINISH)
     {
         TutorialSystem_MarkFinished(playerid);
@@ -127,7 +120,7 @@ stock TutorialSystem_Start(playerid)
     SetPlayerVirtualWorld(playerid, 0);
     TogglePlayerControllable(playerid, false);
     TutorialSystem_ShowStage(playerid, gTutorialStage[playerid]);
-    SendClientMessage(playerid, 0xFFCC00AA, "[TUTORIAL] Willkommen im GTA:SA Reallife. Der Kameraflug zeigt dir alle drei Staedte. Danach waehlst du deine Heimatstadt.");
+    SendClientMessage(playerid, 0xFFCC00AA, "[TUTORIAL] Willkommen im GTA:SA Reallife. Der Kameraflug zeigt dir alle drei Staedte. Danach waehlst du dein Geschlecht und deine Heimatstadt.");
 }
 
 stock TutorialSystem_ShowStage(playerid, stage)
@@ -262,13 +255,6 @@ stock TutorialSystem_Next(playerid)
         return;
     }
 
-    if (!LoginSystem_HasRequiredGender(playerid))
-    {
-        SendClientMessage(playerid, 0xFF6666AA, "[TUTORIAL] Geschlecht muss vor dem Tutorial beendet werden.");
-        LoginSystem_RequireGenderSelection(playerid);
-        return;
-    }
-
     if (gTutorialStage[playerid] < TUTORIAL_STAGE_FINISH)
     {
         gTutorialStage[playerid]++;
@@ -283,8 +269,8 @@ stock TutorialSystem_Next(playerid)
         TutorialSystem_HideStage(playerid);
         CameraSystem_Reset(playerid);
         TogglePlayerControllable(playerid, false);
-        LoginSystem_ShowSkinPicker(playerid);
-        SendClientMessage(playerid, 0x00FF00AA, "[TUTORIAL] Tutorial abgeschlossen. Skin-Auswahl folgt.");
+        LoginSystem_RequireGenderSelection(playerid);
+        SendClientMessage(playerid, 0x00FF00AA, "[TUTORIAL] Tutorial abgeschlossen. Wähle jetzt dein Geschlecht und danach deine Heimatstadt.");
         return;
     }
 
