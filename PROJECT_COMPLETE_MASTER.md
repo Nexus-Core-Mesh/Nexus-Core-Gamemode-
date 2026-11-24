@@ -94,14 +94,14 @@ Der DB-Layer enthält:
 - Schema-Repair-Funktionen
 - Transaction-Logik
 - Backup-/Restore-Funktionen
-- Dini- und SQLite-/MySQL-Hybridstruktur
+- SQLite-Persistenz (MySQL definiert, aber inaktiv)
 
 Wichtige Backend-Definitionen:
 
 - `DB_BACKEND_SQLITE = 0`
 - `DB_BACKEND_MYSQL = 1`
 
-Die Standardkonfiguration zeigt klar: der Gamemode ist derzeit primär auf eine flexiblere, modular-eingebaute Persistenzarchitektur ausgerichtet, wobei die Laufzeitproblematik mit Dini- und SQLite-/MySQL-Pfaden sauber getrennt wird.
+Die Standardkonfiguration zeigt klar: der Gamemode ist derzeit primär auf eine flexiblere, modular-eingebaute Persistenzarchitektur ausgerichtet, wobei die Laufzeitproblematik mit SQLite-/MySQL-Pfaden sauber getrennt wird.
 
 ### 2.3 State-Layer
 
@@ -603,7 +603,7 @@ Zusätzlich gibt es eine enge Beziehung zwischen:
 - `DB_BACKEND_SQLITE`
 - `DB_BACKEND_MYSQL`
 
-Der aktivere Standardpfad ist ein flexibler DB-/Cache-Layer mit SQLite- und MySQL-Adapteroption. Dini-, Scriptfiles- und Runtime-Safe-Ordner sind als Teil der Speicherarchitektur vorgesehen.
+Der aktivere Standardpfad ist ein flexibler DB-/Cache-Layer mit SQLite- und MySQL-Adapteroption. SQLite-, Scriptfiles- und Runtime-Safe-Ordner sind als Teil der Speicherarchitektur vorgesehen.
 
 ### 8.2 Cache- und Persistenzbereiche
 
@@ -962,7 +962,7 @@ Das Design versucht, `core.inc` als zentrale Quelle für Spielerstatus und Valid
 
 UI-Module zeigen Daten an und leiten Interaktion weiter, aber die eigentliche Spiel-Logik sitzt in fachlichen Modulen. Das ist sauber und modular.
 
-### 18.5 Dini- und DB-first mit Modularisierung
+### 18.5 SQLite- und DB-first mit Modularisierung
 
 Die Persistenzarchitektur ist für SA:MP-Umgebungen angepasst und geht deutlich über ein nur einmaliges `mysql`- oder `sqlite`-Setup hinaus. Das Projekt versucht, Caches, Schemas, erste Validierung und backupsicheres Schreiben zusammenzubringen.
 
@@ -1076,6 +1076,6 @@ Diese Erweiterung dient dazu, den bisherigen Dokumentationsstand noch weiter auf
 - Tutorial: `TUTORIAL_SCENE_TIME` auf 11500 ms, Schutz gegen Start ohne Passwort/Geschlecht.
 - Skin-Flow: `LoginSystem_ShowSkinPicker()` zeigt geschlechtsabhängige 10–15 Skins, validiert `0..311`, setzt `SetPlayerSkin` vor finalem Spawn.
 - Spawn-Order: Home-State/State validiert, `StateSpawnSystem_Apply(...)` erst nach Skin-Setzung, dann `CameraSystem_ExitCameraMode`, `SetCameraBehindPlayer`, `TogglePlayerControllable(playerid, true)`, `RoleplayUI_ShowDashboard(playerid)`.
-- Compile: `bash scripts/build_gamemode.sh` erfolgreich; `gtasa_reallife.amx` wird ohne neue Errors gebaut (nur legacy warning in `includes/dini.inc`).
-- Dini-first + state-safe Fallback: gültige State-/Home-State-Werte werden nicht auf 0 zurückgesetzt; Fallback ist `STATE_LOS_SANTOS`.
+- Compile: `bash scripts/build_gamemode.sh` erfolgreich; `gtasa_reallife.amx` wird ohne neue Errors gebaut.
+- SQLite-only + state-safe Fallback: gültige State-/Home-State-Werte werden nicht auf 0 zurückgesetzt; Fallback ist `STATE_LOS_SANTOS`.
 

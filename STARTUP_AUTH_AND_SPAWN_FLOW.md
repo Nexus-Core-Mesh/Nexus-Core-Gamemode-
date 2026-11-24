@@ -1,385 +1,204 @@
 # Nexus Core Gamemode – Startup-, Login-, Register- und Spawn-Flow
 
-Diese Datei beschreibt den aktuellen, stabilisierten Ablauf für den Einstieg eines Spielers in den Gamemode: Login / Registrierung / Tutorial / Stadtwahl / Geschlecht / Skin-Auswahl / finaler Spawn.
+Diese Datei beschreibt den **tatsächlich implementierten** Ablauf für den Einstieg eines Spielers: Connect → Accountstatus → Login **oder** Registrierung → (bei Neuanlage) Geschlecht → Skin → Stadtwahl → Tutorial → finaler Spawn.
 
-Der Fokus liegt auf dem tatsächlich korrigierten Flow, der in der aktuellen Implementierung als gültige Reihenfolge verwendet wird.
-
----
-
-## 1. Ziel des Flows
-
-Der Einstieg darf nicht mehr durch eine Vermischung von Auth-Status, State-/Heimatstadt-Logik und Spawn-Logik blockiert oder verwirrt werden.
-
-Die korrekte Reihenfolge ist:
-
-1. Spieler verbindet sich
-2. Accountstatus wird aufgelöst
-3. bestehender Account geht in Login
-4. neuer Account geht in Registrierung
-5. Pflicht-Gates müssen erfüllt sein (`Passwort`, `Geschlecht M/W`)
-6. Tutorial kann starten
-7. Stadtwahl / Heimatstadt validieren und speichern
-8. Skin-Auswahl anzeigen
-9. finaler Spawn mit gültigem Skin und gültigem State
-10. Kamera-/HUD-/Steuerungsfreigabe
+Die Persistenz läuft ausschließlich über **SQLite** (`data/db/gtasa_reallife.db`). Es gibt keinen INI-/Datei-Fallback mehr. Der Einstieg ist komplett **dialog-first** – es gibt keine Login-/Register-/Stadt-TextDraw-Overlays mehr.
 
 ---
 
-## 2. Grundprinzipien der Korrektur
+## 1. Überblick der zwei Pfade
 
-### 2.1 Trennung von Login- und State-Flow
+**Bestehender Account (Login):**
 
-Die Hauptursache für die bisherigen Blockaden war die Vermischung von:
+1. Connect → Accountstatus aufgelöst (`DB_AccountExists`)
+2. `LOGIN_STATE_LOGIN`
+3. Passwort-Dialog (`DIALOG_STYLE_PASSWORD`)
+4. Passwort gegen SQLite prüfen (`DB_VerifyPassword`)
+5. Accountdaten laden (`DB_LoadAccount`)
+6. `LOGIN_STATE_ACTIVE` → **direkter Spawn** in die gespeicherte Heimatstadt
+7. Kamera/HUD/Steuerung frei – **kein Tutorial, keine Skin-Auswahl**
 
-- Login-/Register-Abschluss
-- Home-State / Staat / Stadtzuordnung
-- Tutorial-Start
-- finalem Spawn
+**Neuer Account (Registrierung):**
 
-Diese Zustände wurden zu früh nebeneinander gesetzt, wodurch die Spiellogik in widersprüchliche Übergänge geriet.
-
-Die feste Regel lautet jetzt:
-
-- Auth-/Login-Zustand entscheidet nur darüber, ob der Spieler überhaupt im Spiel aktiv ist
-- State-/Home-State-Entscheidung wird erst später validiert und gesetzt
-- Spawn passiert nur nach gültiger Stadtwahl, gültigem Skin und gereinigtem Übergang
-
-### 2.2 Login-State ist konsistent
-
-Die Login-/Register-Logik arbeitet mit den Zuständen:
-
-- `LOGIN_STATE_NONE`
-- `LOGIN_STATE_REGISTER`
-- `LOGIN_STATE_LOGIN`
-- `LOGIN_STATE_ACTIVE`
-
-Diese Zustände müssen immer sauber gesetzt und abgefragt werden. Ein Spieler darf nur dann als aktiv gelten, wenn der Auth-Flow tatsächlich abgeschlossen wurde.
-
-### 2.3 Gültige State-Werte werden nicht mit 0 überschrieben
-
-Ein gültiger State bzw. eine gültige Heimatstadt darf nicht durch einen Null-/Reset-Pfad vernichtet werden.
-
-Regel:
-
-- gültige Werte bleiben erhalten
-- ungültige Werte werden auf einen gültigen Fallback normalisiert
-- bevorzugter Fallback: `STATE_LOS_SANTOS`
+1. Connect → Accountstatus aufgelöst
+2. `LOGIN_STATE_REGISTER`
+3. Passwort-Dialog setzen
+4. Geschlecht wählen (`DIALOG_UI_GENDER_PICK`: Männlich / Weiblich)
+5. geschlechtsabhängige Skin-Auswahl (`DIALOG_UI_SKIN_PICK`)
+6. Stadtwahl / Heimatstadt (`DIALOG_UI_STATE_PICK`: LS / SF / LV)
+7. Tutorial-Kameraflug (9 Szenen à 11,5 s)
+8. Account in SQLite anlegen (`DB_CreateAccount`, `INSERT`)
+9. `LOGIN_STATE_ACTIVE` → finaler Spawn mit gültigem Skin und State
 
 ---
 
-## 3. Ablauf: Accountstatus auflösen
+## 2. Grundprinzipien
 
-Beim Connect wird zunächst der Accountstatus geprüft.
+### 2.1 Trennung von Account-Existenz und aktiver Session
 
-### 3.1 Neuer Spieler
+- `LoginSystem_AutoResolveFlow` entscheidet ausschließlich anhand eines echten SQLite-Lookups (`DB_AccountExists` nach `GetPlayerName`) über Login vs. Register.
+- `LoginSystem_IsActive` / `LoginSystem_ActivateSession` steuern den aktiven Zustand (`LOGIN_STATE_ACTIVE`).
+- Ein Spieler gilt erst nach abgeschlossenem Auth-Flow als aktiv.
 
-Wenn kein gültiger Account / keine gültigen Profilwerte vorliegen, geht der Spieler in:
+### 2.2 Login-States
 
-- `LOGIN_STATE_REGISTER`
+```
+LOGIN_STATE_NONE      // vor der Auflösung
+LOGIN_STATE_REGISTER  // neuer Account, Onboarding läuft
+LOGIN_STATE_LOGIN     // bestehender Account, Passwort ausstehend
+LOGIN_STATE_ACTIVE    // authentifiziert und gespawnt
+```
 
-### 3.2 Bestehender Spieler
+### 2.3 Gültige States werden nie mit 0 überschrieben
 
-Wenn bereits Zugriff auf validierte Account-/Profil-/State-Werte existiert, geht der Spieler in:
-
-- `LOGIN_STATE_LOGIN`
-
-Damit wird vermieden, dass bestehende Accounts versehentlich erneut in die Registrierungs- oder Tutorial-Schleife geraten.
-
----
-
-## 4. Ablauf: Login und Registrierung
-
-### 4.1 Registrierung
-
-Bei der Registrierung gilt eine starke Reihenfolge:
-
-1. Passwort setzen
-2. Geschlecht wählen (`M` oder `W`)
-3. Geschlecht speichern
-4. Passwort speichern
-5. erst danach Tutorial freigeben
-
-Das ist ein hard guard:
-
-- Passwort fehlt → Tutorial darf nicht starten
-- Geschlecht fehlt → Tutorial darf nicht starten
-- beide fehlen → der Spieler bleibt im erforderlichen Dialog-/Auth-Gate
-
-### 4.2 Login
-
-Beim Login erfolgt der normale Validierungs- und Aktivierungspfad:
-
-1. Spielername / Accountdaten validieren
-2. Passwort prüfen
-3. Login-Zustand auf `LOGIN_STATE_ACTIVE` setzen
-4. aktive TextDraws/Overlays ausblenden
-5. Tutorial oder direkt weiter zum nächsten logischen Schritt je nach Status
-
-### 4.3 Auth-TextDraw-Cleanup
-
-Beim erfolgreichen Abschluss von Login oder Register muss der Auth-/Register-Overlay sauber verschwinden:
-
-- Login-TextDraws ausblenden
-- Register-TextDraws ausblenden
-- `CancelSelectTextDraw()` ausführen
-- keine veralteten GTA:SA Reallife / LOGIN-TextDraws auf dem Bildschirm
-
-Das verhindert, dass nach erfolgreichem Einstieg noch alte Menüs oder TextDraws im Spiel kleben bleiben.
+- State-IDs sind 0-basiert: `STATE_LOS_SANTOS = 0`, `STATE_SAN_FIERRO = 1`, `STATE_LAS_VENTURAS = 2`.
+- `core.inc` ist die einzige Quelle für `state_id` / `home_state`.
+- Normalisierung läuft über `Core_GetValidStateOrDefault(...)`; ungültige Werte fallen auf `STATE_LOS_SANTOS` zurück, gültige bleiben unangetastet.
+- Beim Connect/Disconnect werden gültige State-Werte erhalten und nicht auf 0 gesetzt.
 
 ---
 
-## 5. Ablauf: Pflicht-Gate vor Tutorial
+## 3. Connect
 
-Der Tutorial darf erst dann loslaufen, wenn der Spieler die erforderlichen Grunddaten erfüllt hat.
+`OnPlayerConnect` (in `gamemode.pwn`) ruft deterministisch **genau einmal**:
 
-### 5.1 Pflicht-Gate
+1. `Core_RunPlayerConnectHooks(playerid)` – darin unter anderem **ein einziger** Aufruf von `LoginSystem_OnPlayerConnect`. Die registrierten Hook-Namen in `runtime_registry.inc` dienen nur der Debug-Auflistung und werden nicht zusätzlich dynamisch ausgeführt.
+2. `LoginSystem_BeginSession(playerid)` – setzt den Spieler in den Spectating-Modus.
+3. `CameraSystem_PlayIntroScene(playerid)` – feste Intro-Kameraposition.
 
-Voraussetzung für Tutorial-Start:
+`LoginSystem_OnPlayerConnect` normalisiert die State-Werte (ohne 0-Override), blendet alle alten TextDraws aus (`LoginSystem_HideLoginScreen` / `HideRegisterScreen` / `TutorialSystem_HideStage` / `CancelSelectTextDraw`) und ruft dann `LoginSystem_AutoResolveFlow`.
 
-- Passwort gesetzt
-- Geschlecht gewählt (`M` oder `W`)
-- Geschlecht im Spielerprofil gespeichert
-- gegebenenfalls DB-/Dini-Write abgeschlossen
-
-Wenn diese nicht erfüllt sind:
-
-- kein Tutorial-Start
-- keine Kamerafahrt-Schleife
-- kein frühes `StateSpawnSystem_Apply()`
-- stattdessen muss der entsprechende Dialog offen bleiben
-
-Damit wird verhindert, dass ein Spieler beim Onboarding vorzeitig in Spawn- oder State-Logik springt.
+`OnPlayerConnect` bleibt schlank: Inventar und schwere Spielerdaten werden erst nach erfolgreichem Login geladen (`InventorySystem_OnPlayerAuthenticated` in `LoginSystem_ActivateSession`).
 
 ---
 
-## 6. Ablauf: Tutorial mit 11,5 Sekunden pro Takt
+## 4. Accountstatus auflösen (`LoginSystem_AutoResolveFlow`)
 
-Der Tutorial ist auf die Kamerafahrt-Schritte mit 11500 ms abgestimmt.
-
-### 6.1 Stages
-
-Die Reihenfolge ist:
-
-- `TUTORIAL_STAGE_INTRO`
-- `TUTORIAL_STAGE_HOME`
-- `TUTORIAL_STAGE_GOV`
-- `TUTORIAL_STAGE_FINISH`
-
-Jeder Schritt läuft mit einem Takt von 11500 ms.
-
-### 6.2 Guard-Regeln
-
-Während der Tutorial-Kamera-Schleife darf kein verfrühter Spawn ausgelöst werden.
-
-Daher gelten diese Regeln:
-
-- kein Spawn, solange der Tutorial- oder Intro-Flow aktiv ist
-- keine Kamera- bzw. Steuerungsfreigabe vor Abschluss des Tutorial-Flow
-- bei Disconnect oder Abbruch: laufende Timer sauber beenden (`KillTimer`)
-
-### 6.3 Ende des Tutorials
-
-Wenn `TUTORIAL_STAGE_FINISH` erreicht wurde:
-
-1. Tutorial-TextDraws aufräumen
-2. Heimatstadt / Staat validieren
-3. ggf. speichern
-4. den Spieler nicht sofort spawnen
-5. stattdessen `DIALOG_UI_SKIN_PICK` öffnen
-
-Das ist der Punkt, an dem der Flow sauber in die Skin-Auswahl übergeht.
+1. Zustände/Flags zurücksetzen, alte TextDraws schließen.
+2. `GetPlayerName` → `DB_SetAccountName`.
+3. `DB_AccountExists(name)`:
+   - **true** → `LOGIN_STATE_LOGIN`, Hinweis „Willkommen zurueck".
+   - **false** → `LOGIN_STATE_REGISTER`, Hinweis „Neuer Account".
+4. `CameraSystem_Reset`, `TogglePlayerControllable(false)`.
+5. `UiHub_ShowPasswordInput(playerid)` zeigt den passenden `DIALOG_STYLE_PASSWORD` (Login vs. Registrierung).
 
 ---
 
-## 7. Ablauf: Stadtwahl / Heimatstadt
+## 5. Passwort (`DIALOG_UI_AUTH_PASSWORD` → `LoginSystem_SubmitPassword`)
 
-Nach erfolgreichem Tutorial-/Onboarding-Entscheid wird die Staat-/Heimatstadt-Logik aufgerufen.
-
-### 7.1 Gültige Städte
-
-Die gültigen State-Varianten sind:
-
-- Los Santos
-- San Fierro
-- Las Venturas
-
-### 7.2 Validierung
-
-Vor dem Spawn muss die Auswahl validiert werden:
-
-- gültige State-ID
-- gültige Heimatstadt
-- keine `0`-Werte als echte Auswahl
-- Fallback nur auf gültigen Standardwert
-
-Der Übergang zur Stadt-/State-Logik darf nicht zusammen mit dem Login-/Register-Reset verknüpft sein. Die Reihenfolge muss eindeutig sein.
+- Eingabe wird auf Länge und sichere Zeichen geprüft (`UiDialog_IsSafeText`).
+- **Registrierung:** Passwort (≥ 3 Zeichen) wird zwischengespeichert, `gPlayerPasswordReady = true`, dann `LoginSystem_CompleteReg`.
+- **Login:** `DB_VerifyPassword` (gehashter Vergleich). Bei Fehler erneuter Dialog; bei Erfolg `DB_LoadAccount` → `LoginSystem_CompleteLogin`.
 
 ---
 
-## 8. Ablauf: Geschlechtsauswahl
+## 6. Login-Pfad (`LoginSystem_CompleteLogin`)
 
-Die Geschlechtslogik ist ein eigener, expliziter Schritt im Onboarding.
+Für bestehende Accounts – **ohne** Tutorial oder Skin-Auswahl:
 
-### 8.1 Auswahlwerte
-
-- `M` = Männlich
-- `W` = Weiblich
-
-### 8.2 Speicherung
-
-Das gewählte Geschlecht wird im Spielerprofil + Speicherlogik gespeichert.
-
-Damit ist später die Auswertung für die Skin-Auswahl möglich:
-
-- männliche Skins
-- weibliche Skins
-- Fallback wenn kein Geschlecht gesetzt ist
-
-### 8.3 Guard
-
-Ohne gültiges Geschlecht darf der Spieler nicht in den Tutorial-/Spawn-Flow übergehen.
+1. Heimatstadt aus den geladenen Daten bestimmen (gültig oder `STATE_LOS_SANTOS`).
+2. `LoginSystem_ActivateSession(homeState)` → `LOGIN_STATE_ACTIVE`.
+3. `LoginSystem_PrepareSpawnInfo` (Skin aus Account übernehmen, `SetSpawnInfo`).
+4. `TogglePlayerSpectating(false)`, `SpawnPlayer`.
+5. `StateSpawnSystem_Apply(homeState)`.
+6. `RoleplayUI_ShowDashboard`.
 
 ---
 
-## 9. Ablauf: Skin-Auswahl
+## 7. Register-Pfad (`LoginSystem_CompleteReg`)
 
-Die Skin-Auswahl ist ein eigener Dialog-Schritt vor dem finalen Spawn.
+Deterministische Dialog-Weiche. Jeder Dialog ruft am Ende wieder `CompleteReg` auf und springt zum nächsten offenen Schritt:
 
-### 9.1 Dialog
+1. Passwort nicht gesetzt → Passwort-Dialog.
+2. Kein Geschlecht → `LoginSystem_RequireGenderSelection` (`DIALOG_UI_GENDER_PICK`).
+3. Kein Skin → `LoginSystem_ShowSkinPicker` (`DIALOG_UI_SKIN_PICK`).
+4. Keine Heimatstadt → `UiHub_ShowStatePick` (`DIALOG_UI_STATE_PICK`).
+5. Tutorial nicht abgeschlossen → `TutorialSystem_Start`.
+6. Alles erfüllt → `LoginSystem_FinalizeRegisterSpawn`.
 
-Beispiel:
+### 7.1 Geschlecht (`DIALOG_UI_GENDER_PICK`)
 
-- `DIALOG_UI_SKIN_PICK`
+- `0 = Männlich` (`GENDER_MALE`), `1 = Weiblich` (`GENDER_FEMALE`).
+- gespeichert über `Core_SetPlayerGender` + `gPlayerData[...][E_PLAYER_GENDER]`.
+- steuert die Skin-Liste.
 
-### 9.2 Auswahlbasis
+### 7.2 Skin (`DIALOG_UI_SKIN_PICK`)
 
-Je nach gespeichertem Geschlecht werden passende Skins angezeigt:
+- geschlechtsabhängige Pools (je 15 gültige SA:MP-Skins), plus Fallback-Pool.
+- `LoginSystem_ApplySkinChoice`: Bereich `0..311`, `SetPlayerSkin`, `Core_SetPlayerSkin`, `gPlayerData[...][E_PLAYER_SKIN]`.
 
-- Männer: 10–15 gültige SA:MP-Skins
-- Frauen: 10–15 gültige SA:MP-Skins
-- Fallback: wenn kein Geschlecht gesetzt ist, ein sicherer Standardbereich oder generische Auswahl
+### 7.3 Stadtwahl (`DIALOG_UI_STATE_PICK`)
 
-### 9.3 Validierung
+- Liste: Los Santos / San Fierro / Las Venturas (Listindex = State-ID 0/1/2).
+- `LoginSystem_SelectHomeState` setzt `state_id` + `home_state` zentral über `core.inc`; keine 0-Overrides gültiger Werte.
 
-Die Skin-ID wird geprüft:
+### 7.4 Tutorial (`tutorial_system.inc`)
 
-- gültiger Bereich `0..311`
-- nur valide SA:MP-Skin-IDs
-- keine ungültigen oder ungenutzten Werte
+- Guard: nur bei `LOGIN_STATE_REGISTER` und gesetztem Passwort.
+- 9 Kameraszenen (`TUTORIAL_SCENE_COUNT = 9`) mit je `TUTORIAL_SCENE_TIME = 11500 ms`, automatisch weitergeschaltet über `TutorialSystem_AutoNext` (tokengesichert gegen doppelte Timer).
+- Stufen laufen von `TUTORIAL_STAGE_INTRO (1)` bis `TUTORIAL_STAGE_FINISH (10)`.
+- Bei `TUTORIAL_STAGE_FINISH`: TextDraws aufräumen, Kamera zurücksetzen, zurück in `LoginSystem_CompleteReg`, das nun den finalen Spawn auslöst.
 
-### 9.4 Setzen des Skins
+### 7.5 Abschluss (`LoginSystem_FinalizeRegisterSpawn`)
 
-Nach Auswahl wird der Skin gesetzt:
-
-- `SetPlayerSkin(playerid, skinid)`
-- `SetSpawnInfo(...)` vorbereiten
-
-Wichtig: Das passiert vor dem finalen Spawn, nicht erst danach.
-
----
-
-## 10. Ablauf: finaler Spawn
-
-Der finale Spawn darf erst nach erfolgreicher Stadtwahl und Skin-Auswahl erfolgen.
-
-### 10.1 Reihenfolge
-
-Die tatsächliche Reihenfolge ist:
-
-1. gültige Home-State / State validieren
-2. Skin gültig wählen und speichern
-3. `SetPlayerSkin(playerid, skinid)` aufrufen
-4. `SetSpawnInfo(...)` vorbereiten
-5. `StateSpawnSystem_Apply(playerid, safeState)` aufrufen
-6. `CameraSystem_ExitCameraMode()`
-7. `SetCameraBehindPlayer()`
-8. `TogglePlayerControllable(playerid, true)`
-9. `RoleplayUI_ShowDashboard(playerid)`
-
-### 10.2 Warum diese Reihenfolge wichtig ist
-
-Wenn der Skin erst nach dem Spawn oder nach dem State-Apply gesetzt wird, entstehen typischerweise:
-
-- falscher Skin beim ersten Aufblitzen
-- Kamera-/Spawn-Reset-Schleifen
-- Starter-Overlay-Probleme
-- doppelte bzw. verfrühte Übergänge
-
-Die korrigierte Reihenfolge verhindert genau diese Effekte.
+1. `DB_CreateAccount` (`INSERT` in SQLite, inkl. gehashtem Passwort, Geschlecht, Skin, State).
+2. `LoginSystem_ActivateSession` → `LOGIN_STATE_ACTIVE`.
+3. `LoginSystem_PrepareSpawnInfo`, `TogglePlayerSpectating(false)`, `SpawnPlayer`.
+4. `StateSpawnSystem_Apply`, `RoleplayUI_ShowDashboard`.
 
 ---
 
-## 11. Guard-Regeln und Sicherheitsprinzipien
+## 8. Finaler Spawn (`StateSpawnSystem_Apply`)
 
-Die folgenden Regeln sind verbindlich:
+Gilt für beide Pfade und führt den Spieler sauber in die Welt:
 
-- Passwort muss gesetzt sein, bevor der Tutorial luft
-- Geschlecht muss gesetzt sein, bevor der Tutorial luft
-- kein Spawn ohne validen State und validen Skin
-- kein `0`-Override bei validen State-/Home-State-Werten
-- keine Login-/Register-TextDraws nach erfolgreichem Ablauf sichtbar
-- Timer müssen bei Abbruch/Disconnect sauber beendet werden
-- UI-Gates dürfen aktive, gültige Logins nicht blockieren
+1. State/Home-State validieren (gültig bleibt erhalten, sonst `STATE_LOS_SANTOS`).
+2. zentral speichern (`Core_SetPlayerState` / `Core_SetPlayerHomeState`, `DB_SavePlayerState`).
+3. Skin erneut sicherstellen (`SetPlayerSkin` + `Core_SetPlayerSkin`).
+4. `SetPlayerInterior(0)`, `SetPlayerVirtualWorld(0)`.
+5. alle Login-/Register-/Tutorial-TextDraws ausblenden, `CancelSelectTextDraw`.
+6. `TogglePlayerSpectating(false)`.
+7. `CameraSystem_ExitCameraMode`, `CameraSystem_Reset`, `SetCameraBehindPlayer`.
+8. `TogglePlayerControllable(true)`.
+9. `SetPlayerPos` + `SetPlayerFacingAngle` auf einen registrierten Spawnpunkt der Heimatstadt.
+10. `RoleplayUI_ShowDashboard`.
 
----
-
-## 12. Praktische Ergebnis-Logik
-
-Der vollständige, derzeit gewünschte Ablauf sieht so aus:
-
-- Connect
-- Accountstatus prüfen
-- Login oder Register
-- Passwort-Gate
-- Geschlecht-Gate (`M/W`)
-- Tutorial mit 11,5s-Schritten
-- Stadtwahl / Heimatstadt validieren
-- Skin-Auswahl anzeigen
-- Skin validieren und setzen
-- finaler Spawn
-- Kamera und Steuerung freigeben
-- HUD aktivieren
+Levelabhängiges Spieler-Wetter wird pro Spieler über `LoginSystem_ApplyPlayerWeather` (`SetPlayerWeather`) in `LoginSystem_OnPlayerSpawn` gesetzt.
 
 ---
 
-## 13. Status der aktuellen Implementierung
+## 9. TextDraw- und Overlay-Cleanup
 
-Der aktuelle Stand ist mit den wichtigsten Kernpunkten umgesetzt:
-
-- Auth-Flow und State-Flow getrennt
-- Pflicht-Gate vor Tutorial
-- M/W-Auswahl im Registrierungs-/Onboarding-Flow
-- geschlechtsabhängige Skin-Auswahl vor finalem Spawn
-- State-Validierung und Fallback-Logik hardened
-- Tutorial-Timer stabilisiert
-- TextDraw-/Overlay-Cleanup verbessert
-
-Darüber hinaus ist der Projektbestand auf den aktuellen Stand dokumentiert und die großen Archivdateien wurden aus dem Repository entfernt.
+- Vor jedem Übergang werden `gLoginTD` und `gTutorialTD` mit `INVALID_TEXT_DRAW`-Prüfung ausgeblendet, zerstört und zurückgesetzt, zusätzlich `CancelSelectTextDraw`.
+- Es existieren keine Login-/Register-/Stadt-TextDraw-Overlays mehr; sämtliche Auth-Schritte laufen über Dialoge.
+- `UiHub_Ready` blockiert aktive Auth-Dialoge nicht: Dialoge im Zustand `LOGIN_STATE_REGISTER` / `LOGIN_STATE_LOGIN` werden immer verarbeitet.
 
 ---
 
-## 14. Build/Compile-Prüfung
+## 10. Persistenz (SQLite-only)
 
-Der aktuelle Code-Stand wurde mit dem Build-Target validiert:
+- `DB_SQLite_Initialize` öffnet `data/db/gtasa_reallife.db` und legt beim Start alle Tabellen via `CREATE TABLE IF NOT EXISTS` an (`players`, `player_inventory`, `houses`, `vehicles`, `states` u. a.).
+- Auth-/Account-API (`DB_AccountExists`, `DB_VerifyPassword`, `DB_LoadAccount`, `DB_CreateAccount`, `DB_SaveAccount`) ist namensbasiert und ausschließlich SQLite-gestützt.
+- Schreibpfade sind erst nach `DB_MarkAuthenticated(true)` frei.
 
-- `bash scripts/build_gamemode.sh`
+---
+
+## 11. Verbindliche Guard-Regeln
+
+- Passwort muss vor Geschlecht/Skin/Tutorial gesetzt sein.
+- Geschlecht muss vor der Skin-Auswahl gesetzt sein.
+- kein Spawn ohne gültigen State und gültigen Skin.
+- kein 0-Override gültiger `state_id` / `home_state`.
+- keine Login-/Register-TextDraws nach erfolgreichem Ablauf sichtbar.
+- Tutorial-Timer sind tokengesichert; bei Disconnect wird der Zustand sauber zurückgesetzt.
+- `LoginSystem_OnPlayerConnect` / `LoginSystem_AutoResolveFlow` laufen genau einmal pro Connect.
+
+---
+
+## 12. Build/Compile
+
+- Build-Befehl: `bash scripts/build_gamemode.sh`
 - Ziel: `Compiler/samp03/gamemodes/gtasa_reallife.amx`
+- Ergebnis: kompiliert mit **0 Errors / 0 Warnings**.
 
-Ergebnis: Der Gamemode kompiliert ohne neue Build-Fehler.
-
-Live-Server-Tests auf Port 7780 wurden in dieser Umgebung nicht als echtes Server-Playtest ausgeführt; die Verifikation hier basiert auf Code- und Compile-Validierung.
-
----
-
-## 15. Kurzfazit
-
-Der Einstieg ist jetzt grundsätzlich sauber aufgebaut:
-
-- Auth und Spawn sind voneinander getrennt
-- Passwort und Geschlecht sind echte Voraussetzungen
-- Tutorial läuft nur nach gültigen Voraussetzungen
-- Skin-Auswahl sitzt genau vor dem Spawn
-- finaler Spawn greift mit validem State und validem Skin
-- die UI-/TextDraw- und State-Blockaden wurden gezielt reduziert
-
-Damit ist die Start- und Spawn-Kette im Kern in einer sicheren Reihenfolge aufgebaut, die die früheren Logik-Fallen deutlich reduziert.
+Live-Server-Tests auf Port 7780 wurden in dieser Umgebung nicht als echtes Playtest ausgeführt; die Verifikation basiert auf Code- und Compile-Validierung.

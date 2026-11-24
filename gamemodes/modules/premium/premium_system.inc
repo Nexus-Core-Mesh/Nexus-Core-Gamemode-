@@ -100,6 +100,11 @@ stock PremiumSystem_GetTierDays(tier)
     return 0;
 }
 
+stock PremiumSystem_EnsureSchema()
+{
+    return DB_Execute("CREATE TABLE IF NOT EXISTS premium_profiles (player_name TEXT PRIMARY KEY COLLATE NOCASE,tier INTEGER NOT NULL DEFAULT 0,expiry INTEGER NOT NULL DEFAULT 0,permanent INTEGER NOT NULL DEFAULT 0,updated_at TEXT);");
+}
+
 stock PremiumSystem_WriteProfileSafe(playerid, const profileData[])
 {
     if (!Core_IsValidPlayerId(playerid))
@@ -107,56 +112,20 @@ stock PremiumSystem_WriteProfileSafe(playerid, const profileData[])
         return false;
     }
 
-    new fileName[128];
-    format(fileName, sizeof(fileName), "premium/player_%d", playerid);
-
-    new tempPath[128];
-    format(tempPath, sizeof(tempPath), "scriptfiles/%s.tmp", fileName);
-
-    new File:tempHandle = fopen(tempPath, io_write);
-    if (tempHandle == INVALID_FILE_HANDLE)
+    new tier = PREMIUM_TIER_NONE;
+    new expiry = 0;
+    new permanent = 0;
+    if (sscanf(profileData, "p<|>iii", tier, expiry, permanent) != 0)
     {
         return false;
     }
-    fwrite(tempHandle, profileData);
-    fclose(tempHandle);
 
-    new validated[128];
-    new File:validateHandle = fopen(tempPath, io_read);
-    if (validateHandle == INVALID_FILE_HANDLE)
-    {
-        fremove(tempPath);
-        return false;
-    }
-    fread(validateHandle, validated, sizeof(validated));
-    fclose(validateHandle);
+    new name[MAX_PLAYER_NAME];
+    GetPlayerName(playerid, name, sizeof(name));
 
-    if (strcmp(validated, profileData, true) != 0)
-    {
-        fremove(tempPath);
-        return false;
-    }
-
-    if (!dini_Exists(fileName))
-    {
-        new File:bootstrapHandle = fopen("scriptfiles/premium/.keep", io_write);
-        if (bootstrapHandle != INVALID_FILE_HANDLE)
-        {
-            fclose(bootstrapHandle);
-        }
-    }
-
-    if (!dini_Set(fileName, PREMIUM_SAVE_KEY, profileData))
-    {
-        fremove(tempPath);
-        return false;
-    }
-
-    if (fexist(tempPath))
-    {
-        fremove(tempPath);
-    }
-    return true;
+    new query[256];
+    format(query, sizeof(query), "INSERT OR REPLACE INTO premium_profiles (player_name, tier, expiry, permanent, updated_at) VALUES ('%s', %d, %d, %d, datetime('now'));", name, tier, expiry, permanent);
+    return DB_Execute(query);
 }
 
 stock bool:PremiumSystem_IsPlayerPremiumExpired(playerid)
@@ -265,33 +234,48 @@ stock PremiumSystem_LoadPlayerPremium(playerid)
         return false;
     }
 
-    new fileName[64];
-    format(fileName, sizeof(fileName), "%s/player_%d", PREMIUM_FILE_PREFIX, playerid);
-    if (!dini_Exists(fileName))
+    Core_SetPlayerPremiumTier(playerid, PREMIUM_TIER_NONE);
+    Core_SetPlayerPremiumExpiry(playerid, 0);
+    Core_SetPermanentPremium(playerid, false);
+
+    PremiumSystem_EnsureSchema();
+
+    if (!DB_SQLite_IsReady())
     {
-        Core_SetPlayerPremiumTier(playerid, PREMIUM_TIER_NONE);
-        Core_SetPlayerPremiumExpiry(playerid, 0);
-        Core_SetPermanentPremium(playerid, false);
         return false;
     }
 
-    new profileData[128];
-    if (!dini_Get(fileName, PREMIUM_SAVE_KEY, profileData, sizeof(profileData)))
+    new name[MAX_PLAYER_NAME];
+    GetPlayerName(playerid, name, sizeof(name));
+
+    new query[192];
+    format(query, sizeof(query), "SELECT tier, expiry, permanent FROM premium_profiles WHERE player_name = '%s' COLLATE NOCASE LIMIT 1;", name);
+
+    new DBResult:result = db_query(gSQLiteDB, query);
+    if (!result)
     {
-        Core_SetPlayerPremiumTier(playerid, PREMIUM_TIER_NONE);
-        Core_SetPlayerPremiumExpiry(playerid, 0);
-        Core_SetPermanentPremium(playerid, false);
         return false;
     }
 
     new tier = PREMIUM_TIER_NONE;
     new expiry = 0;
     new permanent = 0;
-    if (sscanf(profileData, "p<|>iii", tier, expiry, permanent) != 0)
+    new found = 0;
+    if (db_num_rows(result) > 0)
     {
-        Core_SetPlayerPremiumTier(playerid, PREMIUM_TIER_NONE);
-        Core_SetPlayerPremiumExpiry(playerid, 0);
-        Core_SetPermanentPremium(playerid, false);
+        new field[24];
+        db_get_field_assoc(result, "tier", field, sizeof(field));
+        tier = strval(field);
+        db_get_field_assoc(result, "expiry", field, sizeof(field));
+        expiry = strval(field);
+        db_get_field_assoc(result, "permanent", field, sizeof(field));
+        permanent = strval(field);
+        found = 1;
+    }
+    db_free_result(result);
+
+    if (!found)
+    {
         return false;
     }
 
@@ -315,8 +299,7 @@ stock PremiumSystem_SavePlayerPremium(playerid)
         return false;
     }
 
-    new fileName[64];
-    format(fileName, sizeof(fileName), "%s/player_%d", PREMIUM_FILE_PREFIX, playerid);
+    PremiumSystem_EnsureSchema();
 
     new tier = Core_GetPlayerPremiumTier(playerid);
     new expiry = Core_GetPlayerPremiumExpiry(playerid);

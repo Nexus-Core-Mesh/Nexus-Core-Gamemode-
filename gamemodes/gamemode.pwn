@@ -1,6 +1,5 @@
 #include <a_samp>
 #include <sscanf2>
-#include "../includes/dini.inc"
 
 #pragma warning disable 200
 #pragma warning disable 201

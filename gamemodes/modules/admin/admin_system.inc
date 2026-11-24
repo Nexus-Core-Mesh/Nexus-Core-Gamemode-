@@ -42,6 +42,18 @@ stock AdminSystem_OnPlayerDisconnect(playerid, reason)
     Core_SetPlayerAdminState(playerid, -1);
 }
 
+// Nach erfolgreichem Login: den aus SQLite geladenen Admin-Rang in den
+// In-Memory-Spiegel uebernehmen, damit beide Zugriffspruefungen konsistent sind.
+stock AdminSystem_OnPlayerAuthenticated(playerid)
+{
+    if (!Core_IsValidPlayerId(playerid))
+    {
+        return;
+    }
+    gAdminLevel[playerid] = Core_GetPlayerAdminLevel(playerid);
+    gAdminState[playerid] = Core_GetPlayerAdminState(playerid);
+}
+
 stock AdminSystem_IsProjectLeader(playerid)
 {
     if (playerid < 0 || playerid >= MAX_PLAYERS)
@@ -279,6 +291,59 @@ stock AdminSystem_HandleCommand(playerid, const cmdtext[])
             return true;
         }
         SendClientMessage(playerid, 0xFF0000AA, "[PROJECT] Zugriff verweigert: Projektleiter-/Admin-Recht fehlt.");
+        return true;
+    }
+
+    if (strcmp(cmd, "/setadmin", true) == 0)
+    {
+        if (!AdminSystem_IsOwner(playerid) && !IsPlayerAdmin(playerid))
+        {
+            SendClientMessage(playerid, 0xFF0000AA, "[ADMIN] Nur Owner/RCON duerfen Admin-Raenge vergeben.");
+            return true;
+        }
+
+        new targetArg[16], levelArg[16];
+        new pos = 0;
+        while (cmdtext[pos] != '\0' && cmdtext[pos] != ' ') pos++;
+        while (cmdtext[pos] == ' ') pos++;
+        new targetStart = pos;
+        while (cmdtext[pos] != '\0' && cmdtext[pos] != ' ') pos++;
+        strmid(targetArg, cmdtext, targetStart, pos, sizeof(targetArg));
+        while (cmdtext[pos] == ' ') pos++;
+        new levelStart = pos;
+        while (cmdtext[pos] != '\0' && cmdtext[pos] != ' ') pos++;
+        strmid(levelArg, cmdtext, levelStart, pos, sizeof(levelArg));
+
+        if (targetArg[0] == '\0' || levelArg[0] == '\0')
+        {
+            SendClientMessage(playerid, 0xFFCC00AA, "[ADMIN] Nutzung: /setadmin [targetid] [level 0-5]");
+            return true;
+        }
+
+        new targetid = strval(targetArg);
+        new level = strval(levelArg);
+        if (!Core_IsValidPlayerId(targetid) || level < 0 || level > ADMIN_RANK_OWNER)
+        {
+            SendClientMessage(playerid, 0xFF0000AA, "[ADMIN] Zielspieler oder Level ungueltig (0-5).");
+            return true;
+        }
+
+        if (!AdminSystem_SetRank(targetid, level))
+        {
+            SendClientMessage(playerid, 0xFF0000AA, "[ADMIN] Rang konnte nicht gesetzt werden.");
+            return true;
+        }
+
+        // Persistent in SQLite speichern (greift nur fuer eingeloggte Ziele).
+        DB_SaveAccount(targetid);
+
+        new notify[96];
+        format(notify, sizeof(notify), "[ADMIN] Admin-Rang %d gesetzt und gespeichert.", level);
+        SendClientMessage(playerid, 0x00FF00AA, notify);
+        if (targetid != playerid)
+        {
+            SendClientMessage(targetid, 0x00FF00AA, notify);
+        }
         return true;
     }
 

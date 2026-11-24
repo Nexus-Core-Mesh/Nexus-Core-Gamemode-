@@ -7,7 +7,7 @@
 ## ✅ Wichtig zu wissen
 
 - Technische Fakten, Befehle, Pfade und Projektregeln bleiben bewusst unverändert.
-- Port- und Systemtrennung bleiben konsistent, insbesondere für den 7780-Contract und den Dini-first-Pfad.
+- Port- und Systemtrennung bleiben konsistent, insbesondere für den 7780-Contract und den SQLite-only-Pfad.
 - Die optische Aufwertung dient nur der Lesbarkeit, nicht der inhaltlichen Interpretation.
 
 ---
@@ -180,7 +180,7 @@ These checks should be run in the actual sandbox runtime, not inferred from a co
 - SQLite DB verification
   - Check `gtasa_reallife.db` for `player_state` and `home_state` values after a login/register and reconnect.
   - Ensure valid state IDs remain stable and are not reset to `0`.
-- Scriptfile / Dini-first fallback review
+- Scriptfile / SQLite-only fallback review
   - Confirm `Compiler/samp03/scriptfiles/` remains consistent with the DB state logic.
 - Client-side validation
   - Test the full flow in the mobile client with the real 7780 host and confirm the menu/login/tutorial flow works without command-heavy entry.
@@ -203,7 +203,7 @@ This means the overall project quality is now better aligned with the intended o
 - tutorial and state selection re-trigger only when genuinely missing
 - camera resets and HUD cleanup remain consistent across disconnect and state changes
 - expensive loop logic is reduced to protect the qemu-i386 runtime budget
-- Dini-first data writes and SQLite-backed state checks stay conceptually aligned
+- SQLite-only data writes and SQLite-backed state checks stay conceptually aligned
 
 ## ✅ Final release note
 
@@ -288,6 +288,6 @@ Diese Erweiterung dient dazu, den bisherigen Dokumentationsstand noch weiter auf
 - Tutorial: `TUTORIAL_SCENE_TIME` auf 11500 ms, Schutz gegen Start ohne Passwort/Geschlecht.
 - Skin-Flow: `LoginSystem_ShowSkinPicker()` zeigt geschlechtsabhängige 10–15 Skins, validiert `0..311`, setzt `SetPlayerSkin` vor finalem Spawn.
 - Spawn-Order: Home-State/State validiert, `StateSpawnSystem_Apply(...)` erst nach Skin-Setzung, dann `CameraSystem_ExitCameraMode`, `SetCameraBehindPlayer`, `TogglePlayerControllable(playerid, true)`, `RoleplayUI_ShowDashboard(playerid)`.
-- Compile: `bash scripts/build_gamemode.sh` erfolgreich; `gtasa_reallife.amx` wird ohne neue Errors gebaut (nur legacy warning in `includes/dini.inc`).
-- Dini-first + state-safe Fallback: gültige State-/Home-State-Werte werden nicht auf 0 zurückgesetzt; Fallback ist `STATE_LOS_SANTOS`.
+- Compile: `bash scripts/build_gamemode.sh` erfolgreich; `gtasa_reallife.amx` wird ohne neue Errors gebaut.
+- SQLite-only + state-safe Fallback: gültige State-/Home-State-Werte werden nicht auf 0 zurückgesetzt; Fallback ist `STATE_LOS_SANTOS`.
 

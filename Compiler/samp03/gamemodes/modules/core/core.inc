@@ -72,11 +72,11 @@ new gPlayerBank[MAX_PLAYERS];
 new gPlayerCash[MAX_PLAYERS];
 
 #define CORE_SQLITE_ENABLED 1
-#define CORE_DINI_ENABLED 1
+#define CORE_LEGACY_ENABLED 1
 #define CORE_MYSQL_ENABLED 0
 
 new gSQLiteModuleEnabled = CORE_SQLITE_ENABLED;
-new gDiniModuleEnabled = CORE_DINI_ENABLED;
+new gLegacyModuleEnabled = CORE_LEGACY_ENABLED;
 new gMySQLModuleEnabled = CORE_MYSQL_ENABLED;
 
 stock Core_SetSQLiteModuleEnabled(enabled)
@@ -85,10 +85,10 @@ stock Core_SetSQLiteModuleEnabled(enabled)
     return gSQLiteModuleEnabled;
 }
 
-stock Core_SetDiniModuleEnabled(enabled)
+stock Core_SetLegacyModuleEnabled(enabled)
 {
-    gDiniModuleEnabled = enabled;
-    return gDiniModuleEnabled;
+    gLegacyModuleEnabled = enabled;
+    return gLegacyModuleEnabled;
 }
 
 stock Core_SetMySQLModuleEnabled(enabled)
@@ -102,9 +102,9 @@ stock Core_IsSQLiteModuleEnabled()
     return gSQLiteModuleEnabled == 1;
 }
 
-stock Core_IsDiniModuleEnabled()
+stock Core_IsLegacyModuleEnabled()
 {
-    return gDiniModuleEnabled == 1;
+    return gLegacyModuleEnabled == 1;
 }
 
 stock Core_IsMySQLModuleEnabled()
@@ -114,14 +114,14 @@ stock Core_IsMySQLModuleEnabled()
 
 stock Core_HasActivePersistenceLayer()
 {
-    return Core_IsSQLiteModuleEnabled() || Core_IsDiniModuleEnabled();
+    return Core_IsSQLiteModuleEnabled() || Core_IsLegacyModuleEnabled();
 }
 
 stock Core_GetPersistenceModeSummary(output[], len)
 {
-    if (Core_IsSQLiteModuleEnabled() && Core_IsDiniModuleEnabled())
+    if (Core_IsSQLiteModuleEnabled() && Core_IsLegacyModuleEnabled())
     {
-        format(output, len, "sqlite+dini");
+        format(output, len, "sqlite");
         return;
     }
 
@@ -131,9 +131,9 @@ stock Core_GetPersistenceModeSummary(output[], len)
         return;
     }
 
-    if (Core_IsDiniModuleEnabled())
+    if (Core_IsLegacyModuleEnabled())
     {
-        format(output, len, "dini-fallback");
+        format(output, len, "sqlite");
         return;
     }
 
@@ -147,7 +147,7 @@ stock Core_CanProcessPersistenceHotpath(playerid, requireValidState = false)
         return false;
     }
 
-    if (!Core_IsSQLiteModuleEnabled() && !Core_IsDiniModuleEnabled())
+    if (!Core_IsSQLiteModuleEnabled() && !Core_IsLegacyModuleEnabled())
     {
         return false;
     }

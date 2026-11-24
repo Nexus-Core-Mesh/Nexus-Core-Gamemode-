@@ -44,6 +44,133 @@ new gDBUBBVehicleStateCache[MAX_UBB_VEHICLES];
 new gDBUBBVehicleFuelCache[MAX_UBB_VEHICLES];
 new gDBUBBVehiclePriceCache[MAX_UBB_VEHICLES];
 
+// Authentifizierungs-Status je Spieler. Persistente Schreibpfade (State, Bank,
+// Account) duerfen NUR fuer authentifizierte Spieler laufen, damit ein frisch
+// verbundener oder nicht eingeloggter Spieler niemals einen bestehenden
+// SQLite-Datensatz mit Default-/0-Werten ueberschreibt.
+new bool:gDBPlayerAuthenticated[MAX_PLAYERS];
+new gDBPlayerAccountName[MAX_PLAYERS][MAX_PLAYER_NAME];
+new gDBPlayerAccountId[MAX_PLAYERS];
+
+stock DB_SetAccountName(playerid, const name[])
+{
+    if (!Core_IsValidPlayerId(playerid))
+    {
+        return false;
+    }
+    format(gDBPlayerAccountName[playerid], MAX_PLAYER_NAME, "%s", name);
+    return true;
+}
+
+stock DB_ResolveAccountName(playerid, output[], len)
+{
+    if (!Core_IsValidPlayerId(playerid))
+    {
+        format(output, len, "Player");
+        return false;
+    }
+    if (strlen(gDBPlayerAccountName[playerid]) > 0)
+    {
+        format(output, len, "%s", gDBPlayerAccountName[playerid]);
+        return true;
+    }
+    GetPlayerName(playerid, output, len);
+    if (strlen(output) <= 0)
+    {
+        format(output, len, "Player_%d", playerid);
+    }
+    return true;
+}
+
+// Persistente Account-Zeilen-ID (players.id) als stabiler Schluessel fuer
+// spielerbezogene Tabellen (Inventar etc.) statt der fluechtigen Runtime-playerid.
+stock DB_SetAccountId(playerid, accountId)
+{
+    if (!Core_IsValidPlayerId(playerid))
+    {
+        return false;
+    }
+    gDBPlayerAccountId[playerid] = accountId;
+    return true;
+}
+
+stock DB_GetAccountId(playerid)
+{
+    if (!Core_IsValidPlayerId(playerid))
+    {
+        return -1;
+    }
+    return gDBPlayerAccountId[playerid];
+}
+
+stock DB_MarkAuthenticated(playerid, bool:value)
+{
+    if (!Core_IsValidPlayerId(playerid))
+    {
+        return false;
+    }
+    gDBPlayerAuthenticated[playerid] = value;
+    return true;
+}
+
+stock bool:DB_IsAuthenticated(playerid)
+{
+    if (!Core_IsValidPlayerId(playerid))
+    {
+        return false;
+    }
+    return gDBPlayerAuthenticated[playerid];
+}
+
+// -------- Namensbasierte Account-API (einzige Persistenzquelle) --------
+
+stock DB_AccountExists(const name[])
+{
+    return DB_SQLite_AccountExists(name);
+}
+
+stock DB_VerifyPassword(const name[], const inputPassword[])
+{
+    return DB_SQLite_VerifyPassword(name, inputPassword);
+}
+
+stock DB_LoadAccount(playerid, const name[])
+{
+    if (!DB_SQLite_LoadAccountInto(playerid, name))
+    {
+        return 0;
+    }
+    gDBPlayerStateCache[playerid] = Core_GetPlayerState(playerid);
+    gDBPlayerHomeStateCache[playerid] = Core_GetPlayerHomeState(playerid);
+    gDBPlayerBankCache[playerid] = Core_GetPlayerBank(playerid);
+    gDBPlayerCashCache[playerid] = Core_GetPlayerCash(playerid);
+    gDBPlayerGenderCache[playerid] = Core_GetPlayerGender(playerid);
+    gDBPlayerSkinCache[playerid] = Core_GetPlayerSkin(playerid);
+    DB_SetAccountId(playerid, DB_SQLite_GetAccountId(name));
+    return 1;
+}
+
+stock DB_CreateAccount(playerid, const name[], const inputPassword[])
+{
+    new created = DB_SQLite_CreateAccount(playerid, name, inputPassword);
+    if (created)
+    {
+        DB_SetAccountId(playerid, DB_SQLite_GetAccountId(name));
+    }
+    return created;
+}
+
+stock DB_SaveAccount(playerid)
+{
+    if (!DB_IsAuthenticated(playerid))
+    {
+        return 0;
+    }
+    new accountName[MAX_PLAYER_NAME];
+    DB_ResolveAccountName(playerid, accountName, sizeof(accountName));
+    return DB_SQLite_SaveAccount(playerid, accountName);
+}
+
 stock DB_InitializeRuntimeCaches()
 {
     for (new playerid = 0; playerid < MAX_PLAYERS; playerid++)
@@ -54,6 +181,9 @@ stock DB_InitializeRuntimeCaches()
         gDBPlayerCashCache[playerid] = 0;
         gDBPlayerGenderCache[playerid] = GENDER_NONE;
         gDBPlayerSkinCache[playerid] = 0;
+        gDBPlayerAuthenticated[playerid] = false;
+        gDBPlayerAccountName[playerid][0] = EOS;
+        gDBPlayerAccountId[playerid] = -1;
 
         for (new slot = 0; slot < MAX_INVENTORY_SLOTS; slot++)
         {
@@ -245,13 +375,13 @@ stock DB_TransactionWriteWithGuard(const preQuery[], const postQuery[], const ro
 stock DB_Initialize()
 {
     gDBBackend = DB_BACKEND_SQLITE;
-    print("[DB] Dini-First startup aktiv: SQLite/MySQL werden nicht als Pflichtvoraussetzung behandelt.");
+    print("[DB] Reines SQLite-Backend aktiv (data/db/gtasa_reallife.db).");
     DB_SQLite_Initialize();
 
     DB_InitializeRuntimeCaches();
     DB_RepairCriticalTables();
     Core_MarkModuleReady("db");
-    print("[DB] Runtime-Caches und Dini-Fallback-Schema initialisiert");
+    print("[DB] Runtime-Caches und SQLite-Schema initialisiert");
 }
 
 stock DB_Shutdown()
@@ -336,22 +466,6 @@ stock int:DB_GetPlayerBank(playerid)
     return gDBPlayerBankCache[playerid];
 }
 
-stock DB_SetPlayerBank(playerid, amount)
-{
-    if (playerid < 0 || playerid >= MAX_PLAYERS)
-    {
-        return false;
-    }
-
-    gDBPlayerBankCache[playerid] = amount;
-    gPlayerBank[playerid] = amount;
-    gPlayerData[playerid][E_PLAYER_BANK] = amount;
-
-    new query[192];
-    format(query, sizeof(query), "UPDATE players SET money = %d WHERE id = %d", amount, playerid);
-    return DB_Execute(query);
-}
-
 stock int:DB_GetPlayerCash(playerid)
 {
     if (playerid < 0 || playerid >= MAX_PLAYERS)
@@ -370,11 +484,16 @@ stock DB_SetPlayerCash(playerid, amount)
 
     gDBPlayerCashCache[playerid] = amount;
     gPlayerCash[playerid] = amount;
-    return true;
+    Core_SetPlayerCash(playerid, amount);
+    return DB_SaveAccount(playerid);
 }
 
 stock DB_EnsurePlayerRecord(playerid, defaultState)
 {
+    // Die persistente Account-Erstellung erfolgt ausschliesslich namensbasiert
+    // bei der Registrierung (DB_CreateAccount). Hier wird nur der In-Memory-State
+    // normalisiert, damit kein frisch verbundener Spieler einen bestehenden
+    // Datensatz ueberschreibt.
     if (!Core_IsValidPlayerId(playerid))
     {
         return false;
@@ -385,25 +504,22 @@ stock DB_EnsurePlayerRecord(playerid, defaultState)
     {
         stateid = STATE_LOS_SANTOS;
     }
+    return true;
+}
 
-    new playerName[MAX_PLAYER_NAME];
-    GetPlayerName(playerid, playerName, sizeof(playerName));
-    if (strlen(playerName) <= 0)
+stock DB_SetPlayerBank(playerid, amount)
+{
+    if (playerid < 0 || playerid >= MAX_PLAYERS)
     {
-        format(playerName, sizeof(playerName), "Player_%d", playerid);
+        return false;
     }
 
-    new safeName[MAX_PLAYER_NAME];
-    DB_SanitizeMetadata(playerName, safeName, sizeof(safeName));
+    gDBPlayerBankCache[playerid] = amount;
+    gPlayerBank[playerid] = amount;
+    gPlayerData[playerid][E_PLAYER_BANK] = amount;
+    Core_SetPlayerBank(playerid, amount);
 
-    new query[320];
-    format(query, sizeof(query),
-        "INSERT OR IGNORE INTO players (id, name, state_id, money, admin_level, admin_state, home_state, phone_number, has_health_insurance, created_at) VALUES (%d, '%s', %d, 0, 0, -1, %d, 'NONE', 0, datetime('now'));",
-        playerid,
-        safeName,
-        stateid,
-        stateid);
-    return DB_Execute(query);
+    return DB_SaveAccount(playerid);
 }
 
 stock DB_EnsureHouseRecord(houseid, stateid, owner_player_id, const name[])
@@ -428,6 +544,52 @@ stock DB_EnsureHouseRecord(houseid, stateid, owner_player_id, const name[])
         stateid,
         safeName);
     return DB_Execute(query);
+}
+
+// Persistenter Hausbesitz: owner_player_id traegt die stabile Account-Zeilen-ID
+// (players.id), nicht die fluechtige Runtime-playerid. -1 = frei.
+stock DB_SaveHouseOwner(houseid, accountId, stateid, locked)
+{
+    if (houseid < 0 || houseid >= MAX_HOUSES)
+    {
+        return false;
+    }
+    new safeState = Core_GetValidStateOrDefault(stateid, STATE_LOS_SANTOS);
+    DB_EnsureHouseRecord(houseid, safeState, accountId, "");
+
+    new query[192];
+    format(query, sizeof(query),
+        "UPDATE houses SET owner_player_id = %d, state_id = %d, locked = %d WHERE id = %d;",
+        accountId, safeState, (locked != 0) ? 1 : 0, houseid);
+    return DB_Execute(query);
+}
+
+stock DB_GetHouseOwnerAccount(houseid)
+{
+    if (houseid < 0 || houseid >= MAX_HOUSES)
+    {
+        return -1;
+    }
+    if (!DB_SQLite_IsReady())
+    {
+        return -1;
+    }
+
+    new query[128];
+    format(query, sizeof(query), "SELECT owner_player_id FROM houses WHERE id = %d LIMIT 1;", houseid);
+    new DBResult:result = db_query(gSQLiteDB, query);
+    new accountId = -1;
+    if (result)
+    {
+        if (db_num_rows(result) > 0)
+        {
+            new field[16];
+            db_get_field_assoc(result, "owner_player_id", field, sizeof(field));
+            accountId = strval(field);
+        }
+        db_free_result(result);
+    }
+    return accountId;
 }
 
 stock DB_SetPlayerState(playerid, stateid)
@@ -456,12 +618,14 @@ stock DB_SetPlayerState(playerid, stateid)
 
     Core_SetPlayerState(playerid, normalizedState);
     Core_SetPlayerHomeState(playerid, homeState);
+    gDBPlayerStateCache[playerid] = normalizedState;
+    gDBPlayerHomeStateCache[playerid] = homeState;
 
-    new query[192];
-    format(query, sizeof(query), "UPDATE players SET state_id = %d, home_state = %d WHERE id = %d", normalizedState, homeState, playerid);
-    if (!DB_Execute(query))
+    // Nur fuer authentifizierte Spieler persistieren (namensbasiert), damit kein
+    // frisch verbundener Spieler einen bestehenden Datensatz ueberschreibt.
+    if (DB_IsAuthenticated(playerid))
     {
-        return false;
+        DB_SaveAccount(playerid);
     }
 
     return true;
@@ -572,9 +736,11 @@ stock DB_RehydratePlayerState(playerid)
     Core_SetPlayerState(playerid, stateValue);
     Core_SetPlayerHomeState(playerid, homeValue);
 
-    new query[192];
-    format(query, sizeof(query), "UPDATE players SET state_id = %d, home_state = %d WHERE id = %d;", stateValue, homeValue, playerid);
-    return DB_Execute(query);
+    if (DB_IsAuthenticated(playerid))
+    {
+        DB_SaveAccount(playerid);
+    }
+    return true;
 }
 
 stock DB_LoadPlayerState(playerid)
@@ -614,23 +780,13 @@ stock DB_LoadPlayerState(playerid)
         return false;
     }
 
+    // Reine In-Memory-Normalisierung. Die echten Werte werden namensbasiert beim
+    // Login ueber DB_LoadAccount geladen - hier wird NICHT in die DB geschrieben.
     gDBPlayerStateCache[playerid] = stateValue;
     gDBPlayerHomeStateCache[playerid] = homeValue;
     Core_SetPlayerState(playerid, stateValue);
     Core_SetPlayerHomeState(playerid, homeValue);
-
-    new query[192];
-    format(query, sizeof(query), "SELECT state_id, home_state FROM players WHERE id = %d LIMIT 1;", playerid);
-    if (!DB_Query(query))
-    {
-        return false;
-    }
-
-    if (Core_IsValidState(stateValue) && Core_IsValidState(homeValue))
-    {
-        return true;
-    }
-    return false;
+    return true;
 }
 
 stock DB_SavePlayerState(playerid, stateid)
@@ -662,9 +818,13 @@ stock DB_SavePlayerState(playerid, stateid)
     Core_SetPlayerState(playerid, normalizedState);
     Core_SetPlayerHomeState(playerid, homeState);
 
-    new query[192];
-    format(query, sizeof(query), "UPDATE players SET state_id = %d, home_state = %d WHERE id = %d;", normalizedState, homeState, playerid);
-    return DB_Execute(query);
+    // Persistenz nur fuer authentifizierte Spieler (namensbasiert), niemals fuer
+    // frisch verbundene Slots -> schuetzt gueltige state_id/home_state vor 0-Reset.
+    if (DB_IsAuthenticated(playerid))
+    {
+        DB_SaveAccount(playerid);
+    }
+    return true;
 }
 
 stock DB_EnsureStateSchema()
@@ -674,7 +834,7 @@ stock DB_EnsureStateSchema()
 
 stock DB_EnsureStateBankSchema()
 {
-    return true;
+    return DB_Execute("CREATE TABLE IF NOT EXISTS state_bank (state_id INTEGER PRIMARY KEY,balance INTEGER NOT NULL DEFAULT 0,updated_at TEXT);");
 }
 
 stock DB_SetStateTreasury(stateid, amount)
@@ -744,7 +904,7 @@ stock DB_EnsureHouseSchema()
 
 stock DB_EnsureHouseStorageSchema()
 {
-    return true;
+    return DB_Execute("CREATE TABLE IF NOT EXISTS house_storage_items (id INTEGER PRIMARY KEY AUTOINCREMENT,house_id INTEGER NOT NULL,item_id INTEGER NOT NULL,slot_index INTEGER NOT NULL,quantity INTEGER NOT NULL DEFAULT 0,metadata TEXT DEFAULT 'NONE',updated_at TEXT,UNIQUE(house_id, slot_index));");
 }
 
 stock DB_EnsureHouseStorageIntegrity()
@@ -754,27 +914,27 @@ stock DB_EnsureHouseStorageIntegrity()
 
 stock DB_EnsureAccessorySchema()
 {
-    return true;
+    return DB_Execute("CREATE TABLE IF NOT EXISTS player_accessories (id INTEGER PRIMARY KEY AUTOINCREMENT,player_id INTEGER NOT NULL,accessory_type INTEGER NOT NULL,color INTEGER NOT NULL DEFAULT 0,equipped INTEGER NOT NULL DEFAULT 0,updated_at TEXT,UNIQUE(player_id, accessory_type));");
 }
 
 stock DB_EnsurePlayerVehicleSchema()
 {
-    return true;
+    return DB_Execute("CREATE TABLE IF NOT EXISTS player_vehicles (vehicle_id INTEGER PRIMARY KEY,player_id INTEGER NOT NULL,model_id INTEGER NOT NULL DEFAULT 0,state_id INTEGER NOT NULL DEFAULT 0,price_paid INTEGER NOT NULL DEFAULT 0,fuel INTEGER NOT NULL DEFAULT 100,locked INTEGER NOT NULL DEFAULT 1,health REAL NOT NULL DEFAULT 1000.0,position_x REAL DEFAULT 0.0,position_y REAL DEFAULT 0.0,position_z REAL DEFAULT 0.0,angle REAL DEFAULT 0.0,color_1 INTEGER DEFAULT 0,color_2 INTEGER DEFAULT 0,updated_at TEXT);");
 }
 
 stock DB_EnsurePropertySchema()
 {
-    return true;
+    return DB_Execute("CREATE TABLE IF NOT EXISTS player_properties (id INTEGER PRIMARY KEY AUTOINCREMENT,player_id INTEGER NOT NULL,property_type INTEGER NOT NULL,property_id INTEGER NOT NULL,state_id INTEGER NOT NULL DEFAULT 0,value INTEGER NOT NULL DEFAULT 0,created_at TEXT,UNIQUE(property_type, property_id));");
 }
 
 stock DB_EnsureFuelStationSchema()
 {
-    return true;
+    return DB_Execute("CREATE TABLE IF NOT EXISTS fuel_stations (id INTEGER PRIMARY KEY AUTOINCREMENT,state_id INTEGER NOT NULL DEFAULT 0,x REAL DEFAULT 0.0,y REAL DEFAULT 0.0,z REAL DEFAULT 0.0,price INTEGER NOT NULL DEFAULT 0,updated_at TEXT);");
 }
 
 stock DB_EnsureVehicleModsSchema()
 {
-    return true;
+    return DB_Execute("CREATE TABLE IF NOT EXISTS vehicle_mods (id INTEGER PRIMARY KEY AUTOINCREMENT,vehicle_id INTEGER NOT NULL,component_id INTEGER NOT NULL,mod_id INTEGER NOT NULL DEFAULT 0,value INTEGER NOT NULL DEFAULT 0,updated_at TEXT,UNIQUE(vehicle_id, component_id));");
 }
 
 stock DB_EnsureUBBVehicleSchema()
@@ -789,7 +949,7 @@ stock DB_EnsureUBBVehicleIntegrity()
 
 stock DB_EnsureWebAccountSchema()
 {
-    return true;
+    return DB_Execute("CREATE TABLE IF NOT EXISTS web_account_sync (player_name TEXT PRIMARY KEY COLLATE NOCASE,ucp_username TEXT DEFAULT '',password_hash TEXT DEFAULT '',synced_at TEXT);");
 }
 
 stock DB_EnsureMapSchema()
@@ -819,12 +979,12 @@ stock DB_SaveMapZone(const name[], stateid, Float:minX, Float:minY, Float:maxX, 
 
 stock DB_EnsureContactSchema()
 {
-    return true;
+    return DB_Execute("CREATE TABLE IF NOT EXISTS player_contacts (id INTEGER PRIMARY KEY AUTOINCREMENT,player_id INTEGER NOT NULL,contact_name TEXT DEFAULT '',phone_number TEXT DEFAULT '');");
 }
 
 stock DB_EnsureCriminalRecordSchema()
 {
-    return true;
+    return DB_Execute("CREATE TABLE IF NOT EXISTS criminal_records (id INTEGER PRIMARY KEY AUTOINCREMENT,player_id INTEGER NOT NULL,state_id INTEGER NOT NULL DEFAULT 0,offense TEXT DEFAULT '',wanted_level INTEGER NOT NULL DEFAULT 0,bail_amount INTEGER NOT NULL DEFAULT 0,prison_seconds INTEGER NOT NULL DEFAULT 0,officer_name TEXT DEFAULT '',created_at TEXT DEFAULT (datetime('now')));");
 }
 
 stock DB_LoadPlayerInventory(playerid)
@@ -841,13 +1001,56 @@ stock DB_LoadPlayerInventory(playerid)
         format(gDBPlayerInventoryMetaCache[playerid][i], 32, "NONE");
     }
 
-    new query[192];
-    format(query, sizeof(query), "SELECT item_id, slot_index, quantity, metadata FROM player_inventory WHERE player_id = %d ORDER BY slot_index ASC;", playerid);
-    if (!DB_Query(query))
+    new accountId = DB_GetAccountId(playerid);
+    if (accountId <= 0)
     {
         return false;
     }
 
+    new query[192];
+    format(query, sizeof(query), "SELECT item_id, slot_index, quantity, metadata FROM player_inventory WHERE player_id = %d ORDER BY slot_index ASC;", accountId);
+
+    if (!DB_SQLite_IsReady())
+    {
+        return false;
+    }
+
+    new mutableQuery[224];
+    strcat(mutableQuery, query, sizeof(mutableQuery));
+    new DBResult:result = db_query(gSQLiteDB, mutableQuery);
+    if (!result)
+    {
+        return false;
+    }
+
+    new field[48];
+    new rows = db_num_rows(result);
+    for (new r = 0; r < rows; r++)
+    {
+        db_get_field_assoc(result, "slot_index", field, sizeof(field));
+        new slot = strval(field);
+        if (slot < 0 || slot >= MAX_INVENTORY_SLOTS)
+        {
+            db_next_row(result);
+            continue;
+        }
+
+        db_get_field_assoc(result, "item_id", field, sizeof(field));
+        gDBPlayerInventoryCache[playerid][slot] = strval(field);
+
+        db_get_field_assoc(result, "quantity", field, sizeof(field));
+        gDBPlayerInventoryQtyCache[playerid][slot] = strval(field);
+
+        db_get_field_assoc(result, "metadata", gDBPlayerInventoryMetaCache[playerid][slot], 32);
+        if (strlen(gDBPlayerInventoryMetaCache[playerid][slot]) == 0)
+        {
+            format(gDBPlayerInventoryMetaCache[playerid][slot], 32, "NONE");
+        }
+
+        db_next_row(result);
+    }
+
+    db_free_result(result);
     return true;
 }
 
@@ -870,8 +1073,14 @@ stock DB_SavePlayerInventoryItem(playerid, itemid, slot_index, quantity, const m
     gDBPlayerInventoryQtyCache[playerid][slot_index] = quantity;
     format(gDBPlayerInventoryMetaCache[playerid][slot_index], 32, "%s", metadata);
 
+    new accountId = DB_GetAccountId(playerid);
+    if (accountId <= 0)
+    {
+        return false;
+    }
+
     new query[256];
-    format(query, sizeof(query), "INSERT OR REPLACE INTO player_inventory (player_id, item_id, slot_index, quantity, metadata) VALUES (%d, %d, %d, %d, '%s')", playerid, itemid, slot_index, quantity, metadata);
+    format(query, sizeof(query), "INSERT OR REPLACE INTO player_inventory (player_id, item_id, slot_index, quantity, metadata) VALUES (%d, %d, %d, %d, '%s')", accountId, itemid, slot_index, quantity, metadata);
     return DB_Execute(query);
 }
 
@@ -891,11 +1100,48 @@ stock DB_LoadHouseStorage(houseid)
 
     new query[192];
     format(query, sizeof(query), "SELECT item_id, slot_index, quantity, metadata FROM house_storage_items WHERE house_id = %d ORDER BY slot_index ASC;", houseid);
-    if (!DB_Query(query))
+
+    if (!DB_SQLite_IsReady())
     {
         return false;
     }
 
+    new mutableQuery[224];
+    strcat(mutableQuery, query, sizeof(mutableQuery));
+    new DBResult:result = db_query(gSQLiteDB, mutableQuery);
+    if (!result)
+    {
+        return false;
+    }
+
+    new field[48];
+    new rows = db_num_rows(result);
+    for (new r = 0; r < rows; r++)
+    {
+        db_get_field_assoc(result, "slot_index", field, sizeof(field));
+        new slot = strval(field);
+        if (slot < 0 || slot >= MAX_HOUSE_STORAGE_SLOTS)
+        {
+            db_next_row(result);
+            continue;
+        }
+
+        db_get_field_assoc(result, "item_id", field, sizeof(field));
+        gDBHouseStorageCache[houseid][slot] = strval(field);
+
+        db_get_field_assoc(result, "quantity", field, sizeof(field));
+        gDBHouseStorageQtyCache[houseid][slot] = strval(field);
+
+        db_get_field_assoc(result, "metadata", gDBHouseStorageMetaCache[houseid][slot], 32);
+        if (strlen(gDBHouseStorageMetaCache[houseid][slot]) == 0)
+        {
+            format(gDBHouseStorageMetaCache[houseid][slot], 32, "NONE");
+        }
+
+        db_next_row(result);
+    }
+
+    db_free_result(result);
     return true;
 }
 
@@ -906,8 +1152,14 @@ stock DB_RemovePlayerInventoryItem(playerid, itemid, quantity)
         return false;
     }
 
+    new accountId = DB_GetAccountId(playerid);
+    if (accountId <= 0)
+    {
+        return false;
+    }
+
     new query[192];
-    format(query, sizeof(query), "UPDATE player_inventory SET quantity = quantity - %d WHERE player_id = %d AND item_id = %d AND quantity >= %d", quantity, playerid, itemid, quantity);
+    format(query, sizeof(query), "UPDATE player_inventory SET quantity = quantity - %d WHERE player_id = %d AND item_id = %d AND quantity >= %d", quantity, accountId, itemid, quantity);
     return DB_Execute(query);
 }
 
@@ -946,8 +1198,14 @@ stock DB_SavePlayerVehicle(playerid, vehicleid, modelid, stateid, price_paid, fu
         return false;
     }
 
+    new accountId = DB_GetAccountId(playerid);
+    if (accountId <= 0)
+    {
+        return false;
+    }
+
     new query[512];
-    format(query, sizeof(query), "INSERT OR REPLACE INTO player_vehicles (player_id, vehicle_id, model_id, state_id, price_paid, fuel, locked, health, position_x, position_y, position_z, angle, color_1, color_2, updated_at) VALUES (%d, %d, %d, %d, %d, %d, %d, %.2f, %.2f, %.2f, %.2f, %.2f, %d, %d, datetime('now'))", playerid, vehicleid, modelid, stateid, price_paid, fuel, locked, health, x, y, z, angle, color1, color2);
+    format(query, sizeof(query), "INSERT OR REPLACE INTO player_vehicles (player_id, vehicle_id, model_id, state_id, price_paid, fuel, locked, health, position_x, position_y, position_z, angle, color_1, color_2, updated_at) VALUES (%d, %d, %d, %d, %d, %d, %d, %.2f, %.2f, %.2f, %.2f, %.2f, %d, %d, datetime('now'))", accountId, vehicleid, modelid, stateid, price_paid, fuel, locked, health, x, y, z, angle, color1, color2);
     return DB_Execute(query);
 }
 
@@ -958,8 +1216,14 @@ stock DB_SaveAccessory(playerid, accessory_type, color, equipped)
         return false;
     }
 
+    new accountId = DB_GetAccountId(playerid);
+    if (accountId <= 0)
+    {
+        return false;
+    }
+
     new query[256];
-    format(query, sizeof(query), "INSERT OR REPLACE INTO player_accessories (player_id, accessory_type, color, equipped, updated_at) VALUES (%d, %d, %d, %d, datetime('now'))", playerid, accessory_type, color, equipped);
+    format(query, sizeof(query), "INSERT OR REPLACE INTO player_accessories (player_id, accessory_type, color, equipped, updated_at) VALUES (%d, %d, %d, %d, datetime('now'))", accountId, accessory_type, color, equipped);
     return DB_Execute(query);
 }
 
@@ -970,8 +1234,14 @@ stock DB_AddPlayerContact(playerid, const contact_name[], const phone_number[])
         return false;
     }
 
+    new accountId = DB_GetAccountId(playerid);
+    if (accountId <= 0)
+    {
+        return false;
+    }
+
     new query[256];
-    format(query, sizeof(query), "INSERT INTO player_contacts (player_id, contact_name, phone_number) VALUES (%d, '%s', '%s')", playerid, contact_name, phone_number);
+    format(query, sizeof(query), "INSERT INTO player_contacts (player_id, contact_name, phone_number) VALUES (%d, '%s', '%s')", accountId, contact_name, phone_number);
     return DB_Execute(query);
 }
 
@@ -986,8 +1256,14 @@ stock DB_RegisterProperty(playerid, property_type, property_id, stateid, value)
         return false;
     }
 
+    new accountId = DB_GetAccountId(playerid);
+    if (accountId <= 0)
+    {
+        return false;
+    }
+
     new query[320];
-    format(query, sizeof(query), "INSERT OR REPLACE INTO player_properties (player_id, property_type, property_id, state_id, value, created_at) VALUES (%d, %d, %d, %d, %d, datetime('now'))", playerid, property_type, property_id, stateid, value);
+    format(query, sizeof(query), "INSERT OR REPLACE INTO player_properties (player_id, property_type, property_id, state_id, value, created_at) VALUES (%d, %d, %d, %d, %d, datetime('now'))", accountId, property_type, property_id, stateid, value);
     return DB_Execute(query);
 }
 
@@ -998,8 +1274,14 @@ stock DB_AddCriminalRecord(playerid, stateid, const offense[], wanted_level, bai
         return false;
     }
 
+    new accountId = DB_GetAccountId(playerid);
+    if (accountId <= 0)
+    {
+        return false;
+    }
+
     new query[320];
-    format(query, sizeof(query), "INSERT INTO criminal_records (player_id, state_id, offense, wanted_level, bail_amount, prison_seconds, officer_name) VALUES (%d, %d, '%s', %d, %d, %d, '%s')", playerid, stateid, offense, wanted_level, bail_amount, prison_seconds, officer_name);
+    format(query, sizeof(query), "INSERT INTO criminal_records (player_id, state_id, offense, wanted_level, bail_amount, prison_seconds, officer_name) VALUES (%d, %d, '%s', %d, %d, %d, '%s')", accountId, stateid, offense, wanted_level, bail_amount, prison_seconds, officer_name);
     return DB_Execute(query);
 }
 

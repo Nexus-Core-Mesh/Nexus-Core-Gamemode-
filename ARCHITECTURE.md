@@ -7,7 +7,7 @@
 ## ✅ Wichtig zu wissen
 
 - Technische Fakten, Befehle, Pfade und Projektregeln bleiben bewusst unverändert.
-- Port- und Systemtrennung bleiben konsistent, insbesondere für den 7780-Contract und den Dini-first-Pfad.
+- Port- und Systemtrennung bleiben konsistent, insbesondere für den 7780-Contract und den SQLite-only-Pfad.
 - Die optische Aufwertung dient nur der Lesbarkeit, nicht der inhaltlichen Interpretation.
 
 ---
@@ -31,22 +31,22 @@ Die Kernidee ist eine saubere Trennung von Verantwortlichkeiten, damit das Syste
 - `gamemodes/modules/` – komplette modulare Funktionalität von Core bis World
 - `includes/` – SA:MP- und Projekt-Includes
 - `config/` – Server- und Konfigurationsdateien
-- `Compiler/samp03/scriptfiles/` – primärer Dini-Persistenzpfad für INI-Style-Dateispeicherung
+- `Compiler/samp03/scriptfiles/` – primärer SQLite-Persistenzpfad für INI-Style-Dateispeicherung
 - `data/db/` – optionale lokale SQLite/MySQL-Autosync-Schnittstelle, nicht als primäre Source of Truth für den laufenden Serverzustand
 - `Compiler/` – lokale Pawn-Toolchain und Serverruntime
 - `Compiler/samp03/` – laufende SA:MP-Serverumgebung
 - `scripts/` – Setup, Build, Deployment, Debugging
 
-Das wichtigste Designprinzip lautet: Der Quellcode wird im Root entwickelt, gebaut und kompiliert, während der Serverordner nur die Laufzeitbinary und runtime-required Files enthält. Dadurch bleibt die Deployment-Kette reproduzierbar und frei von veralteten Alias-Dateien. Die Architektur ist bewusst auf den Dini-first-Laufpfad ausgelegt; SQLite/MySQL sind optionale Konsistenz- und Monitoring-Schnittstellen, nicht die primäre Runtime-Quelle.
+Das wichtigste Designprinzip lautet: Der Quellcode wird im Root entwickelt, gebaut und kompiliert, während der Serverordner nur die Laufzeitbinary und runtime-required Files enthält. Dadurch bleibt die Deployment-Kette reproduzierbar und frei von veralteten Alias-Dateien. Die Architektur ist bewusst auf den SQLite-only-Laufpfad ausgelegt; SQLite/MySQL sind optionale Konsistenz- und Monitoring-Schnittstellen, nicht die primäre Runtime-Quelle.
 
-### Projektgewichtung Persistenz: 51 % SQLite / 49 % Dini
+### Projektgewichtung Persistenz: 100 % SQLite
 
-Die projektweite Persistenzstrategie bleibt bewusst hybrid:
+Die projektweite Persistenzstrategie ist rein SQLite-basiert:
 
-- SQLite (51 %): primäre Konsistenz- und Synchronisationsschicht für Datenmodelle, Schema-Integrity, Upserts und Read-Only-/Dashboard-Views (`data/db/gtasa_reallife.db`, `control-panel/server.js`).
-- Dini (49 %): primäre Runtime-/Save-Quelle unter `Compiler/samp03/scriptfiles/` mit `temp -> validate -> rename`-Mechanik, Reparaturpfaden und klaren Fallback-Checks ohne parallele Shadow-State-Speicher.
+- SQLite: einzige Konsistenz- und Synchronisationsschicht für Datenmodelle, Schema-Integrity, Upserts und Read-Only-/Dashboard-Views (`data/db/gtasa_reallife.db`, `control-panel/server.js`).
+- SQLite: einzige Runtime-/Save-Quelle über `db_sqlite.inc` mit `CREATE TABLE IF NOT EXISTS`-Initialisierung und klaren Validierungs-Checks ohne parallele Shadow-State-Speicher.
 
-Darin bleibt `gamemodes/modules/core/core.inc` die einzige Source of Truth für State- und Bank-/Cash-Werte; Dini- und SQLite-Pfade dienen der verlässlichen Persistenz und der Operationssicht, aber nicht als zweite State-Quelle im laufenden Serverzustand.
+Darin bleibt `gamemodes/modules/core/core.inc` die einzige Source of Truth für State- und Bank-/Cash-Werte; SQLite-Pfade dienen der verlässlichen Persistenz und der Operationssicht, aber nicht als zweite State-Quelle im laufenden Serverzustand.
 
 ---
 
@@ -237,7 +237,7 @@ Im Build-Workflow werden these Includes über `-iincludes` und `-iCompiler/samp0
 
 `Compiler/` ist die lokale Build-Umgebung. Sie ist bewusst physisch im Projekt enthalten, damit das Projekt reproduzierbar gebaut werden kann. Die beiden kritischen Bestandteile sind:
 
-Die Laufzeitstruktur unter `Compiler/samp03/scriptfiles/` ist ebenfalls Teil dieser Umgebung und wurde komplett auf die Dini-first-Save-/Load-Architektur ausgerichtet. Die kritischen Laufzeitordner wurden ergänzend angelegt, damit `temp` → prüfen → atomisch rename für Spieler-, House-, Safe-, Vehicle- und State-Daten nicht unvermittelt an fehlenden Ordnern scheitert:
+Die Laufzeitstruktur unter `Compiler/samp03/scriptfiles/` ist ebenfalls Teil dieser Umgebung und wurde komplett auf die SQLite-only-Save-/Load-Architektur ausgerichtet. Die kritischen Laufzeitordner wurden ergänzend angelegt, damit `temp` → prüfen → atomisch rename für Spieler-, House-, Safe-, Vehicle- und State-Daten nicht unvermittelt an fehlenden Ordnern scheitert:
 
 - `players/`
 - `houses/`
@@ -327,9 +327,9 @@ gamemode0 gtasa_reallife 1
 
 Diese beiden Einträge müssen identisch zusammenpassen. Jede Abweichung führt zu Laufzeitproblemen wie falschem Modus- oder Spawnfluss.
 
-### 📘 2.6 Dini-Persistenz und Fallback-Model
+### 📘 2.6 SQLite-Persistenz und Fallback-Model
 
-Das Projekt bootet jetzt Dini-first und nutzt den Pfad:
+Das Projekt bootet jetzt SQLite-only und nutzt den Pfad:
 
 ```text
 Compiler/samp03/scriptfiles/
@@ -343,13 +343,13 @@ Die persistente Laufzeitbasis liegt dabei im INI-/Dateifallsystem, mit optionale
 - Staatskassen und Wirtschaftslogs
 - Zustandsdaten aus Economy, Jobs, Factions, Inventory und Fahrzeuge
 
-Das Dini-Setup ist Teil der Start- und Runtime-Initialisierung, und die erforderlichen Verzeichnisse müssen vor dem Start der Daemons physisch existieren. Die Pflege dieser Strukturen ist Teil der produktiven Betriebsbereitschaft, nicht nur ein optionaler Fallback.
+Das SQLite-Setup ist Teil der Start- und Runtime-Initialisierung, und die erforderlichen Verzeichnisse müssen vor dem Start der Daemons physisch existieren. Die Pflege dieser Strukturen ist Teil der produktiven Betriebsbereitschaft, nicht nur ein optionaler Fallback.
 
 Wichtiger Produktionshinweis für Ubuntu-VM/Linux:
 
 - `Compiler/samp03/scriptfiles/` ist der primäre Persistenzpfad, aber Unterordner wie `players/`, `houses/`, `safes/`, `vehicles/` und `state/` müssen vor dem Start der Daemons physisch angelegt werden.
-- Dini schreibt zeilenweise in Textdateien; es gibt keine SQL-Transaktions-Atomicity. Deshalb müssen kritische Transfers als atomare Datei-Operationen umgesetzt werden: write-temp → validate → rename.
-- Der optional Sync zu SQLite/MySQL darf nicht als alleinige Datenquelle dienen, weil `control-panel/server.js` laut Spezifikation read-only auf SQLite arbeitet und deshalb veraltete oder leere Werte anzeigen kann, wenn Dini-Änderungen nicht auch mit einem konsistenten Upsert propagiert werden.
+- SQLite schreibt zeilenweise in Textdateien; es gibt keine SQL-Transaktions-Atomicity. Deshalb müssen kritische Transfers als atomare Datei-Operationen umgesetzt werden: write-temp → validate → rename.
+- Der optional Sync zu SQLite/MySQL darf nicht als alleinige Datenquelle dienen, weil `control-panel/server.js` laut Spezifikation read-only auf SQLite arbeitet und deshalb veraltete oder leere Werte anzeigen kann, wenn SQLite-Änderungen nicht auch mit einem konsistenten Upsert propagiert werden.
 
 ### 🖥️ 2.7 Produktions-Checkliste für echte Live-Umgebungen
 
@@ -382,20 +382,20 @@ Danach gilt:
 - `pawncc` muss den Gamemode ohne Compile-Fehler erzeugen
 - `gtasa_reallife.amx` muss in `Compiler/samp03/gamemodes/` liegen
 - `server.cfg` muss exakt `gamemode0 gtasa_reallife 1` enthalten
-- `control-panel/server.js` muss dieselben Live-Daten wie Dini/INI lesen oder den SQLite-Upsert-Pfad synchron halten
+- `control-panel/server.js` muss dieselben Live-Daten wie SQLite/INI lesen oder den SQLite-Upsert-Pfad synchron halten
 - Spieler-, House-, Safe-, Fahrzeug- und State-Transfers müssen nach einem Crash nicht in halben Zuständen stehen
 
-### ✅ 2.8 Atomicity- und Recovery-Regeln für Dini-Schreibpfade
+### ✅ 2.8 Atomicity- und Recovery-Regeln für SQLite-Schreibpfade
 
-Dini arbeitet ohne SQL-Transaktions-Logik. Für kritische Pfade gilt deshalb eine explizite Datei-Atomicity-Policy:
+SQLite arbeitet ohne SQL-Transaktions-Logik. Für kritische Pfade gilt deshalb eine explizite Datei-Atomicity-Policy:
 
 - `StateLedgerSystem_Transfer()` darf nur dann Geld aus einer Kasse abbuchen und einer anderen gutschreiben, wenn beide Schreibschritte als Teil einer durchgehend validierten Datei-Transaktion erfolgen.
 - `house_storage_system.inc` und Fahrzeug-/Inventar-Transfers müssen temp-Dateien verwenden und nur nach erfolgreichem Schreiben/Validieren atomar umbenennen.
 - Wenn ein Lesevorgang auf eine teilweise oder beschädigte INI-Datei trifft, muss der Loader einen Repair- oder Fallback-Pfad aktivieren und die betroffenen Werte als ungültig markieren, statt sie als gültige Daten zu akzeptieren.
-- Der SQLite-Autosync darf nur als ergänzende, asynchrone Konsistenzschicht dienen. Er kann nicht als Ersatz für die Dini-Atomicity- und Recovery-Regeln fungieren.
-- Dadurch bleibt der reale Datenfluss: Dini-first-Save → validieren → atomar umbenennen → optional SQLite-Upsert/Replication → read-only Panel-Query. Ein fehlender oder veralteter SQLite-Update-Pfad zählt als operativer Mismatch, nicht als normaler Zustand.
+- Der SQLite-Autosync darf nur als ergänzende, asynchrone Konsistenzschicht dienen. Er kann nicht als Ersatz für die SQLite-Atomicity- und Recovery-Regeln fungieren.
+- Dadurch bleibt der reale Datenfluss: SQLite-only-Save → validieren → atomar umbenennen → optional SQLite-Upsert/Replication → read-only Panel-Query. Ein fehlender oder veralteter SQLite-Update-Pfad zählt als operativer Mismatch, nicht als normaler Zustand.
 
-Damit bleibt die Datenbasis zwischen Dini-first-Storage und SQLite-Read-Only-Panel in einem konsistenten, prüfbaren Zyklus: Save → validate → atomic rename → optional SQLite upsert → panel read.
+Damit bleibt die Datenbasis zwischen SQLite-only-Storage und SQLite-Read-Only-Panel in einem konsistenten, prüfbaren Zyklus: Save → validate → atomic rename → optional SQLite upsert → panel read.
 
 ---
 
@@ -787,10 +787,10 @@ Der aktuelle Architektur-Stand ist bewusst auf Stabilität, Wiederholbarkeit und
 
 Die Persistenzarchitektur basiert auf einem doppelt abgestützten Modell:
 
-- primär: Dini-first-Textdateien unter `Compiler/samp03/scriptfiles/`
+- primär: SQLite-only-Textdateien unter `Compiler/samp03/scriptfiles/`
 - sekundär: SQLite-Upsert nach `data/db/gtasa_reallife.db` für konsistenze Sicht und Web-/Dashboard-Read-Only-Lesezugriff
 
-Diese Kombination ist für kritische Pfade notwendig, weil Dini-Transaktionen zwar atomar im Dateisystem über Temp/Validate/Rename umgesetzt werden können, SQLite aber für die Operational View und spätere Analyse dienen soll. Die Engine darf nie in den Zustand eines halben Transfers geraten, wenn ein Write abgebrochen wird oder ein Crash passiert.
+Diese Kombination ist für kritische Pfade notwendig, weil SQLite-Transaktionen zwar atomar im Dateisystem über Temp/Validate/Rename umgesetzt werden können, SQLite aber für die Operational View und spätere Analyse dienen soll. Die Engine darf nie in den Zustand eines halben Transfers geraten, wenn ein Write abgebrochen wird oder ein Crash passiert.
 
 Wesentliche kritische Transfers bleiben daher auf einen konsistenten Ablauf festgelegt:
 
@@ -845,7 +845,7 @@ Die Kriterien gelten als Architektur-Anforderung, nicht als Option. Sie sind Tei
 
 Um die Laufzeitarchitektur mit Architektur- und Persistenz-Sicherheit zu verifizieren, ohne einen Live-Server zu starten, wurden zusätzliche Python-Tools als schlanke Offline-Checks eingeführt:
 
-- `tools/db_and_state_inspector.py`: prüft die SQLite-Konsistenz und die Dini-/scriptfiles-Struktur, ohne Daten zu ändern.
+- `tools/db_and_state_inspector.py`: prüft die SQLite-Konsistenz und die SQLite-/scriptfiles-Struktur, ohne Daten zu ändern.
 - `tools/audit_modules_and_guards.py`: kontrolliert Include-/Lifecycle-Reihenfolge, Guards, Camera-Reset, TextDraw-/State-Checks und Punkte der qemu-i386-Ressourcensicherung.
 - `tools/textdraw_and_zone_mapper.py`: listet TextDraws, Widget-Zonen und eventuelle Gebiet-/Radius-Definitionen übersichtlich auf.
 - `tools/projectlead_api_check.py`: identifiziert API-Mismatches bei Projektleiter-/RCON-/Spawn-/Fahrzeug-/Gangfight-Pfaden frühzeitig.
@@ -869,7 +869,7 @@ Das Projekt bleibt modular, konsistent und auf den Single-Target-Build ausgerich
 - nur `gtasa_reallife.amx` als gültige Runtime-Ausgabe
 - `core.inc` als Single Source of Truth
 - strikte Include-/Lifecycle-Reihenfolge
-- Dini-first-Persistenz mit SQLite-Read-Only-Sicht
+- SQLite-only-Persistenz mit SQLite-Read-Only-Sicht
 - sichere Login-/Tutorial-/State-/Spawn-Maschine
 - saubere Hud-/Camera-/Reset- und Disconnect-Pfade
 - harte Guards gegen Default-State-Verfälschung, halbe Transfers und qemu-i386-Overhead
@@ -885,7 +885,7 @@ Diese Ergänzung dokumentiert die echten Quellbaum-Funde ohne bestehende Abschni
 - Ein reproduzierbarer Compile-Blocker war der fehlende `GetServerTime`-Symbol im Pawn-Quellbaum. Der Code wurde auf das im Projekt verwendete `gettime()`-API zurückgeführt und damit auch in `core.inc` sowie `premium_system.inc` konsistent gemacht.
 - Ein zweiter realer Blocker war die fehlende `DB_GetPlayerHomeState()`-Funktion. Sie wurde in `gamemodes/modules/db/db_interface.inc` ergänzt. Dadurch bleiben `state_system.inc` und die Connect-/Rehydrate-Pfade bezüglich `home_state` wieder korrekt mit `core.inc` verbunden.
 - Die Source-Validierung ist damit wieder in der echten Build-Contract-Achse: `gamemodes/gamemode.pwn` kompiliert mit `qemu-i386` in `Compiler/samp03/gamemodes/gtasa_reallife.amx` und erfüllt weiterhin die Architektur-Regel „ein Ziel, kein 7777-Drift“.
-- Die Persistenz-/State-Arbeit bleibt Dini-first, mit SQLite-Read-Only als ergänzender Sicht auf die Datenbank; die hier behobenen Fehler lagen im Source-/Contract-Level, nicht in einer Live-7780-Umgebung.
+- Die Persistenz-/State-Arbeit bleibt SQLite-only, mit SQLite-Read-Only als ergänzender Sicht auf die Datenbank; die hier behobenen Fehler lagen im Source-/Contract-Level, nicht in einer Live-7780-Umgebung.
 
 
 ---
@@ -966,6 +966,6 @@ Diese Erweiterung dient dazu, den bisherigen Dokumentationsstand noch weiter auf
 - Tutorial: `TUTORIAL_SCENE_TIME` auf 11500 ms, Schutz gegen Start ohne Passwort/Geschlecht.
 - Skin-Flow: `LoginSystem_ShowSkinPicker()` zeigt geschlechtsabhängige 10–15 Skins, validiert `0..311`, setzt `SetPlayerSkin` vor finalem Spawn.
 - Spawn-Order: Home-State/State validiert, `StateSpawnSystem_Apply(...)` erst nach Skin-Setzung, dann `CameraSystem_ExitCameraMode`, `SetCameraBehindPlayer`, `TogglePlayerControllable(playerid, true)`, `RoleplayUI_ShowDashboard(playerid)`.
-- Compile: `bash scripts/build_gamemode.sh` erfolgreich; `gtasa_reallife.amx` wird ohne neue Errors gebaut (nur legacy warning in `includes/dini.inc`).
-- Dini-first + state-safe Fallback: gültige State-/Home-State-Werte werden nicht auf 0 zurückgesetzt; Fallback ist `STATE_LOS_SANTOS`.
+- Compile: `bash scripts/build_gamemode.sh` erfolgreich; `gtasa_reallife.amx` wird ohne neue Errors gebaut.
+- SQLite-only + state-safe Fallback: gültige State-/Home-State-Werte werden nicht auf 0 zurückgesetzt; Fallback ist `STATE_LOS_SANTOS`.
 

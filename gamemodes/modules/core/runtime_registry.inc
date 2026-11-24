@@ -183,6 +183,7 @@ stock Core_RunPlayerDisconnectHooks(playerid, reason)
     LawSystem_OnPlayerDisconnect(playerid);
     CrimeSystem_OnPlayerDisconnect(playerid);
     EmergencySystem_OnPlayerDisconnect(playerid);
+    HouseSystem_OnPlayerDisconnect(playerid);
     Core_OnPlayerDisconnect(playerid, reason);
 }
 

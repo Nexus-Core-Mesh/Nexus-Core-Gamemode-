@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Schreibgeschützte Inspektion von SQLite-State und scriptfiles-Persistenz.
 
-Ziel: die kritischen Datenpfade ohne Serverstart prüfen, damit DB- und Dini-Zustände
+Ziel: die kritischen Datenpfade ohne Serverstart prüfen, damit DB- und SQLite-Zustände
 vor einem Live-Upgrade schnell gegen Inkonsistenzen bewertet werden können.
 """
 

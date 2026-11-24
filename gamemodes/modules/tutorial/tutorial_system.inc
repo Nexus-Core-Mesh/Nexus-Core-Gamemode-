@@ -121,7 +121,7 @@ stock TutorialSystem_Start(playerid)
     SetPlayerVirtualWorld(playerid, 0);
     TogglePlayerControllable(playerid, false);
     TutorialSystem_ShowStage(playerid, gTutorialStage[playerid]);
-    SendClientMessage(playerid, 0xFFCC00AA, "[TUTORIAL] Willkommen im GTA:SA Reallife. Der Kameraflug zeigt dir alle drei Staedte. Danach waehlst du dein Geschlecht und deine Heimatstadt.");
+    SendClientMessage(playerid, 0xFFCC00AA, "[TUTORIAL] Willkommen im GTA:SA Reallife. Der Kameraflug zeigt dir alle drei Staedte. Danach startet dein Charakter in deiner Heimatstadt.");
 }
 
 stock TutorialSystem_ShowStage(playerid, stage)
@@ -270,8 +270,10 @@ stock TutorialSystem_Next(playerid)
         TutorialSystem_HideStage(playerid);
         CameraSystem_Reset(playerid);
         TogglePlayerControllable(playerid, false);
-        LoginSystem_RequireGenderSelection(playerid);
-        SendClientMessage(playerid, 0x00FF00AA, "[TUTORIAL] Tutorial abgeschlossen. Wähle jetzt dein Geschlecht und danach deine Heimatstadt.");
+        SendClientMessage(playerid, 0x00FF00AA, "[TUTORIAL] Tutorial abgeschlossen. Dein Charakter wird jetzt gespawnt.");
+        // Tutorial ist der letzte Schritt -> zurueck in die Registrierungs-Weiche,
+        // die nun den finalen Spawn ausloest.
+        LoginSystem_CompleteReg(playerid);
         return;
     }
 

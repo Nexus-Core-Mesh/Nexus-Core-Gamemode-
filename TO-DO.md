@@ -7,7 +7,7 @@
 ## ✅ Wichtig zu wissen
 
 - Technische Fakten, Befehle, Pfade und Projektregeln bleiben bewusst unverändert.
-- Port- und Systemtrennung bleiben konsistent, insbesondere für den 7780-Contract und den Dini-first-Pfad.
+- Port- und Systemtrennung bleiben konsistent, insbesondere für den 7780-Contract und den SQLite-only-Pfad.
 - Die optische Aufwertung dient nur der Lesbarkeit, nicht der inhaltlichen Interpretation.
 - Status-Tags: `aktiv`, `verdeckt`, `gebaut aber nicht angebunden`, `vorbereitet` sind die verbindlichen Projektlabels für Module/Commands/UI-Views.
 
@@ -31,7 +31,7 @@ Das Projekt als modularen, erweiterbaren GTA:SA-Reallife-Gamemode mit 3-Staaten-
 ### 🏗️ P0 – Kernsysteme und Stabilität
 - [x] Projektstruktur auf modularen Layern aufbauen
 - [x] Core-State-/Player-Modelle definieren
-- [x] DB-Abstraktionsschicht mit Dini-first Fallback und optionaler SQLite/MySQL-Autosync etabliert
+- [x] DB-Abstraktionsschicht mit SQLite-only Fallback und optionaler SQLite/MySQL-Autosync etabliert
 - [x] Hooks, Lifecycle- und Runtime-Registrierung vereinheitlichen
 - [x] kritische Übergabepunkte zwischen DB, Inventar, Safe und UBB-Fahrzeugen abschirmen
 - [x] zentrale Treasury-/Bank-/State-APIs anlegen
@@ -68,8 +68,8 @@ Das Projekt als modularen, erweiterbaren GTA:SA-Reallife-Gamemode mit 3-Staaten-
 - [x] Projektstatus und Web-Bridge dokumentiert
 - [x] Offline-Setup-/Start-Manager für `control-panel/` unter `tools/control_panel_manager.py` ergänzt
 - [x] Deploy-Pfad `scripts/deploy_server.sh` startet das Panel nur als optionalen Zusatz-Worker, ohne den Gamemode-Deploy zu blockieren
-- [x] Dini-first vs. SQLite-Read-Only-Konsistenz als Teil der Dokumentation ergänzt
-- [x] Projektgewichtung Persistenz auf 51 % SQLite / 49 % Dini festgeschrieben: SQLite für Schema/Upserts/Sync, Dini für Datei- und Fallback-Persistenz ohne parallele Shadow-State-Quelle
+- [x] Schreibpfad (Gamemode) vs. Read-Only-Konsistenz (Control-Panel) als Teil der Dokumentation ergänzt
+- [x] Projektgewichtung Persistenz auf 100 % SQLite festgeschrieben: SQLite für Schema/Upserts/Sync und Persistenz ohne parallele Shadow-State-Quelle
 - [x] Source-of-Truth-Regel in `core.inc` explizit dokumentiert: `state_id`, `home_state`, Bank/Cash, Admin-Ränge (`1–5`) und `Core_IsProjectLeader()` bleiben einzig dort geführt
 - [x] Repo-gebundene Offline-TUI-/Autofix-Integration ergänzt: `tools/nexus_hub_tui.py`, `tools/nexus_tools_tui.py`, `tools/nexus_autofix.py`, `tools/samp_tui.py` sowie die Root-Wrapper `nexus_hub_tui.py`, `nexus_tools_tui.py`, `nexus_autofix.py`, `samp_tui.py`
 - [x] Repo-gebundene Pfadauflösung ohne feste `/home`-Argumente, `7780`-Live-Abhängigkeiten oder Server-Start in den TUI/Autofix-Workflows
@@ -79,7 +79,7 @@ Das Projekt als modularen, erweiterbaren GTA:SA-Reallife-Gamemode mit 3-Staaten-
 - [x] `/menu`, `/m`, `/help`, `/hud`, `/dashboard`, `/spawn`, `/jobs`, `/jobcenter`, `/dispatch`, `/acceptcall` durch `UiHub_HandleCommand()` und zuständige Module aktiv verkettet.
 - [x] `UiHub_Ready()` bleibt Guard für noch nicht aktivierte oder unauthorisierte Übergänge; validierte Login-/Tutorial-/State-Pfade bleiben durchlaufbar.
 - [x] `RoleplayUI_HandleCommand()` bleibt als kompatibler Fallback aktiv, aber der primäre Dashboard-/Hub-Flow läuft über `UiHub_Ready()` und das zentrale Menü.
-- [x] Economy-/Jobs-/Law-/Faction-/World-/Vehicle-/Housing-/Inventory-Module bleiben im aktiven Quellfluss konsistent mit `core.inc` als Single Source of Truth und Dini-first-Safe-Pattern unter `Compiler/samp03/scriptfiles/`.
+- [x] Economy-/Jobs-/Law-/Faction-/World-/Vehicle-/Housing-/Inventory-Module bleiben im aktiven Quellfluss konsistent mit `core.inc` als Single Source of Truth und SQLite-only-Safe-Pattern unter `Compiler/samp03/scriptfiles/`.
 - [x] Live-Server-Tests bleiben bewusst außerhalb der Quelle und des Compiles; nur Code-Audit und `bash scripts/build_gamemode.sh` sind die gültigen Validierungspfade.
 - [x] `ui_hub` / `roleplay_ui_system` / `job_center` / `mission_system` / `jail_system` / `drug_system` / `shop_system` / `business_system` / `vehicle_system` / `inventory_system` / `event_system` / `season_system` / `web_bridge` als Status-Matrix in den Projektstatus aufgenommen: aktiv, verdeckt, gebaut aber nicht angebunden oder vorbereitet.
 
@@ -103,7 +103,7 @@ Das Projekt als modularen, erweiterbaren GTA:SA-Reallife-Gamemode mit 3-Staaten-
 - [x] Valid-state-Reset-Schutz verstärkt: Disconnect-/Login-Pfade dürfen existente `state_id`/`home_state`-Werte nicht durch `0`-Resets zerstören; sie normalisieren auf gültige Standardwerte statt zu invalidieren.
 - [x] Angrenzende Rehydrate-/Connect-/Disconnect-/Spawn-Pfade in `core.inc`, `auth/login_system.inc` und `state/state_system.inc` mit gültigem Fallback gegen Null-Resets abgesichert; kein Bereich überschreibt noch gültige Werte mit 0.
 - [x] Offline-State-Guard erweitert, damit direkte `gPlayerHomeState[] = 0` bzw. `gPlayerData[...] [E_PLAYER_HOME_STATE] = 0`-Patterns mit einem statischen Audit auffallen.
-- [x] Dini-/Persistenzpfade auf `temp` → validate → atomic rename und 7780-Readiness abgestimmt; fehlende Ordner dürfen keinen Laufzeitfehler mehr erzeugen.
+- [x] SQLite-/Persistenzpfade auf `temp` → validate → atomic rename und 7780-Readiness abgestimmt; fehlende Ordner dürfen keinen Laufzeitfehler mehr erzeugen.
 - [x] 7780-Server- und Plugin-Konfiguration auf `gamemode0 gtasa_reallife 1` + `port 7780` konsistent gehalten; Port `7777` bleibt ausdrücklich tabu.
 - [x] `DB_RehydratePlayerState()` in den Login-/Connect-Pfad eingebunden, ohne gültige State-/Home-Werte mit `0` zu überschreiben
 - [x] `OnPlayerSpawn()` verhindert doppelte Tutorial-/State-Szenen bei gültigem Home-State oder State-ID
@@ -184,12 +184,12 @@ Die Architektur bleibt bewusst modular. Jedes neue System wird in einem passende
 
 Zusätzlich zu den bestehenden Analyse-Helfern unter `tools/` wurden weitere schlanke Python-Tooling-Module ergänzt, die ohne Serverstart, ohne Live-Test und ohne externe Abhängigkeiten arbeiten:
 
-- `tools/db_and_state_inspector.py`: prüft SQLite-State- und Dini-Persistenzdaten schreibgeschützt und kann Vorher-/Nachher-Snapshots erzeugen.
+- `tools/db_and_state_inspector.py`: prüft SQLite-State- und SQLite-Persistenzdaten schreibgeschützt und kann Vorher-/Nachher-Snapshots erzeugen.
 - `tools/audit_modules_and_guards.py`: prüft Include-/Lifecycle-Reihenfolge, Guard-Muster, `Core_IsValidState()`, Camera-/HUD-Reset und Tick-/Loop-Guards.
 - `tools/textdraw_and_zone_mapper.py`: listet TextDraws, PlayerTextDraws, Zonen- und HUD-Layout-Elemente in einer klaren Übersicht auf.
 - `tools/projectlead_api_check.py`: gleicht Projektleiter-, Admin-, Spawn-, Fahrzeug-, Gangfight- und Zonen-API-Aufrufe über den Sourcetree ab.
 - `tools/gangfight_zone_validator.py`: prüft Rechteck-/Radius-Zonendefinitionen auf Plausibilität, Min/Max-Umkehrungen, unplausible Werte und fehlende Fraktions-/State-Zuordnung.
-- `tools/economy_and_state_ledger_check.py`: prüft Geld-, Cash-, Bank-, Home-State-, Safe- und Fahrzeug-/Ledger-Daten in SQLite und Dini-Dateien auf Null-/Negativwerte und Zustandsabweichungen.
+- `tools/economy_and_state_ledger_check.py`: prüft Geld-, Cash-, Bank-, Home-State-, Safe- und Fahrzeug-/Ledger-Daten in SQLite-Dateien auf Null-/Negativwerte und Zustandsabweichungen.
 - `tools/dialog_and_camera_reset_check.py`: prüft Dialog-IDs, Reset-/Abbruchpfade, Camera-/Toggle-Gaurds und UI-Disengage-Pfade.
 - `tools/qemu_7780_readiness_check.py`: prüft statisch die 7780-Readiness (Single-Target AMX, `gamemode0 gtasa_reallife 1`, Port 7780, kein Port 7777) ohne Serverstart.
 - `tools/state_rehydration_guard.py`: erkennt gültige `state_id`/`home_state`-Sicherungen, 0-Schutzmuster und das Beibehalten von `INSERT OR IGNORE`-Guardrails im Source-Level.
@@ -216,7 +216,7 @@ Der aktuelle Repository-Stand ist technisch auf den Single-Target-Contract und d
 
 - UI- und Tutorial-Flow sind auf den menu-first-Workflow mit Auto-Login/Register-Detektion, Home-State-Auswahl LS/SF/LV und einmaligen Spawn-/Tutorial-Pfad fokussiert.
 - Camera/Reset-Guards bleiben auf `SetCameraBehindPlayer()` + `TogglePlayerControllable(playerid, 1)` ausgelegt.
-- Dini-first-Persistenz unter `Compiler/samp03/scriptfiles/` bleibt als primäre Sicherungsstrategie im Fokus; SQLite-Propagation bildet die konsistente Nebenebene für laufende Statusabgleiche.
+- SQLite-only-Persistenz unter `Compiler/samp03/scriptfiles/` bleibt als primäre Sicherungsstrategie im Fokus; SQLite-Propagation bildet die konsistente Nebenebene für laufende Statusabgleiche.
 - Die אפgepferten Zustände für Häuser, Inventar, Fahrzeuge, Safes und State-Transfers bleiben auf atomare Write-Temp/Validate/Rename-Muster ausgerichtet.
 
 ### 📊 Offener, aber klar definierter Status
@@ -227,7 +227,7 @@ Der aktuelle Repository-Stand ist technisch auf den Single-Target-Contract und d
 
 ### 📘 Abschluss
 
-Der Projekt-Tracker bleibt daher in einem klaren Zustand: technische Stabilität, single-target Build-Validität, Dini-/SQLite-Persistenzsicherung und Lifecycle-Konsistenz sind vollständig dokumentiert und im Code verankert. Die nächste Freigabe erfolgt nur durch echte Live-Validierung auf der Ubuntu-VM und nicht durch reine Compile-Sicherheit allein.
+Der Projekt-Tracker bleibt daher in einem klaren Zustand: technische Stabilität, single-target Build-Validität, SQLite-Persistenzsicherung und Lifecycle-Konsistenz sind vollständig dokumentiert und im Code verankert. Die nächste Freigabe erfolgt nur durch echte Live-Validierung auf der Ubuntu-VM und nicht durch reine Compile-Sicherheit allein.
 
 ---
 
@@ -257,7 +257,7 @@ Diese Abschlussnotiz ergänzt den Projekttracker, ohne frühere Einträge zu ent
 
 - Source-Status: Architektur-, Lifecycle-, Kamera- und State-Guardrails sind im aktuellen Quellbaum stabil und konsistent im 7780-Target verankert.
 - Build-Status: `LD_LIBRARY_PATH="$PWD/Compiler/pawncc${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" qemu-i386 Compiler/pawncc/pawncc -o"$PWD/Compiler/samp03/gamemodes/gtasa_reallife.amx" gamemodes/gamemode.pwn -iincludes -iCompiler/samp03/include -d3` liefert `Exit-Code 0`.
-- Offline-Validierung: `python3 -m py_compile tools/*.py`, `bash -n` auf den passenden Shell-Skripten und die Guard-Skripte unter `tools/` liefen ohne Fehler durch; der einzige verbleibende Hinweis ist ein nicht-blockierender Compiler-Warnhinweis in `includes/dini.inc` (`warning 224`).
+- Offline-Validierung: `python3 -m py_compile tools/*.py`, `bash -n` auf den passenden Shell-Skripten und die Guard-Skripte unter `tools/` liefen ohne Fehler durch; der Build ist warnungsfrei.
 - Abgeschlossen: State-Transfer, Tutorial-/Spawn-Guards, Kamera-/HUD-Reset und Single-Target-Build wurden erneut verifiziert.
 - Offen für späteren Live-Check auf Port 7780: echter Serverstart, Client-Loop, DB-Live-Sync und Gameplay-Validierung. Diese Schritte bleiben bewusst auf ausdrückliche Freigabe verschoben.
 - Haus- und Business-API wurden konsistent erweitert: `HouseSystem_SetState()` und `HouseSystem_SetPrice()` sichern gültige State-/Preiswerte beim dynamischen Haus-Editor, während `BusinessSystem_*`-Pfade weiterhin auf gültige State-IDs und atomare Treasury-/Bank-Checks ausgerichtet bleiben.
@@ -341,6 +341,6 @@ Diese Erweiterung dient dazu, den bisherigen Dokumentationsstand noch weiter auf
 - Tutorial: `TUTORIAL_SCENE_TIME` auf 11500 ms, Schutz gegen Start ohne Passwort/Geschlecht.
 - Skin-Flow: `LoginSystem_ShowSkinPicker()` zeigt geschlechtsabhängige 10–15 Skins, validiert `0..311`, setzt `SetPlayerSkin` vor finalem Spawn.
 - Spawn-Order: Home-State/State validiert, `StateSpawnSystem_Apply(...)` erst nach Skin-Setzung, dann `CameraSystem_ExitCameraMode`, `SetCameraBehindPlayer`, `TogglePlayerControllable(playerid, true)`, `RoleplayUI_ShowDashboard(playerid)`.
-- Compile: `bash scripts/build_gamemode.sh` erfolgreich; `gtasa_reallife.amx` wird ohne neue Errors gebaut (nur legacy warning in `includes/dini.inc`).
-- Dini-first + state-safe Fallback: gültige State-/Home-State-Werte werden nicht auf 0 zurückgesetzt; Fallback ist `STATE_LOS_SANTOS`.
+- Compile: `bash scripts/build_gamemode.sh` erfolgreich; `gtasa_reallife.amx` wird ohne neue Errors gebaut.
+- SQLite-only + state-safe Fallback: gültige State-/Home-State-Werte werden nicht auf 0 zurückgesetzt; Fallback ist `STATE_LOS_SANTOS`.
 

@@ -36,6 +36,8 @@ new bool:gPlayerPasswordReady[MAX_PLAYERS];
 new gPlayerWeather[MAX_PLAYERS];
 new bool:gLoginSpawned[MAX_PLAYERS];
 new bool:gLoginSpawnPending[MAX_PLAYERS];
+new bool:gPlayerHomeStateSelected[MAX_PLAYERS];
+new gPlayerPendingPassword[MAX_PLAYERS][64];
 
 forward TutorialSystem_Start(playerid);
 forward TutorialSystem_MarkFinished(playerid);
@@ -149,40 +151,79 @@ stock LoginSystem_AutoResolveFlow(playerid)
     gPlayerPasswordReady[playerid] = false;
     gPlayerSkinSelected[playerid] = false;
     gPlayerGenderSelected[playerid] = false;
+    gPlayerHomeStateSelected[playerid] = false;
     gLoginSpawned[playerid] = false;
     gLoginSpawnPending[playerid] = false;
     gTutorialStage[playerid] = TUTORIAL_STAGE_NONE;
+    gPlayerPendingPassword[playerid][0] = EOS;
 
     LoginSystem_HideLoginScreen(playerid);
     LoginSystem_HideRegisterScreen(playerid);
     TutorialSystem_HideStage(playerid);
     CancelSelectTextDraw(playerid);
 
-    new bool:registered = gLoginAccountExists[playerid];
-    if (!registered)
-    {
-        new gender = Core_GetPlayerGender(playerid);
-        new skin = Core_GetPlayerSkin(playerid);
-        registered = ((gender == GENDER_MALE || gender == GENDER_FEMALE) && skin >= 0 && skin <= 311 && skin != 0);
-    }
+    // Echter, namensbasierter SQLite-Lookup entscheidet ueber Login vs. Register.
+    new name[MAX_PLAYER_NAME];
+    GetPlayerName(playerid, name, sizeof(name));
+    DB_SetAccountName(playerid, name);
+
+    new bool:registered = (DB_AccountExists(name) != 0);
     gLoginAccountExists[playerid] = registered;
+
+    CameraSystem_Reset(playerid);
+    TogglePlayerControllable(playerid, false);
 
     if (registered)
     {
         gPlayerLoginState[playerid] = LOGIN_STATE_LOGIN;
-        CameraSystem_Reset(playerid);
-        TogglePlayerControllable(playerid, false);
-        LoginSystem_ShowLoginScreen(playerid);
-        SendClientMessage(playerid, 0x00D9FFFF, "[LOGIN] Bestehender Account erkannt. Bitte Passwort eingeben und einloggen.");
+        SendClientMessage(playerid, 0x00D9FFFF, "[LOGIN] Willkommen zurueck! Bitte gib dein Passwort ein.");
+    }
+    else
+    {
+        gPlayerLoginState[playerid] = LOGIN_STATE_REGISTER;
+        SendClientMessage(playerid, 0x00D9FFFF, "[REGISTER] Neuer Account erkannt. Bitte setze ein Passwort.");
+    }
+
+    UiHub_ShowPasswordInput(playerid);
+}
+
+// Zentrale Passwort-Verarbeitung (aus dem Passwort-Dialog aufgerufen).
+stock LoginSystem_SubmitPassword(playerid, const password[])
+{
+    if (!Core_IsValidPlayerId(playerid))
+    {
         return;
     }
 
-    gPlayerLoginState[playerid] = LOGIN_STATE_REGISTER;
-    TutorialSystem_Reset(playerid);
-    CameraSystem_Reset(playerid);
-    TogglePlayerControllable(playerid, false);
-    LoginSystem_ShowRegisterScreen(playerid);
-    SendClientMessage(playerid, 0x00D9FFFF, "[LOGIN] Neuer Spieler erkannt. Passwort setzen und Registrierung starten.");
+    new name[MAX_PLAYER_NAME];
+    DB_ResolveAccountName(playerid, name, sizeof(name));
+
+    if (gPlayerLoginState[playerid] == LOGIN_STATE_REGISTER)
+    {
+        if (strlen(password) < 3)
+        {
+            SendClientMessage(playerid, 0xFF6666AA, "[REGISTER] Passwort zu kurz (mindestens 3 Zeichen).");
+            UiHub_ShowPasswordInput(playerid);
+            return;
+        }
+        format(gPlayerPendingPassword[playerid], 64, "%s", password);
+        gPlayerPasswordReady[playerid] = true;
+        SendClientMessage(playerid, 0x00FF00AA, "[REGISTER] Passwort gesetzt. Weiter mit der Charaktererstellung.");
+        LoginSystem_CompleteReg(playerid);
+        return;
+    }
+
+    // Bestehender Account -> Passwort gegen SQLite pruefen.
+    if (!DB_VerifyPassword(name, password))
+    {
+        SendClientMessage(playerid, 0xFF6666AA, "[LOGIN] Falsches Passwort. Bitte erneut versuchen.");
+        UiHub_ShowPasswordInput(playerid);
+        return;
+    }
+
+    gPlayerPasswordReady[playerid] = true;
+    DB_LoadAccount(playerid, name);
+    LoginSystem_CompleteLogin(playerid);
 }
 
 stock LoginSystem_CompleteRegistrationFlow(playerid)
@@ -288,6 +329,14 @@ stock LoginSystem_OnPlayerDisconnect(playerid, reason)
         return;
     }
 
+    // Echten Kontostand erfassen und den gesamten Account persistieren, solange
+    // der Spieler noch authentifiziert ist (sichert Bargeld/Bank/Level/State/Skin).
+    if (DB_IsAuthenticated(playerid))
+    {
+        Core_SetPlayerCash(playerid, GetPlayerMoney(playerid));
+        DB_SaveAccount(playerid);
+    }
+
     LoginSystem_HideRegisterScreen(playerid);
     LoginSystem_HideLoginScreen(playerid);
     TutorialSystem_HideStage(playerid);
@@ -325,205 +374,20 @@ stock LoginSystem_OnPlayerDisconnect(playerid, reason)
 
 stock LoginSystem_ShowLoginScreen(playerid)
 {
-    LoginSystem_HideRegisterScreen(playerid);
+    // Dialog-First: keine TextDraw-Overlays mehr. Alte TDs werden sauber entfernt
+    // und der Passwort-Dialog (DIALOG_STYLE_PASSWORD) uebernimmt die Eingabe.
     LoginSystem_HideLoginScreen(playerid);
-
-    new const loginTitle[] = "GTA:SA Reallife";
-    new const loginHeader[] = "LOGIN";
-    new const loginText[] = "Willkommen zurueck. Du wirst in den Spielablauf weitergeleitet.";
-    new const loginHint[] = "Stadt, Jobs, Fahrzeuge und Menue sind direkt im Hub erreichbar.";
-    new const loginInfo[] = "Aktiviert: Auto-Login-Flow, Tutorial, Kamera und Hub-Intro";
-    new const passwordButton[] = "[ PASSWORT EINGEBEN ]";
-    new const loginButton[] = "[ EINLOGGEN ]";
-
-    gLoginTD[playerid][0] = UiDialog_TextDrawCreate(320.0, 40.0, loginTitle);
-    TextDrawAlignment(gLoginTD[playerid][0], 2);
-    TextDrawLetterSize(gLoginTD[playerid][0], 0.75, 2.0);
-    TextDrawUseBox(gLoginTD[playerid][0], 1);
-    TextDrawBoxColor(gLoginTD[playerid][0], 0x111111AA);
-    TextDrawTextSize(gLoginTD[playerid][0], 200.0, 0.0);
-    TextDrawSetSelectable(gLoginTD[playerid][0], 0);
-    TextDrawColor(gLoginTD[playerid][0], 0x00D9FFFF);
-
-    gLoginTD[playerid][1] = UiDialog_TextDrawCreate(320.0, 80.0, loginHeader);
-    TextDrawAlignment(gLoginTD[playerid][1], 2);
-    TextDrawLetterSize(gLoginTD[playerid][1], 0.5, 1.6);
-    TextDrawUseBox(gLoginTD[playerid][1], 1);
-    TextDrawBoxColor(gLoginTD[playerid][1], 0x003366AA);
-    TextDrawTextSize(gLoginTD[playerid][1], 180.0, 0.0);
-    TextDrawSetSelectable(gLoginTD[playerid][1], 0);
-    TextDrawColor(gLoginTD[playerid][1], 0x00FF99AA);
-
-    gLoginTD[playerid][2] = UiDialog_TextDrawCreate(320.0, 120.0, loginText);
-    TextDrawAlignment(gLoginTD[playerid][2], 2);
-    TextDrawLetterSize(gLoginTD[playerid][2], 0.28, 1.0);
-    TextDrawSetSelectable(gLoginTD[playerid][2], 0);
-    TextDrawColor(gLoginTD[playerid][2], 0xFFFFFFFF);
-
-    gLoginTD[playerid][3] = UiDialog_TextDrawCreate(320.0, 150.0, loginHint);
-    TextDrawAlignment(gLoginTD[playerid][3], 2);
-    TextDrawLetterSize(gLoginTD[playerid][3], 0.25, 0.9);
-    TextDrawSetSelectable(gLoginTD[playerid][3], 0);
-    TextDrawColor(gLoginTD[playerid][3], 0xFFCC66FF);
-
-    gLoginTD[playerid][4] = UiDialog_TextDrawCreate(320.0, 178.0, loginInfo);
-    TextDrawAlignment(gLoginTD[playerid][4], 2);
-    TextDrawLetterSize(gLoginTD[playerid][4], 0.2, 0.8);
-    TextDrawSetSelectable(gLoginTD[playerid][4], 0);
-    TextDrawColor(gLoginTD[playerid][4], 0xBBBBBBFF);
-
-    gLoginTD[playerid][5] = UiDialog_TextDrawCreate(320.0, 230.0, passwordButton);
-    TextDrawAlignment(gLoginTD[playerid][5], 2);
-    TextDrawLetterSize(gLoginTD[playerid][5], 0.22, 1.0);
-    TextDrawUseBox(gLoginTD[playerid][5], 1);
-    TextDrawBoxColor(gLoginTD[playerid][5], 0x1A4D7AAA);
-    TextDrawTextSize(gLoginTD[playerid][5], 220.0, 0.0);
-    TextDrawSetSelectable(gLoginTD[playerid][5], 1);
-    TextDrawColor(gLoginTD[playerid][5], 0xFFF5A5FF);
-
-    gLoginTD[playerid][6] = UiDialog_TextDrawCreate(320.0, 270.0, loginButton);
-    TextDrawAlignment(gLoginTD[playerid][6], 2);
-    TextDrawLetterSize(gLoginTD[playerid][6], 0.22, 1.0);
-    TextDrawUseBox(gLoginTD[playerid][6], 1);
-    TextDrawBoxColor(gLoginTD[playerid][6], 0x2A9D5DCC);
-    TextDrawTextSize(gLoginTD[playerid][6], 220.0, 0.0);
-    TextDrawSetSelectable(gLoginTD[playerid][6], 1);
-    TextDrawColor(gLoginTD[playerid][6], 0xFFFFFFFF);
-
-    SelectTextDraw(playerid, 0x38BDF8FF);
-
-    for (new i = 0; i < 7; i++)
-    {
-        if (gLoginTD[playerid][i] != Text:INVALID_TEXT_DRAW)
-        {
-            TextDrawShowForPlayer(playerid, gLoginTD[playerid][i]);
-        }
-    }
+    LoginSystem_HideRegisterScreen(playerid);
+    UiHub_ShowPasswordInput(playerid);
 }
 
 stock LoginSystem_ShowRegisterScreen(playerid)
 {
-    LoginSystem_HideRegisterScreen(playerid);
     LoginSystem_HideLoginScreen(playerid);
-
-    new const loginTitle[] = "GTA:SA Reallife";
-    new const loginRegister[] = "REGISTRIERUNG";
-    new const loginHome[] = "Tutorial abgeschlossen. Heimatstadt aendern (optional):";
-    new const loginCities[] = "LS - Los Santos   SF - San Fierro   LV - Las Venturas";
-    new const loginFlow[] = "Das Passwort bleibt die einzige freie Texteingabe.";
-    new const loginTutorial[] = "Passwort eingeben und Account erstellen, dann geht es los.";
-    new const passwordButton[] = "[ PASSWORT EINGEBEN ]";
-    new const registerButton[] = "[ ACCOUNT ERSTELLEN ]";
-    new const lsButton[] = "[ LS: LOS SANTOS ]";
-    new const sfButton[] = "[ SF: SAN FIERRO ]";
-    new const lvButton[] = "[ LV: LAS VENTURAS ]";
-
-    gLoginTD[playerid][0] = UiDialog_TextDrawCreate(320.0, 40.0, loginTitle);
-    TextDrawAlignment(gLoginTD[playerid][0], 2);
-    TextDrawLetterSize(gLoginTD[playerid][0], 0.8, 2.2);
-    TextDrawUseBox(gLoginTD[playerid][0], 1);
-    TextDrawBoxColor(gLoginTD[playerid][0], 0x111111AA);
-    TextDrawTextSize(gLoginTD[playerid][0], 210.0, 0.0);
-    TextDrawSetSelectable(gLoginTD[playerid][0], 0);
-    TextDrawColor(gLoginTD[playerid][0], 0x00D9FFFF);
-
-    gLoginTD[playerid][1] = UiDialog_TextDrawCreate(320.0, 75.0, loginRegister);
-    TextDrawAlignment(gLoginTD[playerid][1], 2);
-    TextDrawLetterSize(gLoginTD[playerid][1], 0.45, 1.4);
-    TextDrawUseBox(gLoginTD[playerid][1], 1);
-    TextDrawBoxColor(gLoginTD[playerid][1], 0x223344AA);
-    TextDrawTextSize(gLoginTD[playerid][1], 180.0, 0.0);
-    TextDrawSetSelectable(gLoginTD[playerid][1], 0);
-    TextDrawColor(gLoginTD[playerid][1], 0xFFFFFFFF);
-
-    gLoginTD[playerid][2] = UiDialog_TextDrawCreate(320.0, 110.0, loginHome);
-    TextDrawAlignment(gLoginTD[playerid][2], 2);
-    TextDrawLetterSize(gLoginTD[playerid][2], 0.28, 1.0);
-    TextDrawSetSelectable(gLoginTD[playerid][2], 0);
-    TextDrawColor(gLoginTD[playerid][2], 0xFFFFFFFF);
-
-    gLoginTD[playerid][3] = UiDialog_TextDrawCreate(320.0, 140.0, loginCities);
-    TextDrawAlignment(gLoginTD[playerid][3], 2);
-    TextDrawLetterSize(gLoginTD[playerid][3], 0.28, 1.0);
-    TextDrawSetSelectable(gLoginTD[playerid][3], 0);
-    TextDrawColor(gLoginTD[playerid][3], 0x55FF55FF);
-
-    gLoginTD[playerid][4] = UiDialog_TextDrawCreate(320.0, 170.0, loginFlow);
-    TextDrawAlignment(gLoginTD[playerid][4], 2);
-    TextDrawLetterSize(gLoginTD[playerid][4], 0.25, 1.0);
-    TextDrawSetSelectable(gLoginTD[playerid][4], 0);
-    TextDrawColor(gLoginTD[playerid][4], 0xFFCC66FF);
-
-    gLoginTD[playerid][5] = UiDialog_TextDrawCreate(320.0, 195.0, loginTutorial);
-    TextDrawAlignment(gLoginTD[playerid][5], 2);
-    TextDrawLetterSize(gLoginTD[playerid][5], 0.24, 0.9);
-    TextDrawSetSelectable(gLoginTD[playerid][5], 0);
-    TextDrawColor(gLoginTD[playerid][5], 0xBBBBBBFF);
-
-    gLoginTD[playerid][6] = UiDialog_TextDrawCreate(320.0, 230.0, passwordButton);
-    TextDrawAlignment(gLoginTD[playerid][6], 2);
-    TextDrawLetterSize(gLoginTD[playerid][6], 0.22, 1.0);
-    TextDrawUseBox(gLoginTD[playerid][6], 1);
-    TextDrawBoxColor(gLoginTD[playerid][6], 0x1A4D7AAA);
-    TextDrawTextSize(gLoginTD[playerid][6], 220.0, 0.0);
-    TextDrawSetSelectable(gLoginTD[playerid][6], 1);
-    TextDrawColor(gLoginTD[playerid][6], 0xFFF5A5FF);
-
-    gLoginTD[playerid][7] = UiDialog_TextDrawCreate(320.0, 258.0, registerButton);
-    TextDrawAlignment(gLoginTD[playerid][7], 2);
-    TextDrawLetterSize(gLoginTD[playerid][7], 0.22, 1.0);
-    TextDrawUseBox(gLoginTD[playerid][7], 1);
-    TextDrawBoxColor(gLoginTD[playerid][7], 0x2A9D5DCC);
-    TextDrawTextSize(gLoginTD[playerid][7], 220.0, 0.0);
-    TextDrawSetSelectable(gLoginTD[playerid][7], 1);
-    TextDrawColor(gLoginTD[playerid][7], 0xFFFFFFFF);
-
-    gLoginTD[playerid][8] = UiDialog_TextDrawCreate(120.0, 295.0, lsButton);
-    TextDrawAlignment(gLoginTD[playerid][8], 2);
-    TextDrawLetterSize(gLoginTD[playerid][8], 0.18, 0.8);
-    TextDrawUseBox(gLoginTD[playerid][8], 1);
-    TextDrawBoxColor(gLoginTD[playerid][8], 0x1D7FC9AA);
-    TextDrawTextSize(gLoginTD[playerid][8], 220.0, 0.0);
-    TextDrawSetSelectable(gLoginTD[playerid][8], 1);
-    TextDrawColor(gLoginTD[playerid][8], 0xFFFFFFFF);
-
-    gLoginTD[playerid][9] = UiDialog_TextDrawCreate(320.0, 295.0, sfButton);
-    TextDrawAlignment(gLoginTD[playerid][9], 2);
-    TextDrawLetterSize(gLoginTD[playerid][9], 0.18, 0.8);
-    TextDrawUseBox(gLoginTD[playerid][9], 1);
-    TextDrawBoxColor(gLoginTD[playerid][9], 0x8C6D3FBB);
-    TextDrawTextSize(gLoginTD[playerid][9], 220.0, 0.0);
-    TextDrawSetSelectable(gLoginTD[playerid][9], 1);
-    TextDrawColor(gLoginTD[playerid][9], 0xFFFFFFFF);
-
-    gLoginTD[playerid][10] = UiDialog_TextDrawCreate(520.0, 295.0, lvButton);
-    TextDrawAlignment(gLoginTD[playerid][10], 2);
-    TextDrawLetterSize(gLoginTD[playerid][10], 0.18, 0.8);
-    TextDrawUseBox(gLoginTD[playerid][10], 1);
-    TextDrawBoxColor(gLoginTD[playerid][10], 0xB05A2AAA);
-    TextDrawTextSize(gLoginTD[playerid][10], 220.0, 0.0);
-    TextDrawSetSelectable(gLoginTD[playerid][10], 1);
-    TextDrawColor(gLoginTD[playerid][10], 0xFFFFFFFF);
-
-    gLoginTD[playerid][11] = UiDialog_TextDrawCreate(320.0, 330.0, "[ STADT-MENUE ]");
-    TextDrawAlignment(gLoginTD[playerid][11], 2);
-    TextDrawLetterSize(gLoginTD[playerid][11], 0.18, 0.8);
-    TextDrawUseBox(gLoginTD[playerid][11], 1);
-    TextDrawBoxColor(gLoginTD[playerid][11], 0x7A4FD7AA);
-    TextDrawTextSize(gLoginTD[playerid][11], 240.0, 0.0);
-    TextDrawSetSelectable(gLoginTD[playerid][11], 1);
-    TextDrawColor(gLoginTD[playerid][11], 0xFFFFFFFF);
-
-    SelectTextDraw(playerid, 0x38BDF8FF);
-
-    for (new i = 0; i < 12; i++)
-    {
-        if (gLoginTD[playerid][i] != Text:INVALID_TEXT_DRAW)
-        {
-            TextDrawShowForPlayer(playerid, gLoginTD[playerid][i]);
-        }
-    }
+    LoginSystem_HideRegisterScreen(playerid);
+    UiHub_ShowPasswordInput(playerid);
 }
+
 
 stock LoginSystem_HideLoginScreen(playerid)
 {
@@ -798,6 +662,7 @@ stock LoginSystem_SelectHomeState(playerid, stateid)
     Core_SetPlayerState(playerid, stateid);
     gPlayerData[playerid][E_PLAYER_HOME_STATE] = stateid;
     gPlayerData[playerid][E_PLAYER_STATE] = stateid;
+    gPlayerHomeStateSelected[playerid] = true;
 
     new message[128];
     new stateName[32];
@@ -942,7 +807,35 @@ stock LoginSystem_ActivateSession(playerid, stateid)
     SetPlayerVirtualWorld(playerid, 0);
 
     DB_ValidateStateTransfer(playerid, safeState, safeHomeState);
+    // Ab jetzt ist der Spieler authentifiziert -> persistente Schreibpfade frei.
+    DB_MarkAuthenticated(playerid, true);
     DB_SavePlayerState(playerid, safeState);
+
+    // Gespeichertes Bargeld autoritativ auf das Spielgeld anwenden (SQLite -> HUD).
+    // Ueberschreibt den pauschalen Connect-Betrag, damit zurueckkehrende Spieler
+    // ihren echten Kontostand sehen und neue Spieler mit dem Startwert starten.
+    ResetPlayerMoney(playerid);
+    new startCash = Core_GetPlayerCash(playerid);
+    if (startCash != 0)
+    {
+        GivePlayerMoney(playerid, startCash);
+    }
+
+    // Persistente Account-Zeilen-ID sicherstellen (stabiler Schluessel fuer
+    // Inventar/Besitz), falls ein Einstiegspfad sie noch nicht gesetzt hat.
+    if (DB_GetAccountId(playerid) <= 0)
+    {
+        new resolveName[MAX_PLAYER_NAME];
+        DB_ResolveAccountName(playerid, resolveName, sizeof(resolveName));
+        DB_SetAccountId(playerid, DB_SQLite_GetAccountId(resolveName));
+    }
+
+    // Inventar erst nach erfolgreichem Login laden (haelt OnPlayerConnect schlank).
+    InventorySystem_OnPlayerAuthenticated(playerid);
+    // Persistenten Admin-Rang in den In-Memory-Spiegel uebernehmen.
+    AdminSystem_OnPlayerAuthenticated(playerid);
+    // Haeuser dieses Accounts mit der aktuellen Runtime-playerid verknuepfen.
+    HouseSystem_OnPlayerAuthenticated(playerid);
 }
 
 stock int:LoginSystem_GetHomeState(playerid)
@@ -963,11 +856,12 @@ stock LoginSystem_CompleteLogin(playerid)
         return;
     }
 
-    gPlayerPasswordReady[playerid] = true;
     LoginSystem_HideLoginScreen(playerid);
     LoginSystem_HideRegisterScreen(playerid);
     CancelSelectTextDraw(playerid);
 
+    // Bestehender Account: Account-Daten wurden bereits aus SQLite geladen.
+    // Direkt in die gespeicherte Heimatstadt spawnen - kein Tutorial, kein Skin.
     new homeState = Core_GetValidStateOrDefault(Core_GetPlayerHomeState(playerid), Core_GetPlayerState(playerid));
     if (!Core_IsValidState(homeState))
     {
@@ -975,15 +869,17 @@ stock LoginSystem_CompleteLogin(playerid)
     }
 
     gPlayerLoginState[playerid] = LOGIN_STATE_LOGIN;
+    gPlayerHomeStateSelected[playerid] = true;
+    gPlayerGenderSelected[playerid] = LoginSystem_HasRequiredGender(playerid);
+    gPlayerSkinSelected[playerid] = true;
+
     LoginSystem_ActivateSession(playerid, homeState);
     LoginSystem_PrepareSpawnInfo(playerid, homeState);
     TogglePlayerSpectating(playerid, false);
-    if (!gLoginSpawned[playerid])
-    {
-        SpawnPlayer(playerid);
-    }
+    SpawnPlayer(playerid);
     StateSpawnSystem_Apply(playerid, homeState);
-    SendClientMessage(playerid, 0x00FF00AA, "[LOGIN] Login erfolgreich. Direkt in die Heimatstadt gespawnt.");
+    RoleplayUI_ShowDashboard(playerid);
+    SendClientMessage(playerid, 0x00FF00AA, "[LOGIN] Login erfolgreich. Willkommen zurueck in deiner Heimatstadt.");
 }
 
 stock LoginSystem_FinalizeRegisterSpawn(playerid)
@@ -1010,16 +906,20 @@ stock LoginSystem_FinalizeRegisterSpawn(playerid)
     CancelSelectTextDraw(playerid);
     TutorialSystem_HideStage(playerid);
 
+    // Account jetzt persistent in SQLite anlegen (namensbasiert, inkl. Passwort).
+    new name[MAX_PLAYER_NAME];
+    DB_ResolveAccountName(playerid, name, sizeof(name));
+    DB_CreateAccount(playerid, name, gPlayerPendingPassword[playerid]);
+    gPlayerPendingPassword[playerid][0] = EOS;
+
     gPlayerLoginState[playerid] = LOGIN_STATE_REGISTER;
     LoginSystem_ActivateSession(playerid, homeState);
     LoginSystem_PrepareSpawnInfo(playerid, homeState);
     TogglePlayerSpectating(playerid, false);
-    if (!gLoginSpawned[playerid])
-    {
-        SpawnPlayer(playerid);
-    }
+    SpawnPlayer(playerid);
     StateSpawnSystem_Apply(playerid, homeState);
-    SendClientMessage(playerid, 0x00FF00AA, "[REGISTER] Registrierung abgeschlossen. Finaler Spawn in der Heimatstadt.");
+    RoleplayUI_ShowDashboard(playerid);
+    SendClientMessage(playerid, 0x00FF00AA, "[REGISTER] Registrierung abgeschlossen. Willkommen in San Andreas!");
 }
 
 stock LoginSystem_CompleteReg(playerid)
@@ -1029,20 +929,17 @@ stock LoginSystem_CompleteReg(playerid)
         return;
     }
 
-    if (!gPlayerPasswordReady[playerid])
-    {
-        UiHub_ShowPasswordInput(playerid);
-        return;
-    }
-
     gPlayerLoginState[playerid] = LOGIN_STATE_REGISTER;
     LoginSystem_HideLoginScreen(playerid);
     LoginSystem_HideRegisterScreen(playerid);
     CancelSelectTextDraw(playerid);
 
-    if (TutorialSystem_GetCurrentStage(playerid) < TUTORIAL_STAGE_FINISH)
+    // Deterministische Reihenfolge: Passwort -> Geschlecht -> Skin -> Heimatstadt
+    // -> Tutorial -> finaler Spawn. Jeder Dialog ruft am Ende wieder CompleteReg
+    // auf und springt so zum jeweils naechsten offenen Schritt.
+    if (!gPlayerPasswordReady[playerid])
     {
-        TutorialSystem_Start(playerid);
+        UiHub_ShowPasswordInput(playerid);
         return;
     }
 
@@ -1052,15 +949,21 @@ stock LoginSystem_CompleteReg(playerid)
         return;
     }
 
-    if (!Core_IsValidState(Core_GetPlayerHomeState(playerid)))
+    if (!gPlayerSkinSelected[playerid])
+    {
+        LoginSystem_ShowSkinPicker(playerid);
+        return;
+    }
+
+    if (!gPlayerHomeStateSelected[playerid])
     {
         UiHub_ShowStatePick(playerid);
         return;
     }
 
-    if (!gPlayerSkinSelected[playerid])
+    if (TutorialSystem_GetCurrentStage(playerid) < TUTORIAL_STAGE_FINISH)
     {
-        LoginSystem_ShowSkinPicker(playerid);
+        TutorialSystem_Start(playerid);
         return;
     }
 

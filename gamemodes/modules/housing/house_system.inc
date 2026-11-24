@@ -9,6 +9,7 @@
 
 new gHouseState[MAX_HOUSES];
 new gHouseOwner[MAX_HOUSES];
+new gHouseOwnerAccount[MAX_HOUSES];
 new gHousePrice[MAX_HOUSES];
 new gHouseInterior[MAX_HOUSES];
 new gHouseLocked[MAX_HOUSES];
@@ -29,6 +30,7 @@ stock HouseSystem_Initialize()
     {
         gHouseState[i] = -1;
         gHouseOwner[i] = -1;
+        gHouseOwnerAccount[i] = -1;
         gHousePrice[i] = 0;
         gHouseInterior[i] = 0;
         gHouseLocked[i] = HOUSE_LOCKED;
@@ -51,7 +53,67 @@ stock HouseSystem_Initialize()
     HouseSystem_RegisterExtra(1, 1, STATE_SAN_FIERRO, -1, HOUSE_EXTRA_STATUS_ACTIVE);
     HouseSystem_RegisterExtra(2, 1, STATE_LAS_VENTURAS, -1, HOUSE_EXTRA_STATUS_ACTIVE);
 
+    HouseSystem_LoadOwnersFromDB();
+
     print("[HOUSE] Dynamisches Haussystem initialisiert");
+}
+
+// Persistierten Besitz (Account-ID) aus SQLite in den In-Memory-Spiegel laden.
+// Besitzer bleibt offline durch die Account-ID erhalten; die Runtime-playerid
+// wird erst beim Connect des Besitzers aufgeloest.
+stock HouseSystem_LoadOwnersFromDB()
+{
+    for (new i = 0; i < MAX_HOUSES; i++)
+    {
+        if (gHouseState[i] < 0)
+        {
+            continue;
+        }
+        new accountId = DB_GetHouseOwnerAccount(i);
+        gHouseOwnerAccount[i] = accountId;
+        gHouseOwner[i] = -1;
+        gHouseLocked[i] = (accountId > 0) ? HOUSE_LOCKED : HOUSE_UNLOCKED;
+    }
+    return true;
+}
+
+// Beim Login des Besitzers dessen Haeuser mit der Runtime-playerid verknuepfen.
+stock HouseSystem_OnPlayerAuthenticated(playerid)
+{
+    if (playerid < 0 || playerid >= MAX_PLAYERS)
+    {
+        return false;
+    }
+    new accountId = DB_GetAccountId(playerid);
+    if (accountId <= 0)
+    {
+        return false;
+    }
+    for (new i = 0; i < MAX_HOUSES; i++)
+    {
+        if (gHouseOwnerAccount[i] == accountId)
+        {
+            gHouseOwner[i] = playerid;
+        }
+    }
+    return true;
+}
+
+// Beim Verlassen nur die Runtime-Verknuepfung loesen; Besitz bleibt per Account-ID.
+stock HouseSystem_OnPlayerDisconnect(playerid)
+{
+    if (playerid < 0 || playerid >= MAX_PLAYERS)
+    {
+        return false;
+    }
+    for (new i = 0; i < MAX_HOUSES; i++)
+    {
+        if (gHouseOwner[i] == playerid)
+        {
+            gHouseOwner[i] = -1;
+        }
+    }
+    return true;
 }
 
 stock HouseSystem_RegisterExtra(houseid, extraid, stateid, ownerid, status)
@@ -182,6 +244,10 @@ stock HouseSystem_BuyHouse(playerid, houseid)
         return false;
     }
     SendClientMessage(playerid, 0x00FF00AA, "[HOUSE] Haus erfolgreich gekauft. Staatseinnahme: %d$", price / 12);
+
+    new buyerAccount = DB_GetAccountId(playerid);
+    gHouseOwnerAccount[houseid] = buyerAccount;
+    DB_SaveHouseOwner(houseid, buyerAccount, safeState, 1);
     return true;
 }
 
@@ -253,6 +319,8 @@ stock HouseSystem_SellHouse(playerid, houseid)
 
     gHouseOwner[houseid] = -1;
     gHouseLocked[houseid] = HOUSE_UNLOCKED;
+    gHouseOwnerAccount[houseid] = -1;
+    DB_SaveHouseOwner(houseid, -1, Core_GetValidStateOrDefault(gHouseState[houseid], STATE_LOS_SANTOS), 0);
     return true;
 }
 
