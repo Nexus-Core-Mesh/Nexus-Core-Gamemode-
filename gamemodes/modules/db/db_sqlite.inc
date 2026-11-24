@@ -26,14 +26,10 @@ stock DB_FallbackWriteKey(const fileName[], const section[], const key[], const 
     new path[128];
     DB_FallbackPath(fileName, path, sizeof(path));
 
-    new File:handle = fopen(path, io_append);
+    new File:handle = fopen(path, io_write);
     if (handle == INVALID_FILE_HANDLE)
     {
-        handle = fopen(path, io_write);
-        if (handle == INVALID_FILE_HANDLE)
-        {
-            return false;
-        }
+        return false;
     }
 
     new entry[256];

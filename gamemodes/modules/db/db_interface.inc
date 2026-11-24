@@ -30,6 +30,8 @@ new gDBPlayerStateCache[MAX_PLAYERS];
 new gDBPlayerHomeStateCache[MAX_PLAYERS];
 new gDBPlayerBankCache[MAX_PLAYERS];
 new gDBPlayerCashCache[MAX_PLAYERS];
+new gDBPlayerGenderCache[MAX_PLAYERS];
+new gDBPlayerSkinCache[MAX_PLAYERS];
 new gDBPlayerInventoryCache[MAX_PLAYERS][MAX_INVENTORY_SLOTS];
 new gDBPlayerInventoryQtyCache[MAX_PLAYERS][MAX_INVENTORY_SLOTS];
 new gDBPlayerInventoryMetaCache[MAX_PLAYERS][MAX_INVENTORY_SLOTS][32];
@@ -50,6 +52,8 @@ stock DB_InitializeRuntimeCaches()
         gDBPlayerHomeStateCache[playerid] = STATE_LOS_SANTOS;
         gDBPlayerBankCache[playerid] = 0;
         gDBPlayerCashCache[playerid] = 0;
+        gDBPlayerGenderCache[playerid] = GENDER_NONE;
+        gDBPlayerSkinCache[playerid] = 0;
 
         for (new slot = 0; slot < MAX_INVENTORY_SLOTS; slot++)
         {

@@ -70,7 +70,13 @@ const E_PLAYER_PREMIUM_TIER = 15;
 const E_PLAYER_PREMIUM_EXPIRES = 16;
 const E_PLAYER_PREMIUM_PERMANENT = 17;
 const E_PLAYER_LOGIN_STATE = 18;
-const E_PLAYER_PROFILE_COUNT = 19;
+const E_PLAYER_GENDER = 19;
+const E_PLAYER_SKIN = 20;
+const E_PLAYER_PROFILE_COUNT = 21;
+
+#define GENDER_NONE 0
+#define GENDER_MALE 1
+#define GENDER_FEMALE 2
 
 #define ADMIN_RANK_SUPPORT 1
 #define ADMIN_RANK_MODERATOR 2
@@ -114,6 +120,8 @@ stock Core_ResetPlayerData(playerid)
     gPlayerData[playerid][E_PLAYER_PREMIUM_TIER] = 0;
     gPlayerData[playerid][E_PLAYER_PREMIUM_EXPIRES] = 0;
     gPlayerData[playerid][E_PLAYER_PREMIUM_PERMANENT] = 0;
+    gPlayerData[playerid][E_PLAYER_GENDER] = GENDER_NONE;
+    gPlayerData[playerid][E_PLAYER_SKIN] = 0;
 }
 
 stock Core_IsValidState(stateid)
@@ -133,6 +141,59 @@ stock int:Core_ResolveStateId(int:stateid)
 stock Core_IsValidAdminState(stateid)
 {
     return (stateid == -1 || Core_IsValidState(stateid));
+}
+
+stock Core_IsValidGender(gender)
+{
+    return (gender == GENDER_MALE || gender == GENDER_FEMALE);
+}
+
+stock Core_GetPlayerGender(playerid)
+{
+    if (!Core_IsValidPlayerId(playerid))
+    {
+        return GENDER_NONE;
+    }
+    return gPlayerData[playerid][E_PLAYER_GENDER];
+}
+
+stock Core_SetPlayerGender(playerid, gender)
+{
+    if (!Core_IsValidPlayerId(playerid))
+    {
+        return;
+    }
+
+    if (!Core_IsValidGender(gender))
+    {
+        gender = GENDER_NONE;
+    }
+
+    gPlayerData[playerid][E_PLAYER_GENDER] = gender;
+}
+
+stock Core_GetPlayerSkin(playerid)
+{
+    if (!Core_IsValidPlayerId(playerid))
+    {
+        return 0;
+    }
+    return gPlayerData[playerid][E_PLAYER_SKIN];
+}
+
+stock Core_SetPlayerSkin(playerid, skinid)
+{
+    if (!Core_IsValidPlayerId(playerid))
+    {
+        return;
+    }
+
+    if (skinid < 0 || skinid > 311)
+    {
+        skinid = 0;
+    }
+
+    gPlayerData[playerid][E_PLAYER_SKIN] = skinid;
 }
 
 stock int:Core_GetPlayerState(playerid)
