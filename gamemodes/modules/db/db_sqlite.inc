@@ -154,6 +154,34 @@ stock DB_SQLite_AccountExists(const name[])
     return exists;
 }
 
+// Persistente Zeilen-ID (players.id) zu einem Namen aufloesen, -1 falls nicht vorhanden.
+stock DB_SQLite_GetAccountId(const name[])
+{
+    if (!DB_SQLite_IsReady())
+    {
+        return -1;
+    }
+
+    new safeName[MAX_PLAYER_NAME];
+    DB_SanitizeName(name, safeName, sizeof(safeName));
+
+    new query[160];
+    format(query, sizeof(query), "SELECT id FROM players WHERE name = '%s' COLLATE NOCASE LIMIT 1;", safeName);
+    new DBResult:result = db_query(gSQLiteDB, query);
+    new accountId = -1;
+    if (result)
+    {
+        if (db_num_rows(result) > 0)
+        {
+            new field[16];
+            db_get_field_assoc(result, "id", field, sizeof(field));
+            accountId = strval(field);
+        }
+        db_free_result(result);
+    }
+    return accountId;
+}
+
 stock DB_SQLite_VerifyPassword(const name[], const inputPassword[])
 {
     if (!DB_SQLite_IsReady())

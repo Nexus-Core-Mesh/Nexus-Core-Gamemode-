@@ -50,6 +50,7 @@ new gDBUBBVehiclePriceCache[MAX_UBB_VEHICLES];
 // SQLite-Datensatz mit Default-/0-Werten ueberschreibt.
 new bool:gDBPlayerAuthenticated[MAX_PLAYERS];
 new gDBPlayerAccountName[MAX_PLAYERS][MAX_PLAYER_NAME];
+new gDBPlayerAccountId[MAX_PLAYERS];
 
 stock DB_SetAccountName(playerid, const name[])
 {
@@ -79,6 +80,27 @@ stock DB_ResolveAccountName(playerid, output[], len)
         format(output, len, "Player_%d", playerid);
     }
     return true;
+}
+
+// Persistente Account-Zeilen-ID (players.id) als stabiler Schluessel fuer
+// spielerbezogene Tabellen (Inventar etc.) statt der fluechtigen Runtime-playerid.
+stock DB_SetAccountId(playerid, accountId)
+{
+    if (!Core_IsValidPlayerId(playerid))
+    {
+        return false;
+    }
+    gDBPlayerAccountId[playerid] = accountId;
+    return true;
+}
+
+stock DB_GetAccountId(playerid)
+{
+    if (!Core_IsValidPlayerId(playerid))
+    {
+        return -1;
+    }
+    return gDBPlayerAccountId[playerid];
 }
 
 stock DB_MarkAuthenticated(playerid, bool:value)
@@ -124,12 +146,18 @@ stock DB_LoadAccount(playerid, const name[])
     gDBPlayerCashCache[playerid] = Core_GetPlayerCash(playerid);
     gDBPlayerGenderCache[playerid] = Core_GetPlayerGender(playerid);
     gDBPlayerSkinCache[playerid] = Core_GetPlayerSkin(playerid);
+    DB_SetAccountId(playerid, DB_SQLite_GetAccountId(name));
     return 1;
 }
 
 stock DB_CreateAccount(playerid, const name[], const inputPassword[])
 {
-    return DB_SQLite_CreateAccount(playerid, name, inputPassword);
+    new created = DB_SQLite_CreateAccount(playerid, name, inputPassword);
+    if (created)
+    {
+        DB_SetAccountId(playerid, DB_SQLite_GetAccountId(name));
+    }
+    return created;
 }
 
 stock DB_SaveAccount(playerid)
@@ -155,6 +183,7 @@ stock DB_InitializeRuntimeCaches()
         gDBPlayerSkinCache[playerid] = 0;
         gDBPlayerAuthenticated[playerid] = false;
         gDBPlayerAccountName[playerid][0] = EOS;
+        gDBPlayerAccountId[playerid] = -1;
 
         for (new slot = 0; slot < MAX_INVENTORY_SLOTS; slot++)
         {
@@ -926,8 +955,14 @@ stock DB_LoadPlayerInventory(playerid)
         format(gDBPlayerInventoryMetaCache[playerid][i], 32, "NONE");
     }
 
+    new accountId = DB_GetAccountId(playerid);
+    if (accountId <= 0)
+    {
+        return false;
+    }
+
     new query[192];
-    format(query, sizeof(query), "SELECT item_id, slot_index, quantity, metadata FROM player_inventory WHERE player_id = %d ORDER BY slot_index ASC;", playerid);
+    format(query, sizeof(query), "SELECT item_id, slot_index, quantity, metadata FROM player_inventory WHERE player_id = %d ORDER BY slot_index ASC;", accountId);
 
     if (!DB_SQLite_IsReady())
     {
@@ -992,8 +1027,14 @@ stock DB_SavePlayerInventoryItem(playerid, itemid, slot_index, quantity, const m
     gDBPlayerInventoryQtyCache[playerid][slot_index] = quantity;
     format(gDBPlayerInventoryMetaCache[playerid][slot_index], 32, "%s", metadata);
 
+    new accountId = DB_GetAccountId(playerid);
+    if (accountId <= 0)
+    {
+        return false;
+    }
+
     new query[256];
-    format(query, sizeof(query), "INSERT OR REPLACE INTO player_inventory (player_id, item_id, slot_index, quantity, metadata) VALUES (%d, %d, %d, %d, '%s')", playerid, itemid, slot_index, quantity, metadata);
+    format(query, sizeof(query), "INSERT OR REPLACE INTO player_inventory (player_id, item_id, slot_index, quantity, metadata) VALUES (%d, %d, %d, %d, '%s')", accountId, itemid, slot_index, quantity, metadata);
     return DB_Execute(query);
 }
 

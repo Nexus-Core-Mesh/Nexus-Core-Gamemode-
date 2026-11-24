@@ -821,6 +821,15 @@ stock LoginSystem_ActivateSession(playerid, stateid)
         GivePlayerMoney(playerid, startCash);
     }
 
+    // Persistente Account-Zeilen-ID sicherstellen (stabiler Schluessel fuer
+    // Inventar/Besitz), falls ein Einstiegspfad sie noch nicht gesetzt hat.
+    if (DB_GetAccountId(playerid) <= 0)
+    {
+        new resolveName[MAX_PLAYER_NAME];
+        DB_ResolveAccountName(playerid, resolveName, sizeof(resolveName));
+        DB_SetAccountId(playerid, DB_SQLite_GetAccountId(resolveName));
+    }
+
     // Inventar erst nach erfolgreichem Login laden (haelt OnPlayerConnect schlank).
     InventorySystem_OnPlayerAuthenticated(playerid);
     // Persistenten Admin-Rang in den In-Memory-Spiegel uebernehmen.
