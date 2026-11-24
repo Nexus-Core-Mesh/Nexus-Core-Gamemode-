@@ -221,7 +221,14 @@ stock UiHub_ShowPasswordInput(playerid)
     LoginSystem_HideLoginScreen(playerid);
     LoginSystem_HideRegisterScreen(playerid);
     CancelSelectTextDraw(playerid);
-    UiDialog_Show(playerid, DIALOG_UI_AUTH_PASSWORD, DIALOG_STYLE_INPUT, "Passwort", "Bitte Passwort nur als freie Texteingabe eingeben. Weitere Auswahl erfolgt im Menü.", "Weiter", "Zurück");
+
+    if (gPlayerLoginState[playerid] == LOGIN_STATE_REGISTER)
+    {
+        UiDialog_Show(playerid, DIALOG_UI_AUTH_PASSWORD, DIALOG_STYLE_PASSWORD, "Registrierung", "Neuer Account. Bitte waehle ein Passwort (mind. 3 Zeichen).", "Weiter", "");
+        return;
+    }
+
+    UiDialog_Show(playerid, DIALOG_UI_AUTH_PASSWORD, DIALOG_STYLE_PASSWORD, "Login", "Willkommen zurueck. Bitte gib dein Passwort ein.", "Einloggen", "");
 }
 
 stock UiHub_ShowStatePick(playerid)
@@ -1236,7 +1243,8 @@ stock UiHub_OnDialogResponse(playerid, dialogid, response, listitem, const input
         {
             if (!response)
             {
-                UiHub_ShowAuthMenu(playerid);
+                // Abbruch im Auth-Flow -> Passwort bleibt Pflicht, erneut anzeigen.
+                UiHub_ShowPasswordInput(playerid);
                 return true;
             }
             if (strlen(inputtext) <= 0)
@@ -1252,14 +1260,8 @@ stock UiHub_OnDialogResponse(playerid, dialogid, response, listitem, const input
                 return true;
             }
 
-            gPlayerPasswordReady[playerid] = true;
-            if (gPlayerLoginState[playerid] == LOGIN_STATE_REGISTER)
-            {
-                LoginSystem_CompleteReg(playerid);
-                return true;
-            }
-
-            LoginSystem_CompleteLogin(playerid);
+            // Zentrale Verarbeitung: Register speichert Passwort, Login prueft gegen SQLite.
+            LoginSystem_SubmitPassword(playerid, inputtext);
         }
         case DIALOG_UI_GENDER_PICK:
         {

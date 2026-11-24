@@ -44,6 +44,105 @@ new gDBUBBVehicleStateCache[MAX_UBB_VEHICLES];
 new gDBUBBVehicleFuelCache[MAX_UBB_VEHICLES];
 new gDBUBBVehiclePriceCache[MAX_UBB_VEHICLES];
 
+// Authentifizierungs-Status je Spieler. Persistente Schreibpfade (State, Bank,
+// Account) duerfen NUR fuer authentifizierte Spieler laufen, damit ein frisch
+// verbundener oder nicht eingeloggter Spieler niemals einen bestehenden
+// SQLite-Datensatz mit Default-/0-Werten ueberschreibt.
+new bool:gDBPlayerAuthenticated[MAX_PLAYERS];
+new gDBPlayerAccountName[MAX_PLAYERS][MAX_PLAYER_NAME];
+
+stock DB_SetAccountName(playerid, const name[])
+{
+    if (!Core_IsValidPlayerId(playerid))
+    {
+        return false;
+    }
+    format(gDBPlayerAccountName[playerid], MAX_PLAYER_NAME, "%s", name);
+    return true;
+}
+
+stock DB_ResolveAccountName(playerid, output[], len)
+{
+    if (!Core_IsValidPlayerId(playerid))
+    {
+        format(output, len, "Player");
+        return false;
+    }
+    if (strlen(gDBPlayerAccountName[playerid]) > 0)
+    {
+        format(output, len, "%s", gDBPlayerAccountName[playerid]);
+        return true;
+    }
+    GetPlayerName(playerid, output, len);
+    if (strlen(output) <= 0)
+    {
+        format(output, len, "Player_%d", playerid);
+    }
+    return true;
+}
+
+stock DB_MarkAuthenticated(playerid, bool:value)
+{
+    if (!Core_IsValidPlayerId(playerid))
+    {
+        return false;
+    }
+    gDBPlayerAuthenticated[playerid] = value;
+    return true;
+}
+
+stock bool:DB_IsAuthenticated(playerid)
+{
+    if (!Core_IsValidPlayerId(playerid))
+    {
+        return false;
+    }
+    return gDBPlayerAuthenticated[playerid];
+}
+
+// -------- Namensbasierte Account-API (einzige Persistenzquelle) --------
+
+stock DB_AccountExists(const name[])
+{
+    return DB_SQLite_AccountExists(name);
+}
+
+stock DB_VerifyPassword(const name[], const inputPassword[])
+{
+    return DB_SQLite_VerifyPassword(name, inputPassword);
+}
+
+stock DB_LoadAccount(playerid, const name[])
+{
+    if (!DB_SQLite_LoadAccountInto(playerid, name))
+    {
+        return 0;
+    }
+    gDBPlayerStateCache[playerid] = Core_GetPlayerState(playerid);
+    gDBPlayerHomeStateCache[playerid] = Core_GetPlayerHomeState(playerid);
+    gDBPlayerBankCache[playerid] = Core_GetPlayerBank(playerid);
+    gDBPlayerCashCache[playerid] = Core_GetPlayerCash(playerid);
+    gDBPlayerGenderCache[playerid] = Core_GetPlayerGender(playerid);
+    gDBPlayerSkinCache[playerid] = Core_GetPlayerSkin(playerid);
+    return 1;
+}
+
+stock DB_CreateAccount(playerid, const name[], const inputPassword[])
+{
+    return DB_SQLite_CreateAccount(playerid, name, inputPassword);
+}
+
+stock DB_SaveAccount(playerid)
+{
+    if (!DB_IsAuthenticated(playerid))
+    {
+        return 0;
+    }
+    new accountName[MAX_PLAYER_NAME];
+    DB_ResolveAccountName(playerid, accountName, sizeof(accountName));
+    return DB_SQLite_SaveAccount(playerid, accountName);
+}
+
 stock DB_InitializeRuntimeCaches()
 {
     for (new playerid = 0; playerid < MAX_PLAYERS; playerid++)
@@ -54,6 +153,8 @@ stock DB_InitializeRuntimeCaches()
         gDBPlayerCashCache[playerid] = 0;
         gDBPlayerGenderCache[playerid] = GENDER_NONE;
         gDBPlayerSkinCache[playerid] = 0;
+        gDBPlayerAuthenticated[playerid] = false;
+        gDBPlayerAccountName[playerid][0] = EOS;
 
         for (new slot = 0; slot < MAX_INVENTORY_SLOTS; slot++)
         {
@@ -245,13 +346,13 @@ stock DB_TransactionWriteWithGuard(const preQuery[], const postQuery[], const ro
 stock DB_Initialize()
 {
     gDBBackend = DB_BACKEND_SQLITE;
-    print("[DB] Dini-First startup aktiv: SQLite/MySQL werden nicht als Pflichtvoraussetzung behandelt.");
+    print("[DB] Reines SQLite-Backend aktiv (data/db/gtasa_reallife.db).");
     DB_SQLite_Initialize();
 
     DB_InitializeRuntimeCaches();
     DB_RepairCriticalTables();
     Core_MarkModuleReady("db");
-    print("[DB] Runtime-Caches und Dini-Fallback-Schema initialisiert");
+    print("[DB] Runtime-Caches und SQLite-Schema initialisiert");
 }
 
 stock DB_Shutdown()
@@ -336,22 +437,6 @@ stock int:DB_GetPlayerBank(playerid)
     return gDBPlayerBankCache[playerid];
 }
 
-stock DB_SetPlayerBank(playerid, amount)
-{
-    if (playerid < 0 || playerid >= MAX_PLAYERS)
-    {
-        return false;
-    }
-
-    gDBPlayerBankCache[playerid] = amount;
-    gPlayerBank[playerid] = amount;
-    gPlayerData[playerid][E_PLAYER_BANK] = amount;
-
-    new query[192];
-    format(query, sizeof(query), "UPDATE players SET money = %d WHERE id = %d", amount, playerid);
-    return DB_Execute(query);
-}
-
 stock int:DB_GetPlayerCash(playerid)
 {
     if (playerid < 0 || playerid >= MAX_PLAYERS)
@@ -375,6 +460,10 @@ stock DB_SetPlayerCash(playerid, amount)
 
 stock DB_EnsurePlayerRecord(playerid, defaultState)
 {
+    // Die persistente Account-Erstellung erfolgt ausschliesslich namensbasiert
+    // bei der Registrierung (DB_CreateAccount). Hier wird nur der In-Memory-State
+    // normalisiert, damit kein frisch verbundener Spieler einen bestehenden
+    // Datensatz ueberschreibt.
     if (!Core_IsValidPlayerId(playerid))
     {
         return false;
@@ -385,25 +474,22 @@ stock DB_EnsurePlayerRecord(playerid, defaultState)
     {
         stateid = STATE_LOS_SANTOS;
     }
+    return true;
+}
 
-    new playerName[MAX_PLAYER_NAME];
-    GetPlayerName(playerid, playerName, sizeof(playerName));
-    if (strlen(playerName) <= 0)
+stock DB_SetPlayerBank(playerid, amount)
+{
+    if (playerid < 0 || playerid >= MAX_PLAYERS)
     {
-        format(playerName, sizeof(playerName), "Player_%d", playerid);
+        return false;
     }
 
-    new safeName[MAX_PLAYER_NAME];
-    DB_SanitizeMetadata(playerName, safeName, sizeof(safeName));
+    gDBPlayerBankCache[playerid] = amount;
+    gPlayerBank[playerid] = amount;
+    gPlayerData[playerid][E_PLAYER_BANK] = amount;
+    Core_SetPlayerBank(playerid, amount);
 
-    new query[320];
-    format(query, sizeof(query),
-        "INSERT OR IGNORE INTO players (id, name, state_id, money, admin_level, admin_state, home_state, phone_number, has_health_insurance, created_at) VALUES (%d, '%s', %d, 0, 0, -1, %d, 'NONE', 0, datetime('now'));",
-        playerid,
-        safeName,
-        stateid,
-        stateid);
-    return DB_Execute(query);
+    return DB_SaveAccount(playerid);
 }
 
 stock DB_EnsureHouseRecord(houseid, stateid, owner_player_id, const name[])
@@ -456,12 +542,14 @@ stock DB_SetPlayerState(playerid, stateid)
 
     Core_SetPlayerState(playerid, normalizedState);
     Core_SetPlayerHomeState(playerid, homeState);
+    gDBPlayerStateCache[playerid] = normalizedState;
+    gDBPlayerHomeStateCache[playerid] = homeState;
 
-    new query[192];
-    format(query, sizeof(query), "UPDATE players SET state_id = %d, home_state = %d WHERE id = %d", normalizedState, homeState, playerid);
-    if (!DB_Execute(query))
+    // Nur fuer authentifizierte Spieler persistieren (namensbasiert), damit kein
+    // frisch verbundener Spieler einen bestehenden Datensatz ueberschreibt.
+    if (DB_IsAuthenticated(playerid))
     {
-        return false;
+        DB_SaveAccount(playerid);
     }
 
     return true;
@@ -572,9 +660,11 @@ stock DB_RehydratePlayerState(playerid)
     Core_SetPlayerState(playerid, stateValue);
     Core_SetPlayerHomeState(playerid, homeValue);
 
-    new query[192];
-    format(query, sizeof(query), "UPDATE players SET state_id = %d, home_state = %d WHERE id = %d;", stateValue, homeValue, playerid);
-    return DB_Execute(query);
+    if (DB_IsAuthenticated(playerid))
+    {
+        DB_SaveAccount(playerid);
+    }
+    return true;
 }
 
 stock DB_LoadPlayerState(playerid)
@@ -614,23 +704,13 @@ stock DB_LoadPlayerState(playerid)
         return false;
     }
 
+    // Reine In-Memory-Normalisierung. Die echten Werte werden namensbasiert beim
+    // Login ueber DB_LoadAccount geladen - hier wird NICHT in die DB geschrieben.
     gDBPlayerStateCache[playerid] = stateValue;
     gDBPlayerHomeStateCache[playerid] = homeValue;
     Core_SetPlayerState(playerid, stateValue);
     Core_SetPlayerHomeState(playerid, homeValue);
-
-    new query[192];
-    format(query, sizeof(query), "SELECT state_id, home_state FROM players WHERE id = %d LIMIT 1;", playerid);
-    if (!DB_Query(query))
-    {
-        return false;
-    }
-
-    if (Core_IsValidState(stateValue) && Core_IsValidState(homeValue))
-    {
-        return true;
-    }
-    return false;
+    return true;
 }
 
 stock DB_SavePlayerState(playerid, stateid)
@@ -662,9 +742,13 @@ stock DB_SavePlayerState(playerid, stateid)
     Core_SetPlayerState(playerid, normalizedState);
     Core_SetPlayerHomeState(playerid, homeState);
 
-    new query[192];
-    format(query, sizeof(query), "UPDATE players SET state_id = %d, home_state = %d WHERE id = %d;", normalizedState, homeState, playerid);
-    return DB_Execute(query);
+    // Persistenz nur fuer authentifizierte Spieler (namensbasiert), niemals fuer
+    // frisch verbundene Slots -> schuetzt gueltige state_id/home_state vor 0-Reset.
+    if (DB_IsAuthenticated(playerid))
+    {
+        DB_SaveAccount(playerid);
+    }
+    return true;
 }
 
 stock DB_EnsureStateSchema()

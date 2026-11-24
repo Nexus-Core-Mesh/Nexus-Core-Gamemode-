@@ -356,7 +356,24 @@ stock InventorySystem_OnPlayerConnect(playerid)
     {
         return;
     }
+    // Connect bleibt schlank: nur In-Memory-Slots zuruecksetzen, KEIN DB-Load.
+    // Das eigentliche Laden erfolgt erst nach erfolgreichem Login
+    // (InventorySystem_OnPlayerAuthenticated).
     gInventoryInitialized[playerid] = 1;
+    for (new i = 0; i < MAX_INVENTORY_SLOTS; i++)
+    {
+        gInventoryItem[playerid][i] = INVENTORY_ITEM_NONE;
+        gInventoryItemQty[playerid][i] = 0;
+        format(gInventoryItemMeta[playerid][i], 32, "NONE");
+    }
+}
+
+stock InventorySystem_OnPlayerAuthenticated(playerid)
+{
+    if (playerid < 0 || playerid >= MAX_PLAYERS)
+    {
+        return;
+    }
     Inventory_Load(playerid);
 }
 
