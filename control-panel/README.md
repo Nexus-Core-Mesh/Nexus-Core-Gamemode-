@@ -121,7 +121,7 @@ Unter dieser Logik ist das Panel ein kontrollierter Zusatz-Worker: wenn `node`/`
 - die Datenbasis des Panels ist keine primäre Speicherquelle, sondern eine lesende Betriebsansicht; fehlende Synchronisation zählt als produktiver Mismatch, nicht als normaler Zustand
 - der Panel-Read-Only-Zugriff ist im echten Betrieb nur dann korrekt, wenn der SQLite-only-Save-Pfad mit einem validen SQLite-Upsert oder einer direkten INI-Lese-Sicherheitslage konsistent bleibt
 
-## ✅ Produktionshinweis: SQLite-only vs. SQLite-Read-Only
+## ✅ Produktionshinweis: Gamemode-Schreibpfad vs. Control-Panel-Read-Only
 
 Das Panel ist bewusst lesend auf SQLite ausgelegt, aber der Gamemode läuft in der aktuellen Architektur SQLite-only über `Compiler/samp03/scriptfiles/`. Das bedeutet für den echten Betrieb:
 

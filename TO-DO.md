@@ -68,7 +68,7 @@ Das Projekt als modularen, erweiterbaren GTA:SA-Reallife-Gamemode mit 3-Staaten-
 - [x] Projektstatus und Web-Bridge dokumentiert
 - [x] Offline-Setup-/Start-Manager für `control-panel/` unter `tools/control_panel_manager.py` ergänzt
 - [x] Deploy-Pfad `scripts/deploy_server.sh` startet das Panel nur als optionalen Zusatz-Worker, ohne den Gamemode-Deploy zu blockieren
-- [x] SQLite-only vs. SQLite-Read-Only-Konsistenz als Teil der Dokumentation ergänzt
+- [x] Schreibpfad (Gamemode) vs. Read-Only-Konsistenz (Control-Panel) als Teil der Dokumentation ergänzt
 - [x] Projektgewichtung Persistenz auf 100 % SQLite festgeschrieben: SQLite für Schema/Upserts/Sync und Persistenz ohne parallele Shadow-State-Quelle
 - [x] Source-of-Truth-Regel in `core.inc` explizit dokumentiert: `state_id`, `home_state`, Bank/Cash, Admin-Ränge (`1–5`) und `Core_IsProjectLeader()` bleiben einzig dort geführt
 - [x] Repo-gebundene Offline-TUI-/Autofix-Integration ergänzt: `tools/nexus_hub_tui.py`, `tools/nexus_tools_tui.py`, `tools/nexus_autofix.py`, `tools/samp_tui.py` sowie die Root-Wrapper `nexus_hub_tui.py`, `nexus_tools_tui.py`, `nexus_autofix.py`, `samp_tui.py`

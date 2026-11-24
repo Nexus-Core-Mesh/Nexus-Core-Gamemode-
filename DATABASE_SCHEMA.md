@@ -27,39 +27,28 @@ Der aktive Backend-Status ist standardmäßig auf SQLite gesetzt:
 
 - `new gDBBackend = DB_BACKEND_SQLITE;`
 
-Das bedeutet: Das Projekt ist derzeit auf eine SQLite-Hybridlogik ausgerichtet, statt einen live aktiven MySQL-Write-Stack zu benutzen.
+Das bedeutet: Das Projekt läuft ausschließlich über SQLite. MySQL ist zwar als Konstante definiert, aber nicht aktiv (`gDBBackend = DB_BACKEND_SQLITE`).
 
 ## 3. SQLite-only-Strategie
 
-Der Projektkontext und die Doku betonen: Der reale primäre Persistenzpfad ist SQLite unter `Compiler/samp03/scriptfiles/`.
+Der einzige Persistenzpfad ist die SQLite-Datenbankdatei:
 
-Die relevanten Laufzeit-/Verzeichnisbereiche sind:
+- `data/db/gtasa_reallife.db` (relativ zum Laufverzeichnis `Compiler/samp03`).
 
-- `players/`
-- `houses/`
-- `house_storage/`
-- `safes/`
-- `vehicles/`
-- `ubb_vehicles/`
-- `state/LS/`, `state/SF/`, `state/LV/`
-- `state_kasse/LS/`, `state_kasse/SF/`, `state_kasse/LV/`
-- `business/`
-- `factions/`
-- `inventory/`
-- `temp/`
-- `backup/`
-- `logs/`
+Es gibt **keinen** INI-/Datei-Fallback mehr. Alle Laufzeit-Lese-/Schreibpfade (Auth, Inventar, Housing, Fahrzeuge, State, Economy u. a.) laufen über `db_sqlite.inc` gegen diese eine Datei.
 
-Dieser Pfad ist in der Architektur-Doku explizit beschrieben und als primäre Persistenzlogik vorgesehen.
+Beim Serverstart (`DB_SQLite_Initialize` → `DB_SQLite_EnsureSchema`) werden alle benötigten Tabellen per `CREATE TABLE IF NOT EXISTS` angelegt, u. a.:
 
-## 3.1 Gewichtung SQLite vs. SQLite (51/49)
+- `players`
+- `player_inventory`
+- `houses`
+- `vehicles`
+- `states`
+- sowie die weiteren Modul-Tabellen (State-Bank, House-Storage, Accessoires, Fahrzeug-Zusatzdaten, Kontakte, Strafregister u. a.) über die `DB_Ensure*Schema`-Funktionen in `db_interface.inc`.
 
-Die projektweit vereinbarte Lastverteilung lautet:
+## 3.1 Single Source of Truth
 
-- SQLite: 51 % – für DB-Interface, Schema-Repair, Transaktionen, Upserts und die produktive Synchronisation mit `data/db/gtasa_reallife.db` sowie `control-panel/server.js`.
-- SQLite: 49 % – für durehafte INI-/Dateisaves unter `Compiler/samp03/scriptfiles/` inklusive `temp -> validate -> rename`, Repairs, Fallbacks und Dateistruktur-Erhaltung.
-
-Wesentlicher Punkt: SQLite bleibt der stabile Dateisystem-Laufpfad, aber `core.inc` bleibt immer die einzige State-Quelle für `state_id`, `home_state`, Bank/Cash, Admin-Ränge (`1–5`) und `Core_IsProjectLeader()`. SQLite dient zur Konsistenz, nicht zum parallelen Shadow-State-System.
+`core.inc` bleibt immer die einzige State-Quelle für `state_id`, `home_state`, Bank/Cash, Admin-Ränge (`1–5`) und `Core_IsProjectLeader()`. SQLite dient der dauerhaften Persistenz, nicht als paralleles Shadow-State-System. Gültige State-Werte werden nie durch `0` überschrieben.
 
 ## 4. Runtime-Caches
 

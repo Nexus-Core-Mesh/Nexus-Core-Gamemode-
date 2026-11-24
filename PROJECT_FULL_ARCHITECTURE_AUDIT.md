@@ -221,7 +221,7 @@ Examples:
 
 This is active and directionally aligned with the resource constraints, but without compile/runtime confirmation it is not proven fully live-safe.
 
-## 📘 4. SQLite vs SQLite vs MySQL: actual active wiring
+## 📘 4. SQLite vs MySQL: actual active wiring
 
 ### 📘 4.1 SQLite and scriptfiles path
 
@@ -338,7 +338,7 @@ The active panel is a direct operational read interface over SQLite:
 
 This is definitely active and consistent with the documentation requirement that SQLite is the operational read base for the control panel.
 
-### 📘 5.2 Role of SQLite vs SQLite
+### 📘 5.2 Role of SQLite
 
 The code is internally consistent in assigning roles:
 

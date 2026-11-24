@@ -94,7 +94,7 @@ Der DB-Layer enthält:
 - Schema-Repair-Funktionen
 - Transaction-Logik
 - Backup-/Restore-Funktionen
-- SQLite-/MySQL-Hybridstruktur
+- SQLite-Persistenz (MySQL definiert, aber inaktiv)
 
 Wichtige Backend-Definitionen:
 
