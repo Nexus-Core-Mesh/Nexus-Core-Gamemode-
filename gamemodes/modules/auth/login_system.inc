@@ -329,6 +329,14 @@ stock LoginSystem_OnPlayerDisconnect(playerid, reason)
         return;
     }
 
+    // Echten Kontostand erfassen und den gesamten Account persistieren, solange
+    // der Spieler noch authentifiziert ist (sichert Bargeld/Bank/Level/State/Skin).
+    if (DB_IsAuthenticated(playerid))
+    {
+        Core_SetPlayerCash(playerid, GetPlayerMoney(playerid));
+        DB_SaveAccount(playerid);
+    }
+
     LoginSystem_HideRegisterScreen(playerid);
     LoginSystem_HideLoginScreen(playerid);
     TutorialSystem_HideStage(playerid);
@@ -803,8 +811,20 @@ stock LoginSystem_ActivateSession(playerid, stateid)
     DB_MarkAuthenticated(playerid, true);
     DB_SavePlayerState(playerid, safeState);
 
+    // Gespeichertes Bargeld autoritativ auf das Spielgeld anwenden (SQLite -> HUD).
+    // Ueberschreibt den pauschalen Connect-Betrag, damit zurueckkehrende Spieler
+    // ihren echten Kontostand sehen und neue Spieler mit dem Startwert starten.
+    ResetPlayerMoney(playerid);
+    new startCash = Core_GetPlayerCash(playerid);
+    if (startCash != 0)
+    {
+        GivePlayerMoney(playerid, startCash);
+    }
+
     // Inventar erst nach erfolgreichem Login laden (haelt OnPlayerConnect schlank).
     InventorySystem_OnPlayerAuthenticated(playerid);
+    // Persistenten Admin-Rang in den In-Memory-Spiegel uebernehmen.
+    AdminSystem_OnPlayerAuthenticated(playerid);
 }
 
 stock int:LoginSystem_GetHomeState(playerid)

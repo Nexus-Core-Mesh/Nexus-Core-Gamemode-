@@ -455,7 +455,8 @@ stock DB_SetPlayerCash(playerid, amount)
 
     gDBPlayerCashCache[playerid] = amount;
     gPlayerCash[playerid] = amount;
-    return true;
+    Core_SetPlayerCash(playerid, amount);
+    return DB_SaveAccount(playerid);
 }
 
 stock DB_EnsurePlayerRecord(playerid, defaultState)

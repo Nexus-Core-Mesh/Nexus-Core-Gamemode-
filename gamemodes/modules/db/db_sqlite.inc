@@ -61,7 +61,12 @@ stock DB_SQLite_EnsureSchema()
 
     new DBResult:result;
 
-    result = db_query(gSQLiteDB, "CREATE TABLE IF NOT EXISTS players (id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT UNIQUE COLLATE NOCASE,password TEXT NOT NULL DEFAULT '',gender INTEGER NOT NULL DEFAULT 0,skin INTEGER NOT NULL DEFAULT 0,state_id INTEGER NOT NULL DEFAULT 0,home_state INTEGER NOT NULL DEFAULT 0,money INTEGER NOT NULL DEFAULT 2500,bank INTEGER NOT NULL DEFAULT 2500,level INTEGER NOT NULL DEFAULT 0,created_at TEXT);");
+    result = db_query(gSQLiteDB, "CREATE TABLE IF NOT EXISTS players (id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT UNIQUE COLLATE NOCASE,password TEXT NOT NULL DEFAULT '',gender INTEGER NOT NULL DEFAULT 0,skin INTEGER NOT NULL DEFAULT 0,state_id INTEGER NOT NULL DEFAULT 0,home_state INTEGER NOT NULL DEFAULT 0,money INTEGER NOT NULL DEFAULT 2500,bank INTEGER NOT NULL DEFAULT 2500,level INTEGER NOT NULL DEFAULT 0,admin_level INTEGER NOT NULL DEFAULT 0,created_at TEXT);");
+    if (result) db_free_result(result);
+
+    // Migration fuer bestehende Datenbanken: admin_level ergaenzen (Fehler wird
+    // ignoriert, falls die Spalte bereits existiert).
+    result = db_query(gSQLiteDB, "ALTER TABLE players ADD COLUMN admin_level INTEGER NOT NULL DEFAULT 0;");
     if (result) db_free_result(result);
 
     result = db_query(gSQLiteDB, "CREATE TABLE IF NOT EXISTS player_inventory (id INTEGER PRIMARY KEY AUTOINCREMENT,player_id INTEGER NOT NULL,item_id INTEGER NOT NULL,slot_index INTEGER NOT NULL,quantity INTEGER NOT NULL DEFAULT 0,metadata TEXT DEFAULT 'NONE',UNIQUE(player_id, slot_index));");
@@ -194,7 +199,7 @@ stock DB_SQLite_LoadAccountInto(playerid, const name[])
 
     new query[192];
     format(query, sizeof(query),
-        "SELECT gender, skin, state_id, home_state, money, bank, level FROM players WHERE name = '%s' COLLATE NOCASE LIMIT 1;",
+        "SELECT gender, skin, state_id, home_state, money, bank, level, admin_level FROM players WHERE name = '%s' COLLATE NOCASE LIMIT 1;",
         safeName);
 
     new DBResult:result = db_query(gSQLiteDB, query);
@@ -230,6 +235,10 @@ stock DB_SQLite_LoadAccountInto(playerid, const name[])
             db_get_field_assoc(result, "level", field, sizeof(field));
             new level = strval(field);
 
+            db_get_field_assoc(result, "admin_level", field, sizeof(field));
+            new adminLevel = strval(field);
+            if (adminLevel < 0 || adminLevel > 5) adminLevel = 0;
+
             Core_SetPlayerGender(playerid, gender);
             gPlayerData[playerid][E_PLAYER_GENDER] = gender;
             Core_SetPlayerSkin(playerid, skin);
@@ -239,6 +248,7 @@ stock DB_SQLite_LoadAccountInto(playerid, const name[])
             gPlayerData[playerid][E_PLAYER_STATE] = stateid;
             gPlayerData[playerid][E_PLAYER_HOME_STATE] = homeState;
             gPlayerData[playerid][E_PLAYER_LEVEL] = level;
+            Core_SetPlayerAdminLevel(playerid, adminLevel);
             Core_SetPlayerCash(playerid, money);
             Core_SetPlayerBank(playerid, bank);
             gPlayerData[playerid][E_PLAYER_BANK] = bank;
@@ -271,11 +281,13 @@ stock DB_SQLite_CreateAccount(playerid, const name[], const inputPassword[])
     new homeState = Core_GetValidStateOrDefault(Core_GetPlayerHomeState(playerid), stateid);
     new money = Core_GetPlayerCash(playerid);
     new bank = Core_GetPlayerBank(playerid);
+    new adminLevel = Core_GetPlayerAdminLevel(playerid);
+    if (adminLevel < 0 || adminLevel > 5) adminLevel = 0;
 
     new query[384];
     format(query, sizeof(query),
-        "INSERT OR REPLACE INTO players (id, name, password, gender, skin, state_id, home_state, money, bank, level, created_at) VALUES ((SELECT id FROM players WHERE name = '%s' COLLATE NOCASE), '%s', '%s', %d, %d, %d, %d, %d, %d, %d, datetime('now'));",
-        safeName, safeName, hash, gender, skin, stateid, homeState, money, bank, gPlayerData[playerid][E_PLAYER_LEVEL]);
+        "INSERT OR REPLACE INTO players (id, name, password, gender, skin, state_id, home_state, money, bank, level, admin_level, created_at) VALUES ((SELECT id FROM players WHERE name = '%s' COLLATE NOCASE), '%s', '%s', %d, %d, %d, %d, %d, %d, %d, %d, datetime('now'));",
+        safeName, safeName, hash, gender, skin, stateid, homeState, money, bank, gPlayerData[playerid][E_PLAYER_LEVEL], adminLevel);
 
     return DB_SQLite_Execute(query) ? 1 : 0;
 }
@@ -298,11 +310,13 @@ stock DB_SQLite_SaveAccount(playerid, const name[])
     new homeState = Core_GetValidStateOrDefault(Core_GetPlayerHomeState(playerid), stateid);
     new money = Core_GetPlayerCash(playerid);
     new bank = Core_GetPlayerBank(playerid);
+    new adminLevel = Core_GetPlayerAdminLevel(playerid);
+    if (adminLevel < 0 || adminLevel > 5) adminLevel = 0;
 
     new query[320];
     format(query, sizeof(query),
-        "UPDATE players SET gender = %d, skin = %d, state_id = %d, home_state = %d, money = %d, bank = %d, level = %d WHERE name = '%s' COLLATE NOCASE;",
-        gender, skin, stateid, homeState, money, bank, gPlayerData[playerid][E_PLAYER_LEVEL], safeName);
+        "UPDATE players SET gender = %d, skin = %d, state_id = %d, home_state = %d, money = %d, bank = %d, level = %d, admin_level = %d WHERE name = '%s' COLLATE NOCASE;",
+        gender, skin, stateid, homeState, money, bank, gPlayerData[playerid][E_PLAYER_LEVEL], adminLevel, safeName);
 
     return DB_SQLite_Execute(query) ? 1 : 0;
 }
